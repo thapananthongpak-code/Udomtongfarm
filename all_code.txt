@@ -1,0 +1,3150 @@
+import { useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import { auth } from "../../services/firebase";
+import { getRoleByEmail } from "../../utils/roles";
+function useQuery() {
+  const { search } = useLocation();
+  return useMemo(() => new URLSearchParams(search), [search]);
+}
+
+export default function VerifyEmail() {
+  const navigate = useNavigate();
+  const query = useQuery();
+
+  const emailFromQuery = query.get("email") ?? "";
+  const [email, setEmail] = useState(emailFromQuery);
+  const [password, setPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<string>("");
+  const [err, setErr] = useState<string>("");
+
+  async function resendToLoggedInUser() {
+    setErr("");
+    setMsg("");
+    setLoading(true);
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setErr("ยังไม่ได้ login — ถ้าต้องการ resend ให้กรอก Email+Password ด้านล่าง");
+        return;
+      }
+
+      await sendEmailVerification(user);
+      setMsg("ส่งอีเมลยืนยันใหม่แล้ว ✅ เช็ค inbox / spam");
+    } catch (e: any) {
+      setErr(e?.message ?? "Resend failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loginToResend(e: React.FormEvent) {
+    e.preventDefault();
+    setErr("");
+    setMsg("");
+    setLoading(true);
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+
+      if (cred.user.emailVerified) {
+        // verified แล้ว → เข้าได้เลย
+        const role = getRoleByEmail(cred.user.email);
+        navigate(role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
+        return;
+      }
+
+      await sendEmailVerification(cred.user);
+      setMsg("ส่งอีเมลยืนยันใหม่แล้ว ✅ เช็ค inbox / spam");
+
+      // กันหลุดไปหน้าอื่นทั้งที่ยังไม่ verify
+      await signOut(auth);
+    } catch (e: any) {
+      setErr(e?.message ?? "Login/Resend failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function checkVerified() {
+    setErr("");
+    setMsg("");
+    setLoading(true);
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setErr("ยังไม่ได้ login — กรุณา login ก่อนเพื่อเช็คสถานะ");
+        return;
+      }
+
+      await user.reload();
+
+      if (!user.emailVerified) {
+        setErr("อีเมลยังไม่ยืนยัน ❌ ลองเช็คเมลแล้วกดลิงก์ก่อน แล้วกลับมากดปุ่มนี้อีกที");
+        return;
+      }
+
+      const role = getRoleByEmail(user.email);
+      navigate(role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
+    } catch (e: any) {
+      setErr(e?.message ?? "Check failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 760, margin: "0 auto", padding: "24px 16px" }}>
+      <h1 style={{ fontSize: 50, margin: "18px 0" }}>Verify your email</h1>
+
+      <p style={{ fontSize: 18, color: "#334155", lineHeight: 1.6 }}>
+        เราส่งลิงก์ยืนยันไปที่อีเมลของคุณแล้ว  
+        กรุณาเปิดอีเมล แล้วกดลิงก์เพื่อยืนยันก่อนเข้าใช้งาน
+      </p>
+
+      <div style={{ marginTop: 10, fontSize: 16, color: "#64748b" }}>
+        Tips: เช็ค <b>Spam / Junk</b> ด้วยนะ
+      </div>
+
+      {(msg || err) && (
+        <div
+          style={{
+            marginTop: 14,
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "1px solid #e2e8f0",
+            background: msg ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.06)",
+            color: msg ? "#166534" : "#991b1b",
+            fontWeight: 700,
+          }}
+        >
+          {msg || err}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
+        <button
+          type="button"
+          onClick={resendToLoggedInUser}
+          disabled={loading}
+          style={{
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "1px solid #ddd",
+            background: "#fff",
+            fontSize: 16,
+            cursor: loading ? "not-allowed" : "pointer",
+            fontWeight: 800,
+          }}
+        >
+          {loading ? "Working..." : "Resend (if you are logged in)"}
+        </button>
+
+        <button
+          type="button"
+          onClick={checkVerified}
+          disabled={loading}
+          style={{
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "1px solid #ddd",
+            background: "#0f172a",
+            color: "#fff",
+            fontSize: 16,
+            cursor: loading ? "not-allowed" : "pointer",
+            fontWeight: 900,
+          }}
+        >
+          {loading ? "Checking..." : "I verified → Continue"}
+        </button>
+      </div>
+
+      <div
+        style={{
+          marginTop: 18,
+          padding: 14,
+          borderRadius: 14,
+          border: "1px solid #e2e8f0",
+          background: "#fff",
+        }}
+      >
+        <div style={{ fontWeight: 900, marginBottom: 10 }}>
+          Resend by logging in (Email + Password)
+        </div>
+
+        <form onSubmit={loginToResend} style={{ display: "grid", gap: 12 }}>
+          <label>
+            <div style={{ marginBottom: 6 }}>Email</div>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              required
+              placeholder="name@email.com"
+              style={{
+                width: "100%",
+                padding: "12px 14px",
+                borderRadius: 10,
+                border: "1px solid #ccc",
+                fontSize: 16,
+              }}
+            />
+          </label>
+
+          <label>
+            <div style={{ marginBottom: 6 }}>Password</div>
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              type="password"
+              required
+              placeholder="Your password"
+              style={{
+                width: "100%",
+                padding: "12px 14px",
+                borderRadius: 10,
+                border: "1px solid #ccc",
+                fontSize: 16,
+              }}
+            />
+          </label>
+
+          <button
+            disabled={loading}
+            style={{
+              marginTop: 4,
+              padding: "12px 14px",
+              borderRadius: 12,
+              border: "1px solid #ddd",
+              background: loading ? "#f3f4f6" : "#fff",
+              fontSize: 18,
+              cursor: loading ? "not-allowed" : "pointer",
+              fontWeight: 800,
+            }}
+          >
+            {loading ? "Working..." : "Login & Resend verification"}
+          </button>
+        </form>
+
+        <div style={{ marginTop: 12, color: "#2563eb", fontSize: 16 }}>
+          <Link to="/login">Back to Login</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+export default function Footer() {
+  return (
+    <footer style={{ padding: 20, opacity: 0.7 }}>
+      © {new Date().getFullYear()} Udomtong Farm
+    </footer>
+  );
+}
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../store/AuthContext";
+
+export default function Navbar() {
+  const navigate = useNavigate();
+  const { user, role, loading, logout } = useAuth();
+
+  async function onLogout() {
+    await logout();
+    navigate("/", { replace: true });
+  }
+
+  return (
+    <div
+      style={{
+        borderBottom: "1px solid #eee",
+        padding: "14px 18px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ fontWeight: 800, fontSize: 20 }}>Udomtong Farm</div>
+        <Link to="/" style={{ color: "#2563eb", fontWeight: 600 }}>
+          Home
+        </Link>
+        <Link to="/encyclopedia" style={{ color: "#2563eb", fontWeight: 600 }}>
+          Encyclopedia
+        </Link>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        {!loading && user ? (
+          <>
+            <div style={{ color: "#111827", fontWeight: 700 }}>
+              {user.email}{" "}
+              <span style={{ color: role === "admin" ? "#0f172a" : "#6b7280" }}>
+                ({role})
+              </span>
+            </div>
+
+            {role === "admin" && (
+              <Link to="/admin" style={{ color: "#2563eb", fontWeight: 700 }}>
+                Admin
+              </Link>
+            )}
+
+            <button
+              onClick={onLogout}
+              style={{
+                padding: "8px 12px",
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                background: "#fff",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login" style={{ color: "#2563eb", fontWeight: 700 }}>
+              Login
+            </Link>
+            <Link to="/register" style={{ color: "#2563eb", fontWeight: 700 }}>
+              Create
+            </Link>
+            <Link to="/admin" style={{ color: "#2563eb", fontWeight: 700 }}>
+              Admin
+            </Link>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+import { Link } from "react-router-dom";
+import type { Species } from "../types/species";
+
+type Props = {
+  species: Species;
+};
+
+export default function SpeciesCard({ species }: Props) {
+  return (
+    <Link
+      to={`/species/${species.type}/${species.id}`}
+      style={{
+        textDecoration: "none",
+        color: "inherit",
+        display: "block",
+      }}
+    >
+      <div
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: "12px",
+          overflow: "hidden",
+          background: "#ffffff",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+          transition: "0.2s",
+          cursor: "pointer",
+        }}
+      >
+        <img
+          src={species.image}
+          alt={species.name_en}
+          style={{
+            width: "100%",
+            height: "200px",
+            objectFit: "cover",
+          }}
+        />
+
+        <div style={{ padding: "1rem" }}>
+          <h3 style={{ margin: "0 0 4px 0" }}>
+            {species.name_th}
+          </h3>
+
+          <p style={{ margin: 0, color: "#666" }}>
+            {species.name_en}
+          </p>
+
+          {species.scientific_name && (
+            <p
+              style={{
+                fontStyle: "italic",
+                fontSize: "0.9rem",
+                margin: "4px 0",
+              }}
+            >
+              {species.scientific_name}
+            </p>
+          )}
+
+          <p style={{ fontSize: "0.9rem" }}>
+            {species.short_description}
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+import { NavLink, Outlet } from "react-router-dom";
+
+const linkStyle = ({ isActive }: { isActive: boolean }) => ({
+  display: "block",
+  padding: "10px 12px",
+  borderRadius: 10,
+  textDecoration: "none",
+  color: isActive ? "#0b1220" : "#334155",
+  background: isActive ? "rgba(37,99,235,0.12)" : "transparent",
+  fontWeight: 600,
+});
+
+export default function AdminLayout() {
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", background: "#f8fafc" }}>
+      <aside
+        style={{
+          width: 260,
+          padding: 16,
+          borderRight: "1px solid #e2e8f0",
+          background: "#ffffff",
+        }}
+      >
+        <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 10 }}>
+          Udomtong Admin
+        </div>
+        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 16 }}>
+          Manage system
+        </div>
+
+        <nav style={{ display: "grid", gap: 8 }}>
+          <NavLink to="/admin" end style={linkStyle}>
+            Dashboard
+          </NavLink>
+
+          <NavLink to="/admin/species" style={linkStyle}>
+            Species Manager
+          </NavLink>
+
+          <NavLink to="/admin/settings" style={linkStyle}>
+            Admin Settings
+          </NavLink>
+
+          <div style={{ height: 1, background: "#e2e8f0", margin: "10px 0" }} />
+
+          <NavLink to="/" style={linkStyle}>
+            ← Back to site
+          </NavLink>
+        </nav>
+      </aside>
+
+      <main style={{ flex: 1, padding: 24 }}>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+import { Outlet } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+
+export default function PublicLayout() {
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <Navbar />
+      <main style={{ flex: 1 }}>
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+}
+import { useMemo, useRef, useState } from "react";
+import { useAuth } from "../store/AuthContext";
+import { useSpeciesStore } from "../store/speciesStore";
+
+const STORAGE_KEY = "udomtong_admin_whitelist_v1";
+
+function loadExtraAdmins(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const arr = raw ? (JSON.parse(raw) as string[]) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveExtraAdmins(emails: string[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
+}
+
+export default function AdminSettings() {
+  const { user } = useAuth();
+  const [input, setInput] = useState("");
+
+  const [extras, setExtras] = useState<string[]>(() => loadExtraAdmins());
+
+  const normalizedExtras = useMemo(
+    () =>
+      Array.from(new Set(extras.map((e) => e.toLowerCase().trim()))).filter(
+        Boolean
+      ),
+    [extras]
+  );
+
+  function addEmail() {
+    const email = input.toLowerCase().trim();
+    if (!email) return;
+    setExtras((prev) => {
+      const next = Array.from(new Set([...prev, email]));
+      saveExtraAdmins(next);
+      return next;
+    });
+    setInput("");
+  }
+
+  function removeEmail(email: string) {
+    setExtras((prev) => {
+      const next = prev.filter((e) => e.toLowerCase().trim() !== email);
+      saveExtraAdmins(next);
+      return next;
+    });
+  }
+
+  // ✅ Backup/Restore (Species)
+  const exportJSON = useSpeciesStore((s) => s.exportJSON);
+  const importJSON = useSpeciesStore((s) => s.importJSON);
+  const mergeImportJSON = useSpeciesStore((s: any) => s.mergeImportJSON); // ✅ merge (ถ้า types ยังไม่อัปเดต)
+
+  const fileRestoreRef = useRef<HTMLInputElement | null>(null);
+  const fileMergeRef = useRef<HTMLInputElement | null>(null);
+
+  function downloadBackup() {
+    const text = exportJSON();
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `udomtong-species-backup-${new Date()
+      .toISOString()
+      .slice(0, 10)}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleImportFile(file: File) {
+    const ok = confirm("นำเข้าไฟล์จะ “ทับข้อมูล species เดิมทั้งหมด” แน่ใจนะ?");
+    if (!ok) return;
+
+    const text = await file.text();
+    const res = importJSON(text);
+
+    if (!res.ok) {
+      alert("Import ไม่สำเร็จ: " + (res.error || ""));
+      return;
+    }
+
+    alert(`Import สำเร็จ: ${res.count ?? 0} รายการ`);
+  }
+
+  async function handleMergeImportFile(file: File) {
+    const ok = confirm(
+      "นำเข้าแบบ MERGE จะ “รวมเข้ากับของเดิม” (ไม่ทับ) — ถ้า id ซ้ำใน type เดียวกันจะข้ามอัตโนมัติ แน่ใจนะ?"
+    );
+    if (!ok) return;
+
+    if (typeof mergeImportJSON !== "function") {
+      alert("ยังไม่มี mergeImportJSON ใน speciesStore.ts");
+      return;
+    }
+
+    const text = await file.text();
+    const res = mergeImportJSON(text);
+
+    if (!res?.ok) {
+      alert("Merge import ไม่สำเร็จ: " + (res?.error || ""));
+      return;
+    }
+
+    const added = res.added ?? 0;
+    const skipped = res.skipped ?? 0;
+    const invalid = res.invalid ?? 0;
+
+    alert(
+      `Merge import สำเร็จ ✅\n- เพิ่มใหม่: ${added}\n- ข้าม (ซ้ำ): ${skipped}\n- ไม่ผ่าน validate: ${invalid}`
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: 900 }}>
+      <h1 style={{ fontSize: 34, margin: 0, fontWeight: 900 }}>
+        Admin settings
+      </h1>
+      <p style={{ color: "#475569", marginTop: 6 }}>
+        โหมดฟรี: เก็บ “admin เพิ่มเติม” ไว้ใน localStorage (ชั่วคราว) — admin หลักยังเป็น
+        <b> thapananthongpak@gmail.com</b>
+      </p>
+
+      <div
+        style={{
+          marginTop: 14,
+          background: "#fff",
+          border: "1px solid #e2e8f0",
+          borderRadius: 16,
+          padding: 16,
+        }}
+      >
+        <div style={{ fontWeight: 900, marginBottom: 10 }}>Add admin email</div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="admin2@email.com"
+            style={{
+              width: 360,
+              maxWidth: "100%",
+              padding: "10px 12px",
+              borderRadius: 12,
+              border: "1px solid #e2e8f0",
+            }}
+          />
+          <button
+            onClick={addEmail}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 12,
+              border: "1px solid #e2e8f0",
+              background: "#0f172a",
+              color: "#fff",
+              fontWeight: 900,
+              cursor: "pointer",
+            }}
+          >
+            Add
+          </button>
+        </div>
+
+        <div style={{ marginTop: 14, color: "#64748b", fontSize: 12 }}>
+          Logged in as: <b>{user?.email ?? "-"}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          marginTop: 14,
+          background: "#fff",
+          border: "1px solid #e2e8f0",
+          borderRadius: 16,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            padding: "12px 14px",
+            background: "#f8fafc",
+            fontWeight: 900,
+            borderBottom: "1px solid #e2e8f0",
+          }}
+        >
+          Extra admins (localStorage)
+        </div>
+
+        {normalizedExtras.length === 0 ? (
+          <div style={{ padding: 14, color: "#64748b" }}>No extra admins yet.</div>
+        ) : (
+          normalizedExtras.map((email) => (
+            <div
+              key={email}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "12px 14px",
+                borderBottom: "1px solid #f1f5f9",
+              }}
+            >
+              <div style={{ fontWeight: 800 }}>{email}</div>
+              <button
+                onClick={() => removeEmail(email)}
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 10,
+                  border: "1px solid #e2e8f0",
+                  background: "#fff",
+                  cursor: "pointer",
+                  fontWeight: 900,
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ✅ Species Backup/Restore */}
+      <div
+        style={{
+          marginTop: 14,
+          background: "#fff",
+          border: "1px solid #e2e8f0",
+          borderRadius: 16,
+          padding: 16,
+        }}
+      >
+        <div style={{ fontWeight: 900, marginBottom: 6 }}>Species backup (JSON)</div>
+        <div style={{ color: "#64748b", fontSize: 12 }}>
+          กันข้อมูลหาย: export เก็บไว้ / import เพื่อ restore (โหมดฟรี ไม่ใช้ Firestore)
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+          <button
+            onClick={downloadBackup}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 12,
+              border: "1px solid #e2e8f0",
+              background: "#0f172a",
+              color: "#fff",
+              fontWeight: 900,
+              cursor: "pointer",
+            }}
+          >
+            Export JSON
+          </button>
+
+          <button
+            onClick={() => fileRestoreRef.current?.click()}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 12,
+              border: "1px solid #e2e8f0",
+              background: "#fff",
+              color: "#0f172a",
+              fontWeight: 900,
+              cursor: "pointer",
+            }}
+          >
+            Import JSON (restore)
+          </button>
+
+          <button
+            onClick={() => fileMergeRef.current?.click()}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 12,
+              border: "1px solid #e2e8f0",
+              background: "#fff",
+              color: "#0f172a",
+              fontWeight: 900,
+              cursor: "pointer",
+            }}
+          >
+            Import JSON (merge)
+          </button>
+
+          {/* Restore input */}
+          <input
+            ref={fileRestoreRef}
+            type="file"
+            accept="application/json"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              handleImportFile(file);
+              e.currentTarget.value = "";
+            }}
+          />
+
+          {/* Merge input */}
+          <input
+            ref={fileMergeRef}
+            type="file"
+            accept="application/json"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              handleMergeImportFile(file);
+              e.currentTarget.value = "";
+            }}
+          />
+        </div>
+
+        <div style={{ marginTop: 10, color: "#64748b", fontSize: 12 }}>
+          *Restore จะ “ทับข้อมูล species เดิมทั้งหมด” (มี confirm ก่อน) <br />
+          *Merge จะ “รวมเข้าไป” โดยไม่ทับ: ถ้า id ซ้ำใน type เดียวกันจะข้าม
+        </div>
+      </div>
+
+      <div style={{ marginTop: 14, color: "#64748b", fontSize: 12 }}>
+        *หมายเหตุ: แบบโปรดักชันจริง จะย้าย whitelist ไป Firestore/Custom Claims ทีหลัง
+      </div>
+    </div>
+  );
+}
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
+import { animals } from "../data/animals";
+import { plants } from "../data/plants";
+
+function Card({
+  title,
+  value,
+  hint,
+}: {
+  title: string;
+  value: string | number;
+  hint?: string;
+}) {
+  return (
+    <div
+      style={{
+        background: "#ffffff",
+        border: "1px solid #e2e8f0",
+        borderRadius: 18,
+        padding: 16,
+        boxShadow: "0 10px 24px rgba(2,6,23,0.06)",
+      }}
+    >
+      <div style={{ color: "#64748b", fontSize: 12, fontWeight: 800 }}>
+        {title}
+      </div>
+      <div style={{ fontSize: 36, fontWeight: 950, marginTop: 6, color: "#0f172a" }}>
+        {value}
+      </div>
+      {hint && (
+        <div style={{ marginTop: 8, color: "#64748b", fontSize: 12 }}>
+          {hint}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  children,
+  right,
+}: {
+  title: string;
+  children: React.ReactNode;
+  right?: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #e2e8f0",
+        borderRadius: 18,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          padding: "12px 14px",
+          background: "#f8fafc",
+          borderBottom: "1px solid #e2e8f0",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+        }}
+      >
+        <div style={{ fontWeight: 950, color: "#0f172a" }}>{title}</div>
+        {right}
+      </div>
+
+      <div style={{ padding: 14 }}>{children}</div>
+    </div>
+  );
+}
+
+function Pill({ text, ok }: { text: string; ok: boolean }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "6px 10px",
+        borderRadius: 999,
+        border: `1px solid ${ok ? "#bbf7d0" : "#fecaca"}`,
+        background: ok ? "#f0fdf4" : "#fef2f2",
+        color: ok ? "#166534" : "#991b1b",
+        fontWeight: 900,
+        fontSize: 12,
+      }}
+    >
+      <span
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          background: ok ? "#16a34a" : "#ef4444",
+          display: "inline-block",
+        }}
+      />
+      {text}
+    </span>
+  );
+}
+
+export default function Dashboard() {
+  const stats = useMemo(() => {
+    const all = [...animals, ...plants];
+
+    const tags = all.flatMap((s) => s.tags ?? []);
+    const uniqueTags = new Set(tags).size;
+
+    const withSci = all.filter((s) => !!s.scientific_name).length;
+
+    // ตัวอย่าง “ความครบ” แบบง่าย ๆ: มีรูป + มีอธิบายสั้น
+    const withImage = all.filter((s) => !!s.image).length;
+    const withShort = all.filter((s) => !!s.short_description?.trim()).length;
+
+    return {
+      total: all.length,
+      animals: animals.length,
+      plants: plants.length,
+      uniqueTags,
+      withSci,
+      withImage,
+      withShort,
+    };
+  }, []);
+
+  const recent = useMemo(
+    () => [
+      {
+        title: "Auth ready",
+        desc: "Email/Password login/register/forgot ใช้งานได้",
+        time: "Today",
+      },
+      {
+        title: "Admin protected",
+        desc: "เข้าหน้า /admin ได้เฉพาะ admin whitelist",
+        time: "Today",
+      },
+      {
+        title: "Content loaded",
+        desc: "ข้อมูลสัตว์/พืชโหลดจาก data files (โหมดฟรี)",
+        time: "Today",
+      },
+    ],
+    []
+  );
+
+  const authOk = true; // ตอนนี้เปิด auth แล้ว
+  const dbOk = false; // Firestore ยังไม่ใช้ (ฟรี)
+  const storageOk = false; // ยังไม่ทำ upload รูป
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <h1 style={{ fontSize: 44, margin: 0, fontWeight: 950, color: "#0f172a" }}>
+            Admin Dashboard
+          </h1>
+          <p style={{ marginTop: 8, color: "#475569", maxWidth: 760 }}>
+            แผงควบคุมระบบ Udomtong (โหมดฟรี): ใช้ข้อมูลจากไฟล์ data ก่อน
+            และใช้ admin whitelist เพื่อคุมสิทธิ์ — พร้อมต่อ Firestore/Claims ทีหลัง
+          </p>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}>
+          <Pill text="Auth: ON" ok={authOk} />
+          <Pill text="DB: OFF (free mode)" ok={dbOk} />
+          <Pill text="Storage: OFF" ok={storageOk} />
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div
+        style={{
+          marginTop: 18,
+          display: "grid",
+          gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+          gap: 12,
+        }}
+      >
+        <Card title="Total species" value={stats.total} hint="ทั้งหมดใน Encyclopedia" />
+        <Card title="Animals" value={stats.animals} />
+        <Card title="Plants" value={stats.plants} />
+        <Card title="Unique tags" value={stats.uniqueTags} hint="แท็กไม่ซ้ำ" />
+        <Card title="Has scientific name" value={stats.withSci} hint="มีชื่อวิทยาศาสตร์" />
+        <Card
+          title="Data completeness"
+          value={`${Math.round(((stats.withImage + stats.withShort) / (stats.total * 2)) * 100)}%`}
+          hint="รูป + คำอธิบายสั้น (ประมาณ)"
+        />
+      </div>
+
+      {/* Quick actions + Recent */}
+      <div
+        style={{
+          marginTop: 14,
+          display: "grid",
+          gridTemplateColumns: "1.2fr 0.8fr",
+          gap: 12,
+        }}
+      >
+        <Panel
+          title="Quick actions"
+          right={
+            <span style={{ fontSize: 12, color: "#64748b", fontWeight: 800 }}>
+              next: CRUD + Firestore
+            </span>
+          }
+        >
+          <div style={{ display: "grid", gap: 10 }}>
+            <Link
+              to="/encyclopedia"
+              style={{
+                padding: "12px 14px",
+                borderRadius: 14,
+                border: "1px solid #e2e8f0",
+                textDecoration: "none",
+                fontWeight: 900,
+                color: "#0f172a",
+              }}
+            >
+              🔎 Open Encyclopedia (Public)
+              <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700, marginTop: 4 }}>
+                ดูหน้าค้นหา/กรอง/การ์ด + ลิงก์ไปหน้าแต่ละชนิด
+              </div>
+            </Link>
+
+            <Link
+              to="/admin/settings"
+              style={{
+                padding: "12px 14px",
+                borderRadius: 14,
+                border: "1px solid #e2e8f0",
+                textDecoration: "none",
+                fontWeight: 900,
+                color: "#0f172a",
+              }}
+            >
+              🛡️ Admin Settings
+              <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700, marginTop: 4 }}>
+                เพิ่ม/ลบ admin เพิ่มเติม (localStorage) + เตรียมย้ายไป production role
+              </div>
+            </Link>
+
+            <div
+              style={{
+                padding: "12px 14px",
+                borderRadius: 14,
+                border: "1px dashed #cbd5e1",
+                color: "#334155",
+              }}
+            >
+              ✨ Next upgrade (recommended)
+              <ul style={{ margin: "8px 0 0 18px" }}>
+                <li>ทำ Species Manager: เพิ่ม/แก้ไข/ลบ (ตอนนี้ยัง mock)</li>
+                <li>ทำ Upload รูป (Firebase Storage)</li>
+                <li>ทำ Audit log (กิจกรรมล่าสุด)</li>
+              </ul>
+            </div>
+          </div>
+        </Panel>
+
+        <Panel title="Recent activity">
+          <div style={{ display: "grid", gap: 10 }}>
+            {recent.map((r) => (
+              <div
+                key={r.title}
+                style={{
+                  padding: 12,
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 14,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                  <div style={{ fontWeight: 950, color: "#0f172a" }}>{r.title}</div>
+                  <div style={{ fontSize: 12, color: "#64748b", fontWeight: 800 }}>
+                    {r.time}
+                  </div>
+                </div>
+                <div style={{ marginTop: 6, color: "#334155" }}>{r.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 12, fontSize: 12, color: "#64748b" }}>
+            *ตอนต่อ Firestore จะเปลี่ยนเป็น activity จริงจากระบบ
+          </div>
+        </Panel>
+      </div>
+
+      {/* System plan */}
+      <div style={{ marginTop: 14 }}>
+        <Panel title="Roadmap (what we’ll build next)">
+          <ol style={{ margin: 0, paddingLeft: 18, color: "#334155" }}>
+            <li>
+              <b>Species CRUD (Admin)</b> — ทำฟอร์มเพิ่ม/แก้ไข/ลบ + preview
+            </li>
+            <li>
+              <b>Storage</b> — อัปโหลดรูปเข้า Firebase Storage และเก็บ URL
+            </li>
+            <li>
+              <b>Production roles</b> — Firestore/Custom Claims + Admin management จริง
+            </li>
+            <li>
+              <b>PDPA</b> — Privacy Notice + Consent log + export/delete request flow
+            </li>
+          </ol>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+import { useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import type { Species, SpeciesType } from "../types/species";
+import { useSpeciesStore } from "../store/speciesStore";
+
+type RefRow = { title: string; url: string };
+
+function emptySpecies(type: SpeciesType): Species {
+  return {
+    id: "",
+    type,
+    name_th: "",
+    name_en: "",
+    scientific_name: "",
+    short_description: "",
+    description: "",
+    image: type === "animal" ? "/images/animals/" : "/images/plants/",
+    tags: [],
+    references: [{ title: "Wikipedia", url: "" }],
+  };
+}
+
+export default function SpeciesAdminEdit() {
+  const nav = useNavigate();
+  const { type, id } = useParams();
+
+  const items = useSpeciesStore((s) => s.items);
+  const upsert = useSpeciesStore((s) => s.upsert);
+
+  const mode: "new" | "edit" = id ? "edit" : "new";
+  const initialType: SpeciesType =
+    (type as SpeciesType) || "animal";
+
+  const existing = useMemo(() => {
+    if (!type || !id) return null;
+    return items.find((x) => x.type === type && x.id === id) || null;
+  }, [items, type, id]);
+
+  const [form, setForm] = useState<Species>(() => existing ?? emptySpecies(initialType));
+
+  const [refs, setRefs] = useState<RefRow[]>(
+    (existing?.references?.length ? existing.references : form.references).map((r) => ({
+      title: r.title,
+      url: r.url,
+    }))
+  );
+
+  function set<K extends keyof Species>(key: K, value: Species[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function onSave() {
+    const cleanId = form.id.trim();
+    if (!cleanId) return alert("id ห้ามว่าง");
+    if (!/^[a-z0-9-]+$/.test(cleanId)) {
+      return alert('id ต้องเป็น lowercase + ตัวเลข + "-" เท่านั้น เช่น call-duck');
+    }
+    if (!form.name_th.trim()) return alert("name_th ห้ามว่าง");
+    if (!form.name_en.trim()) return alert("name_en ห้ามว่าง");
+    if (!form.image.trim()) return alert("image ห้ามว่าง");
+
+    const cleanRefs = refs
+      .map((r) => ({ title: r.title.trim(), url: r.url.trim() }))
+      .filter((r) => r.title && r.url);
+
+    if (cleanRefs.length === 0) {
+      return alert("ต้องมี reference อย่างน้อย 1 อัน");
+    }
+
+    const payload: Species = {
+      ...form,
+      id: cleanId,
+      scientific_name: form.scientific_name?.trim() || undefined,
+      references: cleanRefs,
+    };
+
+    upsert(payload);
+    nav("/admin");
+  }
+
+  return (
+    <div style={{ padding: 24, maxWidth: 980, margin: "0 auto" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <h1 style={{ margin: 0 }}>
+          {mode === "new" ? "Add new species" : `Edit: ${form.type}/${form.id}`}
+        </h1>
+
+        <div style={{ marginLeft: "auto", display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link to="/admin" style={btnGhost}>← Back</Link>
+          <button onClick={onSave} style={btnPrimary}>Save</button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        {/* Type */}
+        <div>
+          <label style={label}>Type</label>
+          <select
+            value={form.type}
+            onChange={(e) => {
+              const t = e.target.value as SpeciesType;
+              set("type", t);
+              // auto suggest image folder
+              set("image", t === "animal" ? "/images/animals/" : "/images/plants/");
+            }}
+            style={input}
+            disabled={mode === "edit"} // กัน id/type เปลี่ยนแล้วชนกับของเดิม
+          >
+            <option value="animal">animal</option>
+            <option value="plant">plant</option>
+          </select>
+          {mode === "edit" && (
+            <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+              โหมดแก้ไขจะล็อก type/id ไว้ (กันข้อมูลชนกัน)
+            </div>
+          )}
+        </div>
+
+        {/* ID */}
+        <div>
+          <label style={label}>ID (slug)</label>
+          <input
+            value={form.id}
+            onChange={(e) => set("id", e.target.value)}
+            placeholder='เช่น "call-duck"'
+            style={input}
+            disabled={mode === "edit"}
+          />
+        </div>
+
+        {/* TH */}
+        <div>
+          <label style={label}>Name (TH)</label>
+          <input
+            value={form.name_th}
+            onChange={(e) => set("name_th", e.target.value)}
+            style={input}
+          />
+        </div>
+
+        {/* EN */}
+        <div>
+          <label style={label}>Name (EN)</label>
+          <input
+            value={form.name_en}
+            onChange={(e) => set("name_en", e.target.value)}
+            style={input}
+          />
+        </div>
+
+        {/* Scientific */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label style={label}>Scientific name (optional)</label>
+          <input
+            value={form.scientific_name || ""}
+            onChange={(e) => set("scientific_name", e.target.value)}
+            placeholder='เช่น "Amazona spp."'
+            style={input}
+          />
+        </div>
+
+        {/* Image */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label style={label}>Image path</label>
+          <input
+            value={form.image}
+            onChange={(e) => set("image", e.target.value)}
+            placeholder='/images/animals/call-duck.jpg'
+            style={input}
+          />
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+            ต้องเป็น path ใน public เช่น /images/animals/xxx.jpg หรือ /images/plants/xxx.jpg
+          </div>
+        </div>
+
+        {/* Short */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label style={label}>Short description</label>
+          <textarea
+            value={form.short_description}
+            onChange={(e) => set("short_description", e.target.value)}
+            rows={2}
+            style={textarea}
+          />
+        </div>
+
+        {/* Desc */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label style={label}>Description</label>
+          <textarea
+            value={form.description}
+            onChange={(e) => set("description", e.target.value)}
+            rows={6}
+            style={textarea}
+          />
+        </div>
+
+        {/* References */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <label style={{ ...label, margin: 0 }}>References</label>
+            <button
+              type="button"
+              onClick={() => setRefs((p) => [...p, { title: "", url: "" }])}
+              style={btnGhostSmall}
+            >
+              + Add reference
+            </button>
+          </div>
+
+          <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+            {refs.map((r, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "220px 1fr auto",
+                  gap: 10,
+                }}
+              >
+                <input
+                  value={r.title}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setRefs((p) => p.map((x, idx) => (idx === i ? { ...x, title: v } : x)));
+                  }}
+                  placeholder="Title"
+                  style={input}
+                />
+                <input
+                  value={r.url}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setRefs((p) => p.map((x, idx) => (idx === i ? { ...x, url: v } : x)));
+                  }}
+                  placeholder="https://..."
+                  style={input}
+                />
+                <button
+                  type="button"
+                  onClick={() => setRefs((p) => p.filter((_, idx) => idx !== i))}
+                  style={dangerBtn}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Preview */}
+          <div style={{ marginTop: 14, borderTop: "1px solid rgba(0,0,0,0.1)", paddingTop: 14 }}>
+            <div style={{ fontWeight: 800, marginBottom: 8 }}>Preview</div>
+            <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(0,0,0,0.12)" }}>
+              <img
+                src={form.image}
+                alt="preview"
+                style={{ width: "100%", height: 260, objectFit: "cover", display: "block" }}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+              <div style={{ padding: 14 }}>
+                <div style={{ fontSize: 22, fontWeight: 900 }}>{form.name_en || "Name EN"}</div>
+                <div style={{ opacity: 0.75 }}>{form.name_th || "Name TH"}</div>
+                {form.scientific_name ? (
+                  <div style={{ fontStyle: "italic", opacity: 0.7, marginTop: 6 }}>
+                    {form.scientific_name}
+                  </div>
+                ) : null}
+                <div style={{ marginTop: 10 }}>{form.short_description || "Short description..."}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {existing === null && mode === "edit" && (
+        <div style={{ marginTop: 14, color: "#b91c1c" }}>
+          ไม่พบข้อมูลเดิม (อาจถูกลบไปแล้ว) — แนะนำกลับไปหน้า admin แล้วเช็ค
+        </div>
+      )}
+    </div>
+  );
+}
+
+const label: React.CSSProperties = { fontWeight: 800, marginBottom: 6, display: "block" };
+
+const input: React.CSSProperties = {
+  width: "100%",
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid rgba(0,0,0,0.18)",
+  outline: "none",
+};
+
+const textarea: React.CSSProperties = {
+  width: "100%",
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid rgba(0,0,0,0.18)",
+  outline: "none",
+  resize: "vertical",
+  fontFamily: "inherit",
+};
+
+const btnPrimary: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  background: "#111827",
+  color: "white",
+  fontWeight: 800,
+  border: "none",
+  cursor: "pointer",
+};
+
+const btnGhost: React.CSSProperties = {
+  textDecoration: "none",
+  padding: "10px 14px",
+  borderRadius: 12,
+  background: "white",
+  border: "1px solid rgba(0,0,0,0.18)",
+  cursor: "pointer",
+  fontWeight: 700,
+  color: "#111827",
+};
+
+const btnGhostSmall: React.CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: 12,
+  background: "white",
+  border: "1px solid rgba(0,0,0,0.18)",
+  cursor: "pointer",
+  fontWeight: 800,
+};
+
+const dangerBtn: React.CSSProperties = {
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid rgba(0,0,0,0.16)",
+  background: "#fee2e2",
+  cursor: "pointer",
+  fontWeight: 800,
+};
+import { Link } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useSpeciesStore } from "../store/speciesStore";
+import type { SpeciesType } from "../types/species";
+
+export default function SpeciesAdminList() {
+  const items = useSpeciesStore((s) => s.items);
+  const remove = useSpeciesStore((s) => s.remove);
+  const resetToSeed = useSpeciesStore((s) => s.resetToSeed);
+
+  const [tab, setTab] = useState<"all" | SpeciesType>("all");
+  const [q, setQ] = useState("");
+
+  const filtered = useMemo(() => {
+    let list = items;
+    if (tab !== "all") list = list.filter((x) => x.type === tab);
+
+    const query = q.trim().toLowerCase();
+    if (query) {
+      list = list.filter((x) => {
+        const th = (x.name_th || "").toLowerCase();
+        const en = (x.name_en || "").toLowerCase();
+        const sci = (x.scientific_name || "").toLowerCase();
+        const id = (x.id || "").toLowerCase();
+        return (
+          th.includes(query) ||
+          en.includes(query) ||
+          sci.includes(query) ||
+          id.includes(query)
+        );
+      });
+    }
+
+    // sort by type then name_en
+    return [...list].sort((a, b) => {
+      if (a.type !== b.type) return a.type.localeCompare(b.type);
+      return (a.name_en || "").localeCompare(b.name_en || "");
+    });
+  }, [items, tab, q]);
+
+  const counts = useMemo(() => {
+    const animal = items.filter((x) => x.type === "animal").length;
+    const plant = items.filter((x) => x.type === "plant").length;
+    return { all: items.length, animal, plant };
+  }, [items]);
+
+  return (
+    <div style={{ padding: 24, maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <h1 style={{ margin: 0 }}>Admin: Species</h1>
+
+        <div style={{ marginLeft: "auto", display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link to="/admin/new" style={btnPrimary}>
+            + Add new
+          </Link>
+
+          <button
+            onClick={() => {
+              const ok = confirm("Reset ข้อมูลกลับเป็นค่าเริ่มต้น? (จะทับ localStorage)");
+              if (ok) resetToSeed();
+            }}
+            style={btnGhost}
+          >
+            Reset to seed
+          </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+        <button style={pill(tab === "all")} onClick={() => setTab("all")}>
+          All ({counts.all})
+        </button>
+        <button style={pill(tab === "animal")} onClick={() => setTab("animal")}>
+          Animals ({counts.animal})
+        </button>
+        <button style={pill(tab === "plant")} onClick={() => setTab("plant")}>
+          Plants ({counts.plant})
+        </button>
+
+        <div style={{ flex: 1, minWidth: 260, display: "flex", justifyContent: "flex-end" }}>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name/id/scientific..."
+            style={input}
+          />
+        </div>
+      </div>
+
+      <div style={{ marginTop: 12, opacity: 0.75 }}>
+        Showing {filtered.length} items
+      </div>
+
+      {/* Table */}
+      <div style={{ marginTop: 14, border: "1px solid rgba(0,0,0,0.12)", borderRadius: 12, overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead style={{ background: "#f3f4f6" }}>
+            <tr>
+              <th style={th}>Type</th>
+              <th style={th}>ID</th>
+              <th style={th}>Name (TH)</th>
+              <th style={th}>Name (EN)</th>
+              <th style={th}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((x) => (
+              <tr key={`${x.type}-${x.id}`} style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}>
+                <td style={td}>
+                  <span style={badge(x.type)}>{x.type}</span>
+                </td>
+                <td style={td} title={x.id}>
+                  {x.id}
+                </td>
+                <td style={td}>{x.name_th}</td>
+                <td style={td}>{x.name_en}</td>
+                <td style={td}>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <Link to={`/species/${x.type}/${x.id}`} style={linkBtn}>
+                      View
+                    </Link>
+                    <Link to={`/admin/edit/${x.type}/${x.id}`} style={linkBtn}>
+                      Edit
+                    </Link>
+                    <button
+                      style={dangerBtn}
+                      onClick={() => {
+                        const ok = confirm(`Delete: ${x.type}/${x.id} ?`);
+                        if (ok) remove(x.type, x.id);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+
+            {filtered.length === 0 && (
+              <tr>
+                <td style={{ ...td, padding: 18 }} colSpan={5}>
+                  No data.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+const th: React.CSSProperties = {
+  textAlign: "left",
+  padding: "12px 12px",
+  fontSize: 13,
+  letterSpacing: 0.2,
+};
+
+const td: React.CSSProperties = {
+  padding: "12px 12px",
+  verticalAlign: "top",
+};
+
+const input: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 520,
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid rgba(0,0,0,0.18)",
+  outline: "none",
+};
+
+const btnPrimary: React.CSSProperties = {
+  textDecoration: "none",
+  padding: "10px 14px",
+  borderRadius: 12,
+  background: "#111827",
+  color: "white",
+  fontWeight: 700,
+};
+
+const btnGhost: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  background: "white",
+  border: "1px solid rgba(0,0,0,0.18)",
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const linkBtn: React.CSSProperties = {
+  textDecoration: "none",
+  padding: "6px 10px",
+  borderRadius: 10,
+  border: "1px solid rgba(0,0,0,0.16)",
+  color: "#111827",
+  background: "white",
+  fontWeight: 600,
+};
+
+const dangerBtn: React.CSSProperties = {
+  padding: "6px 10px",
+  borderRadius: 10,
+  border: "1px solid rgba(0,0,0,0.16)",
+  background: "#fee2e2",
+  cursor: "pointer",
+  fontWeight: 700,
+};
+
+function pill(active: boolean): React.CSSProperties {
+  return {
+    padding: "10px 14px",
+    borderRadius: 999,
+    border: active ? "1px solid #111827" : "1px solid rgba(0,0,0,0.18)",
+    background: active ? "#111827" : "white",
+    color: active ? "white" : "#111827",
+    cursor: "pointer",
+    fontWeight: 700,
+  };
+}
+
+function badge(type: "animal" | "plant"): React.CSSProperties {
+  return {
+    display: "inline-block",
+    padding: "4px 10px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 800,
+    background: type === "animal" ? "#dbeafe" : "#dcfce7",
+    color: "#111827",
+  };
+}
+import { useMemo, useState } from "react";
+import { useSpeciesStore } from "../store/speciesStore";
+import type { Species, SpeciesType, Reference } from "../types/species";
+
+type Mode = "create" | "edit" | null;
+
+const emptyDraft = (): Species => ({
+  id: "",
+  type: "animal",
+  name_th: "",
+  name_en: "",
+  scientific_name: "",
+  short_description: "",
+  description: "",
+  image: "",
+  tags: [],
+  references: [],
+});
+
+export default function SpeciesManager() {
+  const items = useSpeciesStore((s) => s.items);
+  const add = useSpeciesStore((s) => s.add);
+  const update = useSpeciesStore((s) => s.update);
+  const remove = useSpeciesStore((s) => s.remove);
+
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | SpeciesType>("all");
+
+  const [mode, setMode] = useState<Mode>(null);
+  const [editingKey, setEditingKey] = useState<{ type: SpeciesType; id: string } | null>(null);
+  const [draft, setDraft] = useState<Species>(emptyDraft());
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items
+      .filter((x) => (typeFilter === "all" ? true : x.type === typeFilter))
+      .filter((x) => {
+        if (!q) return true;
+
+        const refsText = (x.references ?? [])
+          .map((r) => `${r.title ?? ""} ${r.url ?? ""}`)
+          .join(" ");
+
+        const hay = [
+          x.id,
+          x.name_th,
+          x.name_en,
+          x.scientific_name ?? "",
+          x.short_description ?? "",
+          (x.tags ?? []).join(" "),
+          refsText,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return hay.includes(q);
+      })
+      .sort((a, b) => (a.name_en || "").localeCompare(b.name_en || ""));
+  }, [items, query, typeFilter]);
+
+  function startCreate() {
+    setMode("create");
+    setEditingKey(null);
+    setDraft(emptyDraft());
+  }
+
+  function startEdit(item: Species) {
+    setMode("edit");
+    setEditingKey({ type: item.type, id: item.id });
+    setDraft({
+      ...item,
+      tags: item.tags ?? [],
+      references: item.references ?? [],
+      scientific_name: item.scientific_name ?? "",
+      short_description: item.short_description ?? "",
+      description: item.description ?? "",
+    });
+  }
+
+  function cancel() {
+    setMode(null);
+    setEditingKey(null);
+    setDraft(emptyDraft());
+  }
+
+  function validate(d: Species) {
+    if (!d.id.trim()) return "กรุณาใส่ id (เช่น black-swan)";
+    if (!d.name_th.trim()) return "กรุณาใส่ชื่อไทย";
+    if (!d.name_en.trim()) return "กรุณาใส่ชื่ออังกฤษ";
+    if (!d.image.trim()) return "กรุณาใส่ path รูป (เช่น /images/animals/xxx.jpg)";
+    return "";
+  }
+
+  function onSave() {
+    const err = validate(draft);
+    if (err) {
+      alert(err);
+      return;
+    }
+
+    const normalized: Species = {
+      ...draft,
+      id: draft.id.trim(),
+      name_th: draft.name_th.trim(),
+      name_en: draft.name_en.trim(),
+      image: draft.image.trim(),
+      scientific_name: (draft.scientific_name ?? "").trim(),
+      short_description: (draft.short_description ?? "").trim(),
+      description: (draft.description ?? "").trim(),
+      tags: (draft.tags ?? []).map((t) => t.trim()).filter(Boolean),
+      references: (draft.references ?? [])
+        .map((r) => ({
+          title: (r.title ?? "").trim(),
+          url: (r.url ?? "").trim(),
+        }))
+        .filter((r) => r.title || r.url),
+    };
+
+    if (mode === "create") {
+      const dup = items.some((x) => x.type === normalized.type && x.id === normalized.id);
+      if (dup) {
+        alert("id นี้ซ้ำใน type เดียวกันแล้ว (เปลี่ยน id ก่อน)");
+        return;
+      }
+      add(normalized);
+      cancel();
+      return;
+    }
+
+   if (mode === "edit" && editingKey) {
+  update(editingKey.type, editingKey.id, normalized);
+  cancel();
+}
+  }
+
+  function onDelete(item: Species) {
+    const ok = confirm(`ลบ: ${item.name_en} (${item.type}/${item.id}) ?`);
+    if (!ok) return;
+    remove(item.type, item.id);
+    if (editingKey?.type === item.type && editingKey?.id === item.id) cancel();
+  }
+
+  function setReferenceLines(text: string) {
+    // รูปแบบ: Title | URL ต่อ 1 บรรทัด
+    const lines = text.split("\n").map((x) => x.trim()).filter(Boolean);
+    const refs: Reference[] = lines.map((line) => {
+      const [titleRaw, urlRaw] = line.split("|");
+      return {
+        title: (titleRaw ?? "").trim(),
+        url: (urlRaw ?? "").trim(),
+      };
+    });
+    setDraft((prev) => ({ ...prev, references: refs }));
+  }
+
+  const referencesText = (draft.references ?? [])
+    .map((r) => `${r.title ?? ""} | ${r.url ?? ""}`.trim())
+    .join("\n");
+
+  return (
+    <div style={{ maxWidth: 1100 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <h1 style={{ fontSize: 34, margin: 0, fontWeight: 900 }}>Species Manager</h1>
+          <p style={{ marginTop: 8, color: "#475569" }}>
+            CRUD จริง (แก้/เพิ่ม/ลบ) โดยเก็บใน store — หน้า Encyclopedia จะเปลี่ยนตามทันที
+          </p>
+        </div>
+
+        <button
+          onClick={startCreate}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 12,
+            border: "1px solid #e2e8f0",
+            background: "#0f172a",
+            color: "#fff",
+            fontWeight: 900,
+            cursor: "pointer",
+            height: 44,
+          }}
+        >
+          + New species
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value as "all" | SpeciesType)}
+          style={{ padding: 10, borderRadius: 12, border: "1px solid #e2e8f0" }}
+        >
+          <option value="all">All</option>
+          <option value="animal">Animals</option>
+          <option value="plant">Plants</option>
+        </select>
+
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search..."
+          style={{
+            flex: 1,
+            minWidth: 240,
+            padding: 10,
+            borderRadius: 12,
+            border: "1px solid #e2e8f0",
+          }}
+        />
+
+        <div style={{ alignSelf: "center", color: "#64748b", fontWeight: 800 }}>
+          {filtered.length} items
+        </div>
+      </div>
+
+      {/* Editor */}
+      {mode && (
+        <div
+          style={{
+            marginTop: 14,
+            background: "#fff",
+            border: "1px solid #e2e8f0",
+            borderRadius: 16,
+            padding: 14,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <h2 style={{ margin: 0 }}>{mode === "create" ? "Create" : "Edit"}</h2>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={onSave} style={btnPrimary}>
+                Save
+              </button>
+              <button onClick={cancel} style={btnGhost}>
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
+            <label style={labelStyle}>
+              Type
+              <select
+                value={draft.type}
+                onChange={(e) => setDraft({ ...draft, type: e.target.value as SpeciesType })}
+                disabled={mode === "edit"}
+                style={inputStyle}
+              >
+                <option value="animal">animal</option>
+                <option value="plant">plant</option>
+              </select>
+            </label>
+
+            <label style={labelStyle}>
+              ID (url key)
+              <input
+                value={draft.id}
+                onChange={(e) => setDraft({ ...draft, id: e.target.value })}
+                disabled={mode === "edit"}
+                placeholder="black-swan"
+                style={inputStyle}
+              />
+            </label>
+
+            <label style={labelStyle}>
+              Name (TH)
+              <input
+                value={draft.name_th}
+                onChange={(e) => setDraft({ ...draft, name_th: e.target.value })}
+                style={inputStyle}
+              />
+            </label>
+
+            <label style={labelStyle}>
+              Name (EN)
+              <input
+                value={draft.name_en}
+                onChange={(e) => setDraft({ ...draft, name_en: e.target.value })}
+                style={inputStyle}
+              />
+            </label>
+
+            <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
+              Image path (public)
+              <input
+                value={draft.image}
+                onChange={(e) => setDraft({ ...draft, image: e.target.value })}
+                placeholder="/images/animals/black-swan.jpg"
+                style={inputStyle}
+              />
+            </label>
+
+            <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
+              Scientific name (optional)
+              <input
+                value={draft.scientific_name ?? ""}
+                onChange={(e) => setDraft({ ...draft, scientific_name: e.target.value })}
+                style={inputStyle}
+              />
+            </label>
+
+            <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
+              Short description
+              <textarea
+                value={draft.short_description ?? ""}
+                onChange={(e) => setDraft({ ...draft, short_description: e.target.value })}
+                style={{ ...inputStyle, minHeight: 80 }}
+              />
+            </label>
+
+            <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
+              Full description
+              <textarea
+                value={draft.description ?? ""}
+                onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                style={{ ...inputStyle, minHeight: 120 }}
+              />
+            </label>
+
+            <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
+              Tags (comma separated)
+              <input
+                value={(draft.tags ?? []).join(", ")}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    tags: e.target.value.split(",").map((x) => x.trim()).filter(Boolean),
+                  })
+                }
+                style={inputStyle}
+              />
+            </label>
+
+            <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
+              References (1 บรรทัดต่อ 1 อัน) — รูปแบบ: Title | URL
+              <textarea
+                value={referencesText}
+                onChange={(e) => setReferenceLines(e.target.value)}
+                placeholder={`Wikipedia - Amazona | https://en.wikipedia.org/wiki/Amazona`}
+                style={{ ...inputStyle, minHeight: 110 }}
+              />
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* List */}
+      <div
+        style={{
+          marginTop: 14,
+          background: "#fff",
+          border: "1px solid #e2e8f0",
+          borderRadius: 16,
+          overflow: "hidden",
+        }}
+      >
+        {filtered.map((sp) => (
+          <div
+            key={`${sp.type}-${sp.id}`}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 10,
+              padding: 12,
+              borderBottom: "1px solid #f1f5f9",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <img
+                src={sp.image}
+                alt={sp.name_en}
+                style={{
+                  width: 90,
+                  height: 56,
+                  objectFit: "cover",
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                }}
+              />
+              <div>
+                <div style={{ fontWeight: 900 }}>
+                  {sp.name_th} — {sp.name_en}
+                </div>
+                <div style={{ color: "#64748b", fontSize: 12 }}>
+                  {sp.type}/{sp.id}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => startEdit(sp)} style={btnGhost}>
+                Edit
+              </button>
+              <button onClick={() => onDelete(sp)} style={btnDanger}>
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const labelStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 6,
+  fontWeight: 800,
+  color: "#0f172a",
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid #e2e8f0",
+  outline: "none",
+};
+
+const btnGhost: React.CSSProperties = {
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid #e2e8f0",
+  background: "#fff",
+  cursor: "pointer",
+  fontWeight: 900,
+};
+
+const btnPrimary: React.CSSProperties = {
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid #0f172a",
+  background: "#0f172a",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: 900,
+};
+
+const btnDanger: React.CSSProperties = {
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid #fecaca",
+  background: "#fff",
+  color: "#991b1b",
+  cursor: "pointer",
+  fontWeight: 900,
+};
+// src/routes/AdminGuard.tsx
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../store/AuthContext";
+
+export default function AdminGuard() {
+  const { loading, user, role } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <div style={{ padding: 24 }}>Loading...</div>;
+  }
+
+  // 🔒 ยังไม่ login → ไปหน้า login ก่อน
+  if (!user) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
+  }
+
+  // 🔒 login แล้ว แต่ไม่ใช่ admin
+  if (role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+
+  // ✅ เป็น admin เข้าได้
+  return <Outlet />;
+}
+// src/routes/RequireAdmin.tsx
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../store/AuthContext";
+import { ADMIN_EMAILS } from "../config/admin";
+
+export default function RequireAdmin() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div style={{ padding: 24 }}>Loading...</div>;
+
+  const email = (user?.email || "").toLowerCase().trim();
+  const isAdmin = !!email && ADMIN_EMAILS.includes(email);
+
+  // ไม่ใช่ admin -> กลับหน้าแรก (หรือจะไป /login ก็ได้)
+  if (!isAdmin) return <Navigate to="/" replace />;
+
+  return <Outlet />;
+}
+// src/routes/RequireAuth.tsx
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../store/AuthContext";
+
+export default function RequireAuth() {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return <div style={{ padding: 24 }}>Loading...</div>;
+
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  return <Outlet />;
+}
+// src/store/AuthContext.tsx
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import type { User } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../services/firebase";
+import { getRoleByEmail, type Role } from "../utils/roles";
+
+type AuthState = {
+  user: User | null;
+  role: Role;
+  loading: boolean;
+  logout: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthState | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  const role = useMemo(() => getRoleByEmail(user?.email), [user?.email]);
+
+  async function logout() {
+    await signOut(auth);
+  }
+
+  const value: AuthState = { user, role, loading, logout };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}
+// src/config/admin.ts
+export const ADMIN_EMAILS = ["thapananthongpak@gmail.com"].map((x) =>
+  x.toLowerCase().trim()
+);
+import type { Species } from "../types/species";
+
+export const animals: Species[] = [
+  {
+    id: "black-swan",
+    type: "animal",
+    name_th: "หงส์ดำ",
+    name_en: "Black Swan",
+    scientific_name: "Cygnus atratus",
+    short_description: "หงส์สีดำเด่น เป็นนกน้ำขนาดใหญ่",
+    description:
+      "หงส์ดำเป็นนกน้ำขนาดใหญ่ ลำคอยาว สีดำเด่น และจะงอยปากสีแดง เป็นชนิดที่รู้จักกันมากในออสเตรเลียและถูกนำไปเลี้ยงในหลายประเทศ",
+    image: "/images/animals/black-swan.jpg",
+    tags: ["Avian", "Waterfowl"],
+    references: [
+      { title: "Wikipedia - Black Swan", url: "https://en.wikipedia.org/wiki/Black_swan" }
+    ]
+  },
+  {
+    id: "mute-swan",
+    type: "animal",
+    name_th: "หงส์ขาว",
+    name_en: "Mute Swan",
+    scientific_name: "Cygnus olor",
+    short_description: "หงส์สีขาวสง่างาม พบได้ในยุโรปและเอเชีย",
+    description:
+      "หงส์ขาวเป็นหงส์ขนาดใหญ่ สีขาวล้วน มีโหนกดำที่โคนจะงอยปาก มักพบในแหล่งน้ำจืดและนิยมเลี้ยงเพื่อความสวยงาม",
+    image: "/images/animals/mute-swan.jpg",
+    tags: ["Avian", "Waterfowl"],
+    references: [
+      { title: "Wikipedia - Mute swan", url: "https://en.wikipedia.org/wiki/Mute_swan" }
+    ]
+  },
+  {
+    id: "egyptian-goose",
+    type: "animal",
+    name_th: "ห่านอียิปต์",
+    name_en: "Egyptian Goose",
+    scientific_name: "Alopochen aegyptiaca",
+    short_description: "ห่าน/เป็ดน้ำจากแอฟริกา ลวดลายเด่น",
+    description:
+      "ห่านอียิปต์เป็นนกน้ำพื้นถิ่นของแอฟริกา มีลวดลายสีน้ำตาล-ครีมและแต้มรอบตาเด่น พบตามแหล่งน้ำและทุ่งหญ้า",
+    image: "/images/animals/egyptian-goose.jpg",
+    tags: ["Avian", "Waterfowl"],
+    references: [
+      { title: "Wikipedia - Egyptian goose", url: "https://en.wikipedia.org/wiki/Egyptian_goose" }
+    ]
+  },
+  {
+    id: "call-duck",
+    type: "animal",
+    name_th: "เป็ดคอลดักส์",
+    name_en: "Call Duck",
+    scientific_name: "Anas platyrhynchos domesticus",
+    short_description: "เป็ดบ้านสายพันธุ์เล็ก ใช้เลี้ยง/สวยงาม",
+    description:
+      "Call Duck เป็นสายพันธุ์เป็ดบ้านที่มีขนาดเล็ก นิยมเลี้ยงเพื่อความสวยงาม (เป็นสายพันธุ์ของเป็ดบ้านจากกลุ่ม mallard domesticated)",
+    image: "/images/animals/call-duck.jpg",
+    tags: ["Avian", "Domestic"],
+    references: [
+      { title: "Wikipedia - Call duck", url: "https://en.wikipedia.org/wiki/Call_duck" }
+    ]
+  },
+  {
+    id: "indian-peafowl",
+    type: "animal",
+    name_th: "นกยูง",
+    name_en: "Indian Peafowl",
+    scientific_name: "Pavo cristatus",
+    short_description: "นกยูงอินเดีย หางสวยงามเป็นเอกลักษณ์",
+    description:
+      "นกยูงอินเดียเป็นนกที่มีชื่อเสียงด้านหางยาวลวดลายสวยงาม ตัวผู้มักแสดงแพนหางเพื่อดึงดูดตัวเมีย พบได้ในอนุทวีปอินเดียและถูกเลี้ยงแพร่หลาย",
+    image: "/images/animals/indian-peafowl.jpg",
+    tags: ["Avian"],
+    references: [
+      { title: "Wikipedia - Indian peafowl", url: "https://en.wikipedia.org/wiki/Indian_peafowl" }
+    ]
+  },
+  {
+    id: "white-eared-pheasant",
+    type: "animal",
+    name_th: "ไก่ป่าหูขาว",
+    name_en: "White-eared Pheasant",
+    scientific_name: "Crossoptilon crossoptilon",
+    short_description: "ไก่ฟ้ากลุ่มหูขาว พบแถบจีน/เทือกเขา",
+    description:
+      "White-eared pheasant เป็นนกตระกูลไก่ฟ้า มีลักษณะเด่นคือขนสีขาวบริเวณแก้ม/หู พบตามพื้นที่สูงและทุ่งหญ้าในบางภูมิภาคของจีน",
+    image: "/images/animals/white-eared-pheasant.jpg",
+    tags: ["Avian", "Pheasant"],
+    references: [
+      { title: "Wikipedia - White-eared pheasant", url: "https://en.wikipedia.org/wiki/White-eared_pheasant" }
+    ]
+  },
+  {
+    id: "domestic-goose",
+    type: "animal",
+    name_th: "ห่าน",
+    name_en: "Domestic Goose",
+    scientific_name: "Anser anser domesticus",
+    short_description: "ห่านเลี้ยงในบ้าน ใช้เลี้ยงดูแลพื้นที่/สวยงาม",
+    description:
+      "ห่านบ้านเป็นสัตว์ปีกเลี้ยง มีพฤติกรรมรวมฝูงและร้องดัง บางพื้นที่นิยมเลี้ยงเพื่อเฝ้าบ้าน/สวน หรือเพื่อเนื้อและไข่",
+    image: "/images/animals/domestic-goose.jpg",
+    tags: ["Avian", "Domestic"],
+    references: [
+      { title: "Wikipedia - Domestic goose", url: "https://en.wikipedia.org/wiki/Domestic_goose" }
+    ]
+  },
+  {
+    id: "scarlet-macaw",
+    type: "animal",
+    name_th: "นกแก้วมาคอว์",
+    name_en: "Scarlet Macaw",
+    scientific_name: "Ara macao",
+    short_description: "มาคอว์สีแดงสด ขนาดใหญ่จากอเมริกากลาง-ใต้",
+    description:
+      "Scarlet macaw เป็นนกแก้วขนาดใหญ่ สีแดง-เหลือง-น้ำเงินเด่น พบในป่าฝนเขตร้อนของอเมริกากลางและอเมริกาใต้ นิยมเลี้ยงในกรงนกขนาดใหญ่",
+    image: "/images/animals/scarlet-macaw.jpg",
+    tags: ["Avian", "Parrot"],
+    references: [
+      { title: "Wikipedia - Scarlet macaw", url: "https://en.wikipedia.org/wiki/Scarlet_macaw" }
+    ]
+  },
+  {
+    id: "rose-ringed-parakeet",
+    type: "animal",
+    name_th: "นกแก้วริงเน็ต",
+    name_en: "Rose-ringed Parakeet",
+    scientific_name: "Psittacula krameri",
+    short_description: "นกแก้วขนาดกลาง มีวงแหวนรอบคอในตัวผู้",
+    description:
+      "Rose-ringed parakeet เป็นนกแก้วที่พบตามธรรมชาติในแอฟริกาและเอเชียใต้-ตะวันตก และถูกนำไปอยู่หลายพื้นที่ ตัวผู้มักมีวงแหวนรอบคอเด่น",
+    image: "/images/animals/rose-ringed-parakeet.jpg",
+    tags: ["Avian", "Parrot"],
+    references: [
+      { title: "Wikipedia - Rose-ringed parakeet", url: "https://en.wikipedia.org/wiki/Rose-ringed_parakeet" }
+    ]
+  },
+  {
+    id: "crimson-conure",
+    type: "animal",
+    name_th: "นกแก้วคริมสันคอนัวร์",
+    name_en: "Crimson-bellied Parakeet (Conure)",
+    scientific_name: "Pyrrhura perlata",
+    short_description: "คอนัวร์ขนาดเล็ก สีท้องแดง (ชื่อสามัญอาจเรียกต่างกัน)",
+    description:
+      "กลุ่ม conure มีหลายชนิด ชื่อเรียกอาจต่างกันตามแหล่งเลี้ยง/ตลาด สำหรับรายการนี้ใช้ชนิดที่รู้จักกันในชื่อ Crimson-bellied parakeet (Pyrrhura perlata) เป็นตัวแทน",
+    image: "/images/animals/crimson-conure.jpg",
+    tags: ["Avian", "Parrot"],
+    references: [
+      { title: "Wikipedia - Crimson-bellied parakeet", url: "https://en.wikipedia.org/wiki/Crimson-bellied_parakeet" }
+    ]
+  },
+  {
+    id: "amazon-parrot",
+    type: "animal",
+    name_th: "นกแก้วอเมซอน",
+    name_en: "Amazon Parrot",
+    scientific_name: "Amazona spp.",
+    short_description: "กลุ่มนกแก้วอเมซอน หลายชนิด มีชื่อเสียงเรื่องเลียนเสียง",
+    description:
+      "Amazon parrots เป็นกลุ่มนกแก้วสกุล Amazona มีหลายชนิด มักมีสีเขียวเป็นหลักและมีความสามารถในการเรียนรู้เสียง/คำพูดที่ดี (ชนิดจริงในฟาร์มสามารถระบุเพิ่มภายหลังได้)",
+    image: "/images/animals/amazon-parrot.jpg",
+    tags: ["Avian", "Parrot"],
+    references: [
+      { title: "Wikipedia - Amazona", url: "https://en.wikipedia.org/wiki/Amazona" }
+    ]
+  },
+  {
+    id: "guineafowl",
+    type: "animal",
+    name_th: "ไก่ต๊อก",
+    name_en: "Helmeted Guineafowl",
+    scientific_name: "Numida meleagris",
+    short_description: "ไก่ต๊อกลายจุด พบในแอฟริกา นิยมเลี้ยง",
+    description:
+      "Helmeted guineafowl เป็นนกในแอฟริกา มีลายจุดบนลำตัว เสียงร้องดังและมีพฤติกรรมรวมฝูง บางพื้นที่นิยมเลี้ยงในฟาร์ม",
+    image: "/images/animals/guineafowl.jpg",
+    tags: ["Avian", "Domestic"],
+    references: [
+      { title: "Wikipedia - Helmeted guineafowl", url: "https://en.wikipedia.org/wiki/Helmeted_guineafowl" }
+    ]
+  },
+  {
+    id: "red-junglefowl",
+    type: "animal",
+    name_th: "ไก่ป่าอินเดีย",
+    name_en: "Red Junglefowl",
+    scientific_name: "Gallus gallus",
+    short_description: "บรรพบุรุษของไก่บ้าน พบในเอเชียใต้-ตะวันออกเฉียงใต้",
+    description:
+      "Red junglefowl เป็นไก่ป่าที่ถือว่าเป็นบรรพบุรุษของไก่บ้าน พบในป่าและพื้นที่รอยต่อป่าหลายประเทศในเอเชีย",
+    image: "/images/animals/red-junglefowl.jpg",
+    tags: ["Avian", "Galliformes"],
+    references: [
+      { title: "Wikipedia - Red junglefowl", url: "https://en.wikipedia.org/wiki/Red_junglefowl" }
+    ]
+  },
+  {
+    id: "golden-pheasant",
+    type: "animal",
+    name_th: "ไก่ฟ้าสีทอง",
+    name_en: "Golden Pheasant",
+    scientific_name: "Chrysolophus pictus",
+    short_description: "ไก่ฟ้าสีสันสดจากจีน นิยมเลี้ยงเพื่อความสวยงาม",
+    description:
+      "Golden pheasant เป็นไก่ฟ้าที่มีสีสันโดดเด่น โดยเฉพาะบริเวณหัวและลำตัว นิยมเลี้ยงในสวนสัตว์/ฟาร์มเพื่อความสวยงาม",
+    image: "/images/animals/golden-pheasant.jpg",
+    tags: ["Avian", "Pheasant"],
+    references: [
+      { title: "Wikipedia - Golden pheasant", url: "https://en.wikipedia.org/wiki/Golden_pheasant" }
+    ]
+  }
+];
+import type { Species } from "../types/species";
+
+export const plants: Species[] = [
+  {
+    id: "teak",
+    type: "plant",
+    name_th: "ต้นสักทอง",
+    name_en: "Teak",
+    scientific_name: "Tectona grandis",
+    short_description: "ไม้เศรษฐกิจสำคัญ เนื้อไม้ทนทาน",
+    description:
+      "สักเป็นไม้เนื้อแข็งที่นิยมใช้ในงานเฟอร์นิเจอร์และก่อสร้าง เนื้อไม้คงทน มีคุณสมบัติทนต่อสภาพอากาศ",
+    image: "/images/plants/teak.jpg",
+    tags: ["Hardwood"],
+    references: [
+      { title: "Wikipedia - Teak", url: "https://en.wikipedia.org/wiki/Teak" }
+    ]
+  },
+  {
+    id: "burmese-rosewood",
+    type: "plant",
+    name_th: "ต้นประดู่ป่า",
+    name_en: "Burmese Rosewood",
+    scientific_name: "Pterocarpus macrocarpus",
+    short_description: "ไม้เนื้อแข็ง ใช้ทำงานไม้และเฟอร์นิเจอร์",
+    description:
+      "ประดู่ป่าเป็นไม้เนื้อแข็ง มีค่าทางเศรษฐกิจ นิยมใช้ในงานไม้และเฟอร์นิเจอร์",
+    image: "/images/plants/burmese-rosewood.jpg",
+    tags: ["Hardwood"],
+    references: [
+      { title: "Wikipedia - Pterocarpus macrocarpus", url: "https://en.wikipedia.org/wiki/Pterocarpus_macrocarpus" }
+    ]
+  },
+  {
+    id: "siamese-rosewood",
+    type: "plant",
+    name_th: "ต้นพะยูง",
+    name_en: "Siamese Rosewood",
+    scientific_name: "Dalbergia cochinchinensis",
+    short_description: "ไม้หวงห้าม/มีค่ามาก นิยมงานไม้หรู",
+    description:
+      "พะยูงเป็นไม้เนื้อแข็งในสกุล Dalbergia มีค่าทางเศรษฐกิจสูงและได้รับการคุ้มครองในหลายพื้นที่",
+    image: "/images/plants/siamese-rosewood.jpg",
+    tags: ["Protected", "Hardwood"],
+    references: [
+      { title: "Wikipedia - Dalbergia cochinchinensis", url: "https://en.wikipedia.org/wiki/Dalbergia_cochinchinensis" }
+    ]
+  },
+  {
+    id: "payom",
+    type: "plant",
+    name_th: "ต้นพยอม",
+    name_en: "White Meranti (Payom)",
+    scientific_name: "Shorea roxburghii",
+    short_description: "ไม้ในวงศ์ยาง (Dipterocarpaceae) พบในเอเชียตะวันออกเฉียงใต้",
+    description:
+      "พยอมเป็นไม้ในสกุล Shorea พบในเอเชียตะวันออกเฉียงใต้ มีคุณค่าในด้านเนื้อไม้และระบบนิเวศ",
+    image: "/images/plants/payom.jpg",
+    tags: ["Hardwood"],
+    references: [
+      { title: "Wikipedia - Shorea roxburghii", url: "https://en.wikipedia.org/wiki/Shorea_roxburghii" }
+    ]
+  },
+  {
+    id: "takhian-thong",
+    type: "plant",
+    name_th: "ต้นตะเคียนทอง",
+    name_en: "Takhian (Hopea)",
+    scientific_name: "Hopea odorata",
+    short_description: "ไม้ยืนต้นในวงศ์ยาง มีความสำคัญเชิงป่าไม้",
+    description:
+      "ตะเคียนทองเป็นไม้ยืนต้นในวงศ์ Dipterocarpaceae พบในเอเชียตะวันออกเฉียงใต้ มีเนื้อไม้แข็งแรง",
+    image: "/images/plants/takhian-thong.jpg",
+    tags: ["Hardwood"],
+    references: [
+      { title: "Wikipedia - Hopea odorata", url: "https://en.wikipedia.org/wiki/Hopea_odorata" }
+    ]
+  },
+  {
+    id: "chingchan",
+    type: "plant",
+    name_th: "ต้นชิงชัน",
+    name_en: "Dalbergia (Chingchan)",
+    scientific_name: "Dalbergia oliveri",
+    short_description: "ไม้สกุล Dalbergia ใช้ทำงานไม้",
+    description:
+      "ชิงชันเป็นไม้ในสกุล Dalbergia ที่มีความสำคัญทางเศรษฐกิจ นิยมใช้เป็นไม้เนื้อแข็งสำหรับงานไม้",
+    image: "/images/plants/chingchan.jpg",
+    tags: ["Hardwood"],
+    references: [
+      { title: "Wikipedia - Dalbergia oliveri", url: "https://en.wikipedia.org/wiki/Dalbergia_oliveri" }
+    ]
+  },
+  {
+    id: "yang-na",
+    type: "plant",
+    name_th: "ต้นยางนา",
+    name_en: "Yang Na",
+    scientific_name: "Dipterocarpus alatus",
+    short_description: "ไม้ยืนต้นใหญ่ในวงศ์ยาง มีเรซิน",
+    description:
+      "ยางนาเป็นไม้ยืนต้นขนาดใหญ่ พบในเอเชียตะวันออกเฉียงใต้ มีเรซินและมีบทบาทต่อระบบนิเวศป่า",
+    image: "/images/plants/yang-na.jpg",
+    tags: ["Large tree", "Resin"],
+    references: [
+      { title: "Wikipedia - Dipterocarpus alatus", url: "https://en.wikipedia.org/wiki/Dipterocarpus_alatus" }
+    ]
+  },
+  {
+    id: "bamboo",
+    type: "plant",
+    name_th: "ต้นไผ่",
+    name_en: "Bamboo",
+    scientific_name: "Bambusoideae",
+    short_description: "พืชวงศ์หญ้า ใช้ประโยชน์ได้หลากหลาย",
+    description:
+      "ไผ่เป็นพืชในอนุวงศ์ Bambusoideae อยู่ในวงศ์หญ้า ใช้ทำงานก่อสร้าง งานจักสาน และอาหาร",
+    image: "/images/plants/bamboo.jpg",
+    tags: ["Grass"],
+    references: [
+      { title: "Wikipedia - Bamboo", url: "https://en.wikipedia.org/wiki/Bamboo" }
+    ]
+  },
+  {
+    id: "salao",
+    type: "plant",
+    name_th: "ต้นเสลา",
+    name_en: "Lagerstroemia (Salao)",
+    scientific_name: "Lagerstroemia loudonii",
+    short_description: "ไม้ดอกสวย นิยมปลูกประดับ",
+    description:
+      "เสลาเป็นไม้ดอกในสกุล Lagerstroemia ออกดอกสวยงาม นิยมปลูกเป็นไม้ประดับตามถนนและสวน",
+    image: "/images/plants/salao.jpg",
+    tags: ["Ornamental"],
+    references: [
+      { title: "Wikipedia - Lagerstroemia loudonii", url: "https://en.wikipedia.org/wiki/Lagerstroemia_loudonii" }
+    ]
+  },
+  {
+    id: "red-padau",
+    type: "plant",
+    name_th: "ต้นประดู่แดง",
+    name_en: "Narra (Red Paduak)",
+    scientific_name: "Pterocarpus indicus",
+    short_description: "ไม้เนื้อแข็ง ใช้ทำงานไม้/ร่มเงา",
+    description:
+      "ประดู่แดง (Narra) เป็นไม้ยืนต้นในสกุล Pterocarpus มีการปลูกเป็นไม้ให้ร่มเงาและใช้เนื้อไม้",
+    image: "/images/plants/red-padau.jpg",
+    tags: ["Hardwood"],
+    references: [
+      { title: "Wikipedia - Pterocarpus indicus", url: "https://en.wikipedia.org/wiki/Pterocarpus_indicus" }
+    ]
+  },
+  {
+    id: "pak-wan-pa",
+    type: "plant",
+    name_th: "ต้นผักหวาน",
+    name_en: "Pak Wan Pa",
+    scientific_name: "Melientha suavis",
+    short_description: "พืชกินใบยอดอ่อน นิยมในอาหารไทย",
+    description:
+      "ผักหวานป่าเป็นพืชที่ยอดอ่อนนิยมใช้ทำอาหาร มีการปลูกและดูแลในสวน/ฟาร์มหลายพื้นที่",
+    image: "/images/plants/pak-wan-pa.jpg",
+    tags: ["Edible"],
+    references: [
+      { title: "Wikipedia - Melientha suavis", url: "https://en.wikipedia.org/wiki/Melientha_suavis" }
+    ]
+  },
+  {
+    id: "pomelo",
+    type: "plant",
+    name_th: "ต้นส้มโอ",
+    name_en: "Pomelo",
+    scientific_name: "Citrus maxima",
+    short_description: "ไม้ผลตระกูลส้ม ผลใหญ่ กลิ่นหอม",
+    description:
+      "ส้มโอเป็นไม้ผลตระกูล Citrus มีผลขนาดใหญ่ นิยมปลูกเพื่อบริโภคและทำผลิตภัณฑ์ต่าง ๆ",
+    image: "/images/plants/pomelo.jpg",
+    tags: ["Fruit tree"],
+    references: [
+      { title: "Wikipedia - Pomelo", url: "https://en.wikipedia.org/wiki/Pomelo" }
+    ]
+  },
+  {
+    id: "guava",
+    type: "plant",
+    name_th: "ต้นฝรั่ง",
+    name_en: "Guava",
+    scientific_name: "Psidium guajava",
+    short_description: "ไม้ผลยอดนิยม ปลูกง่าย",
+    description:
+      "ฝรั่งเป็นไม้ผลเขตร้อน ปลูกง่าย ให้ผลผลิตเร็ว นิยมบริโภคสดหรือแปรรูป",
+    image: "/images/plants/guava.jpg",
+    tags: ["Fruit tree"],
+    references: [
+      { title: "Wikipedia - Guava", url: "https://en.wikipedia.org/wiki/Guava" }
+    ]
+  },
+  {
+    id: "lime",
+    type: "plant",
+    name_th: "ต้นมะนาว",
+    name_en: "Key Lime",
+    scientific_name: "Citrus aurantiifolia",
+    short_description: "ไม้ผลตระกูลส้ม ใช้ในอาหารและเครื่องดื่ม",
+    description:
+      "มะนาวเป็นพืชสกุล Citrus นิยมใช้ปรุงอาหารและเครื่องดื่ม มีรสเปรี้ยวและกลิ่นหอม",
+    image: "/images/plants/lime.jpg",
+    tags: ["Fruit tree"],
+    references: [
+      { title: "Wikipedia - Key lime", url: "https://en.wikipedia.org/wiki/Key_lime" }
+    ]
+  },
+  {
+    id: "golden-shower",
+    type: "plant",
+    name_th: "ต้นคูน",
+    name_en: "Golden Shower Tree",
+    scientific_name: "Cassia fistula",
+    short_description: "ไม้ดอกสีเหลือง เป็นไม้ประจำชาติไทย",
+    description:
+      "คูนหรือราชพฤกษ์ออกดอกสีเหลืองเป็นช่อสวยงาม นิยมปลูกเป็นไม้ประดับ",
+    image: "/images/plants/golden-shower.jpg",
+    tags: ["Ornamental"],
+    references: [
+      { title: "Wikipedia - Cassia fistula", url: "https://en.wikipedia.org/wiki/Cassia_fistula" }
+    ]
+  },
+  {
+    id: "croton",
+    type: "plant",
+    name_th: "ต้นโกศล",
+    name_en: "Croton",
+    scientific_name: "Codiaeum variegatum",
+    short_description: "ไม้ประดับใบสีสันหลากหลาย",
+    description:
+      "โกศลเป็นไม้ประดับ ใบมีสีและลวดลายหลากหลาย นิยมปลูกตกแต่งสวนและอาคาร",
+    image: "/images/plants/croton.jpg",
+    tags: ["Ornamental"],
+    references: [
+      { title: "Wikipedia - Codiaeum variegatum", url: "https://en.wikipedia.org/wiki/Codiaeum_variegatum" }
+    ]
+  },
+  {
+    id: "makok",
+    type: "plant",
+    name_th: "ต้นมะกอก",
+    name_en: "Indian Hog Plum",
+    scientific_name: "Spondias pinnata",
+    short_description: "ไม้ผลพื้นถิ่นเอเชีย ผลกินได้",
+    description:
+      "มะกอกไทยมักหมายถึง Spondias pinnata ผลกินได้ มีรสเปรี้ยว-ฝาด นำไปทำอาหาร/แปรรูปได้",
+    image: "/images/plants/makok.jpg",
+    tags: ["Fruit tree"],
+    references: [
+      { title: "Wikipedia - Spondias pinnata", url: "https://en.wikipedia.org/wiki/Spondias_pinnata" }
+    ]
+  },
+  {
+    id: "daeng-xylia",
+    type: "plant",
+    name_th: "ต้นแดง",
+    name_en: "Xylia",
+    scientific_name: "Xylia xylocarpa",
+    short_description: "ไม้เนื้อแข็ง แข็งแรงทนทาน",
+    description:
+      "ต้นแดงเป็นไม้เนื้อแข็ง มีความทนทาน นิยมใช้เป็นไม้ก่อสร้างหรือทำเครื่องมือบางชนิด",
+    image: "/images/plants/daeng.jpg",
+    tags: ["Hardwood"],
+    references: [
+      { title: "Wikipedia - Xylia xylocarpa", url: "https://en.wikipedia.org/wiki/Xylia_xylocarpa" }
+    ]
+  },
+  {
+    id: "kratom",
+    type: "plant",
+    name_th: "ต้นกะท่อม",
+    name_en: "Kratom",
+    scientific_name: "Mitragyna speciosa",
+    short_description: "พืชพื้นถิ่นเอเชียตะวันออกเฉียงใต้ (มีข้อกำกับทางกฎหมาย/การใช้)",
+    description:
+      "กะท่อมเป็นพืชในวงศ์กาแฟ (Rubiaceae) พบในเอเชียตะวันออกเฉียงใต้ มีการใช้งานหลากหลายและอาจมีข้อกำกับตามกฎหมายในแต่ละพื้นที่",
+    image: "/images/plants/kratom.jpg",
+    tags: ["Botanical"],
+    references: [
+      { title: "Wikipedia - Mitragyna speciosa", url: "https://en.wikipedia.org/wiki/Mitragyna_speciosa" }
+    ]
+  },
+  {
+    id: "flame-tree",
+    type: "plant",
+    name_th: "ต้นทองกวาว",
+    name_en: "Flame-of-the-forest",
+    scientific_name: "Butea monosperma",
+    short_description: "ไม้ดอกสีส้ม-แดงเด่น นิยมปลูกประดับ",
+    description:
+      "ทองกวาวเป็นไม้ดอกที่มีสีส้ม-แดงสดโดดเด่น ออกดอกเป็นช่อ นิยมปลูกเป็นไม้ประดับ",
+    image: "/images/plants/thongkwao.jpg",
+    tags: ["Ornamental"],
+    references: [
+      { title: "Wikipedia - Butea monosperma", url: "https://en.wikipedia.org/wiki/Butea_monosperma" }
+    ]
+  }
+];
+// src/services/firebase.ts
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAZKj00l3nUxcMWJYhiivDXJIGnR9LhvOA",
+  authDomain: "my-udomtong-farm.firebaseapp.com",
+  projectId: "my-udomtong-farm",
+  storageBucket: "my-udomtong-farm.firebasestorage.app",
+  messagingSenderId: "221289876524",
+  appId: "1:221289876524:web:ff3fcf47b346de98cfd589",
+  measurementId: "G-VM2BV9WLTE",
+};
+
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+// src/store/speciesStore.ts
+import { create } from "zustand";
+import type { Species, SpeciesType } from "../types/species";
+import { animals } from "../data/animals";
+import { plants } from "../data/plants";
+
+type MergeResult = {
+  ok: boolean;
+  error?: string;
+  totalInFile?: number;
+  added?: number;
+  skipped?: number;
+  invalid?: number;
+  countAfter?: number;
+};
+
+type SpeciesState = {
+  items: Species[];
+  updatedAt: number;
+
+  setItems: (items: Species[]) => void;
+  add: (item: Species) => void;
+  update: (type: SpeciesType, id: string, next: Species) => void;
+  remove: (type: SpeciesType, id: string) => void;
+
+  hydrate: () => void;
+  resetToSeed: () => void;
+
+  // ✅ Backup/Restore
+  exportJSON: () => string;
+  importJSON: (jsonText: string) => { ok: boolean; error?: string; count?: number };
+
+  // ✅ Merge Import (รวม ไม่ทับ)
+  mergeImportJSON: (jsonText: string) => MergeResult;
+};
+
+const STORAGE_KEY = "udomtong.speciesStore.v1";
+
+// 👇 รวม animals + plants เป็น seed เริ่มต้น
+const SEED_ITEMS: Species[] = [...animals, ...plants];
+
+function safeParse<T>(raw: string | null): T | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+function now() {
+  return Date.now();
+}
+
+function normalize(items: Species[]): Species[] {
+  return (items ?? []).map((x) => ({
+    ...x,
+    scientific_name: x.scientific_name ?? "",
+    short_description: x.short_description ?? "",
+    description: x.description ?? "",
+    tags: x.tags ?? [],
+    references: x.references ?? [],
+  }));
+}
+
+function save(items: Species[], updatedAt: number) {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      items,
+      updatedAt,
+    })
+  );
+}
+
+function load(): { items: Species[]; updatedAt: number } | null {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const parsed = safeParse<{ items: Species[]; updatedAt: number }>(raw);
+  if (!parsed?.items) return null;
+
+  return {
+    items: normalize(parsed.items),
+    updatedAt: parsed.updatedAt ?? now(),
+  };
+}
+
+function isValidSpecies(it: any): it is Species {
+  return !!(
+    it &&
+    typeof it.id === "string" &&
+    typeof it.type === "string" &&
+    typeof it.name_th === "string" &&
+    typeof it.name_en === "string" &&
+    typeof it.image === "string" &&
+    it.id.trim() &&
+    it.type.trim() &&
+    it.name_th.trim() &&
+    it.name_en.trim() &&
+    it.image.trim()
+  );
+}
+
+function extractItemsFromJSON(parsed: any): any[] | null {
+  // รองรับ 2 แบบ:
+  // 1) เป็น array ตรงๆ
+  // 2) เป็น object { items: [...] }
+  if (Array.isArray(parsed)) return parsed;
+  if (Array.isArray(parsed?.items)) return parsed.items;
+  return null;
+}
+
+function makeKey(type: string, id: string) {
+  return `${String(type).toLowerCase()}:${String(id).toLowerCase()}`;
+}
+
+export const useSpeciesStore = create<SpeciesState>((set, get) => {
+  const stored = typeof window !== "undefined" ? load() : null;
+
+  const initialItems =
+    stored?.items?.length ? stored.items : normalize(SEED_ITEMS);
+
+  const initialUpdatedAt = stored?.updatedAt ?? now();
+
+  // ถ้ายังไม่มี storage ให้เซฟ seed ลงไปเลย
+  if (typeof window !== "undefined" && !stored) {
+    save(initialItems, initialUpdatedAt);
+  }
+
+  return {
+    items: initialItems,
+    updatedAt: initialUpdatedAt,
+
+    setItems: (items) => {
+      const next = normalize(items);
+      const ts = now();
+      set({ items: next, updatedAt: ts });
+      save(next, ts);
+    },
+
+    add: (item) => {
+      const state = get();
+      const next = normalize([...state.items, item]);
+      const ts = now();
+      set({ items: next, updatedAt: ts });
+      save(next, ts);
+    },
+
+    update: (type, id, nextItem) => {
+      const state = get();
+      const next = normalize(
+        state.items.map((x) =>
+          x.type === type && x.id === id ? nextItem : x
+        )
+      );
+      const ts = now();
+      set({ items: next, updatedAt: ts });
+      save(next, ts);
+    },
+
+    remove: (type, id) => {
+      const state = get();
+      const next = normalize(
+        state.items.filter(
+          (x) => !(x.type === type && x.id === id)
+        )
+      );
+      const ts = now();
+      set({ items: next, updatedAt: ts });
+      save(next, ts);
+    },
+
+    hydrate: () => {
+      const storedNow = load();
+      if (!storedNow) return;
+      set({
+        items: storedNow.items,
+        updatedAt: storedNow.updatedAt,
+      });
+    },
+
+    resetToSeed: () => {
+      const next = normalize(SEED_ITEMS);
+      const ts = now();
+      set({ items: next, updatedAt: ts });
+      save(next, ts);
+    },
+
+    // ✅ Export/Import JSON
+    exportJSON: () => {
+      const state = get();
+      return JSON.stringify(
+        {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          items: state.items,
+        },
+        null,
+        2
+      );
+    },
+
+    importJSON: (jsonText: string) => {
+      try {
+        const parsed = JSON.parse(jsonText);
+        const items = extractItemsFromJSON(parsed);
+
+        if (!items) {
+          return { ok: false, error: "ไฟล์ JSON ไม่ถูกต้อง (ต้องเป็น array หรือมี field items)" };
+        }
+
+        const normalized = normalize(items as Species[]);
+
+        for (const it of normalized) {
+          if (!isValidSpecies(it)) {
+            return {
+              ok: false,
+              error: "ข้อมูลบางรายการขาด field จำเป็น (id/type/name_th/name_en/image)",
+            };
+          }
+        }
+
+        const ts = now();
+        set({ items: normalized, updatedAt: ts });
+        save(normalized, ts);
+
+        return { ok: true, count: normalized.length };
+      } catch (e: any) {
+        return { ok: false, error: e?.message || "JSON parse error" };
+      }
+    },
+
+    // ✅ Merge Import JSON (รวม ไม่ทับของเดิม)
+    mergeImportJSON: (jsonText: string) => {
+      try {
+        const parsed = JSON.parse(jsonText);
+        const incoming = extractItemsFromJSON(parsed);
+
+        if (!incoming) {
+          return {
+            ok: false,
+            error: "ไฟล์ JSON ไม่ถูกต้อง (ต้องเป็น array หรือมี field items)",
+          };
+        }
+
+        const state = get();
+        const existing = state.items ?? [];
+        const existingMap = new Set(existing.map((x) => makeKey(x.type, x.id)));
+
+        let added = 0;
+        let skipped = 0;
+        let invalid = 0;
+
+        const toAdd: Species[] = [];
+
+        for (const raw of incoming) {
+          const candidate = normalize([raw as Species])[0];
+
+          if (!isValidSpecies(candidate)) {
+            invalid++;
+            continue;
+          }
+
+          const key = makeKey(candidate.type, candidate.id);
+          if (existingMap.has(key)) {
+            skipped++;
+            continue;
+          }
+
+          existingMap.add(key);
+          toAdd.push(candidate);
+          added++;
+        }
+
+        // ไม่มีอะไรเพิ่มก็ไม่ต้องเซฟ
+        if (added === 0) {
+          return {
+            ok: true,
+            totalInFile: incoming.length,
+            added,
+            skipped,
+            invalid,
+            countAfter: existing.length,
+          };
+        }
+
+        const next = normalize([...existing, ...toAdd]);
+        const ts = now();
+        set({ items: next, updatedAt: ts });
+        save(next, ts);
+
+        return {
+          ok: true,
+          totalInFile: incoming.length,
+          added,
+          skipped,
+          invalid,
+          countAfter: next.length,
+        };
+      } catch (e: any) {
+        return { ok: false, error: e?.message || "JSON parse error" };
+      }
+    },
+  };
+});
+// src/store/useSpecies.ts
+import { useSpeciesStore } from "./speciesStore";
+
+export function useSpecies() {
+  const items = useSpeciesStore((s) => s.items);
+  const updatedAt = useSpeciesStore((s) => s.updatedAt);
+
+  const setItems = useSpeciesStore((s) => s.setItems);
+  const add = useSpeciesStore((s) => s.add);
+  const update = useSpeciesStore((s) => s.update);
+  const remove = useSpeciesStore((s) => s.remove);
+
+  return { items, updatedAt, setItems, add, update, remove };
+}
+export type SpeciesType = "animal" | "plant";
+
+export type Reference = {
+  title: string;
+  url: string;
+};
+
+export type Species = {
+  id: string;
+  type: SpeciesType;
+
+  name_th: string;
+  name_en: string;
+  scientific_name?: string;
+
+  short_description: string;
+  description: string;
+
+  image: string;
+  tags?: string[];
+
+  references: Reference[];
+};
+export type Role = "admin" | "user";
+
+export const ADMIN_EMAILS = ["thapananthongpak@gmail.com"].map((x) =>
+  x.toLowerCase()
+);
+
+const STORAGE_KEY = "udomtong_admin_whitelist_v1";
+
+function loadExtraAdmins(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const arr = raw ? (JSON.parse(raw) as string[]) : [];
+    return Array.isArray(arr) ? arr.map((x) => String(x).toLowerCase().trim()) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function getRoleByEmail(email?: string | null): Role {
+  if (!email) return "user";
+  const e = email.toLowerCase().trim();
+  const extra = loadExtraAdmins();
+  return ADMIN_EMAILS.includes(e) || extra.includes(e) ? "admin" : "user";
+}
