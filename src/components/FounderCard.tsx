@@ -11,7 +11,7 @@ export default function FounderCard({ variant = "full" }: FounderCardProps) {
 
   const t = {
     founderLabel: lang === "th" ? "เจ้าของและผู้ก่อตั้ง" : "Owner & Founder",
-    name: lang === "th" ? "นายธีรวุฒิ ธงภักดิ์" : "Mr. Thirawut Thongphak",
+    name: lang === "th" ? "นายธีรวุฒิ ธงภักดิ์" : "Mr. Terawut Thongpak",
     title:
       lang === "th"
         ? "รองเลขาธิการคณะกรรมการดิจิทัลเพื่อเศรษฐกิจและสังคมแห่งชาติ"
@@ -24,7 +24,7 @@ export default function FounderCard({ variant = "full" }: FounderCardProps) {
     bioFull:
       lang === "th"
         ? "นายธีรวุฒิ ธงภักดิ์ มีประสบการณ์ยาวนานในสายงานเทคโนโลยีสารสนเทศและระบบเครือข่ายภาครัฐ ก่อนพัฒนาบทบาทสู่การเป็นผู้บริหารระดับสูงที่วางนโยบายด้านดิจิทัล ครอบคลุมประเด็น AI ข้อมูลขนาดใหญ่ (Big Data) และการผลักดันสังคมดิจิทัลในระดับประเทศ นอกจากบทบาทด้านราชการแล้ว ท่านยังมีความหลงใหลในธรรมชาติและสิ่งมีชีวิตหายาก จึงก่อตั้งฟาร์มอุดมทองขึ้นเพื่อเป็นแหล่งรวบรวม ศึกษา และอนุรักษ์พันธุ์สัตว์และพืชหายาก ณ จังหวัดนครราชสีมา"
-        : "Mr. Thirawut Thongphak brings extensive experience in government IT and network systems, rising to senior leadership roles in national digital policy encompassing AI, Big Data, and digital infrastructure. Beyond his public service, his passion for nature and rare species led to the founding of Udomtong Farm — a dedicated space for collecting, studying, and conserving rare animals and plants in Nakhon Ratchasima.",
+        : "Mr. Terawut Thongpak brings extensive experience in government IT and network systems, rising to senior leadership roles in national digital policy encompassing AI, Big Data, and digital infrastructure. Beyond his public service, his passion for nature and rare species led to the founding of Udomtong Farm — a dedicated space for collecting, studying, and conserving rare animals and plants in Nakhon Ratchasima.",
     tags:
       lang === "th"
         ? ["นโยบาย AI", "รัฐบาลดิจิทัล", "Big Data", "อนุรักษ์ธรรมชาติ"]
@@ -58,9 +58,9 @@ export default function FounderCard({ variant = "full" }: FounderCardProps) {
           width: 80, height: 80, borderRadius: "50%",
           background: "var(--primary)", color: "#fff",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 36, flexShrink: 0,
+          fontSize: 28, fontWeight: 900, flexShrink: 0, letterSpacing: -1,
         }}>
-          🌿
+          ธ
         </div>
 
         {/* Text */}
@@ -98,9 +98,9 @@ export default function FounderCard({ variant = "full" }: FounderCardProps) {
           width: 88, height: 88, borderRadius: 20, flexShrink: 0,
           background: "var(--primary)", color: "#fff",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 42,
+          fontSize: 32, fontWeight: 900, letterSpacing: -1,
         }}>
-          🌿
+          ธ
         </div>
 
         <div style={{ flex: 1 }}>

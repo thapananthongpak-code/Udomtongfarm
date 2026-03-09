@@ -56,9 +56,20 @@ export default function Login() {
         if (rememberMe) localStorage.setItem("saved_email", email.trim());
         else            localStorage.removeItem("saved_email");
         localStorage.removeItem("saved_password");
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // merge กับ local profile เดิม (nickname, phone, birthDate, avatar) เพื่อไม่ให้หาย
+        const prev = JSON.parse(localStorage.getItem("user") || "{}");
+        const merged = {
+          ...data.user,
+          ...(prev.email === data.user.email ? {
+            avatar:    data.user.avatar    ?? prev.avatar,
+            nickname:  data.user.nickname  ?? prev.nickname,
+            phone:     data.user.phone     ?? prev.phone,
+            birthDate: data.user.birthDate ?? prev.birthDate,
+          } : {}),
+        };
+        localStorage.setItem("user", JSON.stringify(merged));
         window.dispatchEvent(new Event("auth-change"));
-        navigate(data.user.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
+        navigate(merged.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
       } else if (res.status === 403) {
         setVerifyMsg(t.verifyNote);
       } else {
@@ -79,19 +90,30 @@ export default function Login() {
     setGoogleLoad(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const { email: gEmail, displayName, uid } = result.user;
+      const { email: gEmail, displayName, uid, photoURL } = result.user;
       if (!gEmail) throw new Error("No email from Google");
 
       const res  = await fetch(`${API_BASE}/api/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: gEmail, name: displayName ?? gEmail, uid }),
+        body: JSON.stringify({ email: gEmail, name: displayName ?? gEmail, uid, photoURL }),
       });
       const data = await res.json();
       if (res.ok) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // merge กับ local profile เดิม เพื่อไม่ให้ข้อมูลที่แก้ไขหาย
+        const prev = JSON.parse(localStorage.getItem("user") || "{}");
+        const merged = {
+          ...data.user,
+          ...(prev.email === data.user.email ? {
+            avatar:    data.user.avatar    ?? prev.avatar,
+            nickname:  data.user.nickname  ?? prev.nickname,
+            phone:     data.user.phone     ?? prev.phone,
+            birthDate: data.user.birthDate ?? prev.birthDate,
+          } : {}),
+        };
+        localStorage.setItem("user", JSON.stringify(merged));
         window.dispatchEvent(new Event("auth-change"));
-        navigate(data.user.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
+        navigate(merged.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
       } else {
         setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
       }

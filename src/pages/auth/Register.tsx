@@ -3,6 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
 
+const EMOJI_LIST = [
+  "🐦","🦜","🦚","🦋","🐸","🐢","🌿","🌸","🌺","🌻","🍃","🌾",
+  "🐆","🦁","🐘","🦒","🐊","🦎","🌴","🌵","🍀","🌱","🐠","🦀",
+  "🐧","🦩","🦔","🐿️","🌍","⭐","🔥","💎",
+];
+
 export default function Register() {
   const navigate = useNavigate();
   const { lang } = useSettingsStore(); // 🟢
@@ -14,6 +20,8 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pdpa, setPdpa] = useState(false);
+  const [avatar, setAvatar] = useState("🌿");
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const [otpCode, setOtpCode] = useState("");
   const [step, setStep] = useState<"REGISTER" | "OTP">("REGISTER");
@@ -50,7 +58,7 @@ export default function Register() {
     try {
       const response = await fetch(`${API_BASE}/api/register`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), nickname: nickname.trim(), phone: phone.trim(), birthDate, email: email.trim(), password, pdpa })
+        body: JSON.stringify({ name: name.trim(), nickname: nickname.trim(), phone: phone.trim(), birthDate, email: email.trim(), password, pdpa, avatar })
       });
       const data = await response.json();
       if (response.ok) { setStep("OTP"); } else { setError(data.error || (lang === "th" ? "เกิดข้อผิดพลาดในการสมัครสมาชิก" : "Registration failed")); }
@@ -123,6 +131,35 @@ export default function Register() {
               <div>
                 <div style={{ marginBottom: "8px", fontWeight: 700, color: "var(--text-main)", fontSize: "0.95rem" }}>{t.passLabel}</div>
                 <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.passPlaceholder} type="password" required minLength={6} className="auth-input" />
+              </div>
+
+              {/* Avatar picker */}
+              <div>
+                <div style={{ marginBottom: "8px", fontWeight: 700, color: "var(--text-main)", fontSize: "0.95rem" }}>
+                  {lang === "th" ? "รูปโปรไฟล์เริ่มต้น" : "Default Profile Picture"}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--primary-light)", border: "2px solid var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>
+                    {avatar}
+                  </div>
+                  <button type="button" onClick={() => setShowAvatarPicker((v) => !v)}
+                    style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid var(--border-color)", background: showAvatarPicker ? "var(--primary-light)" : "var(--bg-color)", color: "var(--text-main)", fontWeight: 700, cursor: "pointer", fontSize: "0.88rem" }}>
+                    {lang === "th" ? "เลือกอีโมจิ" : "Pick Emoji"}
+                  </button>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                    {lang === "th" ? "หรือเปลี่ยนได้ภายหลังในหน้าโปรไฟล์" : "or change later in Profile"}
+                  </span>
+                </div>
+                {showAvatarPicker && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: 14, marginTop: 10, background: "var(--bg-color)", borderRadius: 12, border: "1px solid var(--border-color)" }}>
+                    {EMOJI_LIST.map((e) => (
+                      <button type="button" key={e} onClick={() => { setAvatar(e); setShowAvatarPicker(false); }}
+                        style={{ width: 42, height: 42, borderRadius: 10, border: avatar === e ? "2px solid var(--primary)" : "1px solid var(--border-color)", background: avatar === e ? "var(--primary-light)" : "var(--card-bg)", fontSize: 20, cursor: "pointer" }}>
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <label style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginTop: "10px", cursor: "pointer" }}>

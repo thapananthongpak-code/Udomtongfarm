@@ -243,15 +243,44 @@ html[data-font-size="large"] { font-size: 18px; }
 }
 
 /* ────────────────────────────────────────────────────────────
-   🖼️ Hover Zoom Image
+   🖼️ Hover Zoom Image + Shimmer Overlay
 ──────────────────────────────────────────────────────────── */
 .hover-zoom-img {
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.55s ease;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.glass-card:hover .hover-zoom-img { transform: scale(1.07); }
+.glass-card:hover .hover-zoom-img {
+  transform: scale(1.08);
+  filter: brightness(1.05) saturate(1.1);
+}
+
+/* shimmer sweep on image hover */
+.img-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.img-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255,255,255,0.18) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.0s;
+  pointer-events: none;
+}
+.img-wrap:hover::after {
+  transform: translateX(100%);
+  transition: transform 0.65s ease;
+}
+
 
 /* ────────────────────────────────────────────────────────────
    💀 Skeleton Loading Shimmer
@@ -284,6 +313,85 @@ html[data-font-size="large"] { font-size: 18px; }
   animation: spin 0.7s linear infinite;
   display: inline-block;
 }
+
+/* ────────────────────────────────────────────────────────────
+   Nav Link Hover Animation
+──────────────────────────────────────────────────────────── */
+.nav-link {
+  position: relative;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-decoration: none !important;
+  padding-bottom: 2px;
+  transition: color 0.25s ease;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link:hover { color: var(--primary-hover); }
+.nav-link:hover::after { width: 100%; }
+.nav-link.nav-active { color: var(--primary-hover); font-weight: 700; }
+.nav-link.nav-active::after { width: 100%; }
+
+/* ────────────────────────────────────────────────────────────
+   Back Button
+──────────────────────────────────────────────────────────── */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.btn-back:hover {
+  border-color: var(--primary);
+  color: var(--primary-hover);
+  background: var(--primary-light);
+}
+
+/* ────────────────────────────────────────────────────────────
+   Search Suggestions Dropdown
+──────────────────────────────────────────────────────────── */
+.search-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  overflow: hidden;
+}
+.search-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+.search-suggestion-item:hover { background: var(--primary-light); }
 
 /* ────────────────────────────────────────────────────────────
    🖱️ Custom Scrollbar
@@ -421,24 +529,7 @@ html[data-theme="dark"] .auth-input {
   -webkit-backdrop-filter: blur(14px) !important;
 }
 
-/* ────────────────────────────────────────────────────────────
-   🖱️ Cursor Glow (subtle radial highlight following mouse)
-──────────────────────────────────────────────────────────── */
-.cursor-glow {
-  position: fixed;
-  width: 340px;
-  height: 340px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(45, 106, 79, 0.10) 0%, transparent 65%);
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  z-index: 9998;
-  transition: opacity 0.4s ease;
-}
-html[data-theme="dark"] .cursor-glow {
-  background: radial-gradient(circle, rgba(82, 183, 136, 0.12) 0%, transparent 65%);
-}
-@media (pointer: coarse) { .cursor-glow { display: none; } }
+/* cursor-glow removed — using default browser cursor */
 
 /* ────────────────────────────────────────────────────────────
    🔍 Scroll-Reveal
@@ -488,7 +579,7 @@ html[data-theme="dark"] .cursor-glow {
 }
 .icon-wrap:hover::after { opacity: 0.4; transform: scale(1.15); }
 
-/* Announce card reveal */
+/* Announce card reveal + hover lift */
 .announce-card {
   opacity: 0;
   transform: translateY(24px);
@@ -498,6 +589,30 @@ html[data-theme="dark"] .cursor-glow {
 .announce-card.revealed {
   opacity: 1;
   transform: translateY(0);
+}
+.announce-card:hover .glass-card {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 16px 40px rgba(45,106,79,0.18);
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.3s ease;
+}
+
+/* Pulsing "NEW" badge */
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45,106,79,0.5); }
+  50%       { box-shadow: 0 0 0 6px rgba(45,106,79,0); }
+}
+.badge-new {
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* Float animation for stat cards */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-5px); }
+}
+.float-card:hover {
+  animation: floatY 1.5s ease-in-out infinite;
 }
 
 /* Shimmer highlight on btn-primary hover */

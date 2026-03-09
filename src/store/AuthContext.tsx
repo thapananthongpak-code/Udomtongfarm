@@ -8,6 +8,10 @@ export type CustomUser = {
   email: string;
   name: string;
   role: Role;
+  avatar?: string;    // emoji เช่น "🐦" หรือ URL รูปภาพ
+  nickname?: string;
+  phone?: string;
+  birthDate?: string;
 };
 
 type AuthState = {
