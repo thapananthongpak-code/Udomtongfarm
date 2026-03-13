@@ -9,25 +9,22 @@ export default function Home() {
   const { items, fetchAll } = useSpeciesStore();
   const { lang } = useSettingsStore();
   const appSettings = useAppSettingsStore();
-  
-  useEffect(() => { 
-    fetchAll(); 
-    appSettings.fetchSettings();
-  }, [fetchAll, appSettings]);
+  const fetchAppSettings = useAppSettingsStore((s) => s.fetchSettings);
+
+  useEffect(() => {
+    fetchAll();
+    fetchAppSettings();
+  }, [fetchAll, fetchAppSettings]);
 
   const [spotlight, setSpotlight] = useState<Species[]>([]);
   useEffect(() => {
     if (items.length === 0) {
-      if (spotlight.length !== 0) {
-         const t = setTimeout(() => setSpotlight([]), 0);
-         return () => clearTimeout(t);
-      }
+      setSpotlight([]);
       return;
     }
     const shuffled = [...items].sort(() => 0.5 - Math.random());
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSpotlight(shuffled.slice(0, 3));
-  }, [items, spotlight.length]);
+  }, [items]);
 
   const t = {
     title:          lang === "th" ? "ฟาร์มอุดมทอง" : "Udomtong Farm",
