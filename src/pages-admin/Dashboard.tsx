@@ -129,7 +129,7 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, accent, icon }: { title: string; value: any; accent?: string; icon: React.ReactNode }) {
+function StatCard({ title, value, accent, icon }: { title: string; value: string | number; accent?: string; icon: React.ReactNode }) {
   return (
     <div className="glass-card" style={{ padding: "18px 20px", borderTop: accent ? `3px solid ${accent}` : "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

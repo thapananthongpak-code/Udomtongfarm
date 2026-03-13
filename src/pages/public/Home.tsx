@@ -1,24 +1,33 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useSpeciesStore } from "../../store/speciesStore";
 import { useSettingsStore } from "../../store/settingsStore";
+import { useAppSettingsStore } from "../../store/appSettingsStore";
+import type { Species } from "../../types/species";
 
 export default function Home() {
-  const { items, fetchAll, loading } = useSpeciesStore();
+  const { items, fetchAll } = useSpeciesStore();
   const { lang } = useSettingsStore();
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  const appSettings = useAppSettingsStore();
+  
+  useEffect(() => { 
+    fetchAll(); 
+    appSettings.fetchSettings();
+  }, [fetchAll, appSettings]);
 
-  const stats = useMemo(() => {
-    const animals = items.filter((x) => x.type === "animal").length;
-    const plants = items.filter((x) => x.type === "plant").length;
-    return { total: items.length, animals, plants };
-  }, [items]);
-
-  const spotlight = useMemo(() => {
-    if (items.length === 0) return [];
+  const [spotlight, setSpotlight] = useState<Species[]>([]);
+  useEffect(() => {
+    if (items.length === 0) {
+      if (spotlight.length !== 0) {
+         const t = setTimeout(() => setSpotlight([]), 0);
+         return () => clearTimeout(t);
+      }
+      return;
+    }
     const shuffled = [...items].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 3);
-  }, [items]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSpotlight(shuffled.slice(0, 3));
+  }, [items, spotlight.length]);
 
   const t = {
     title:          lang === "th" ? "ฟาร์มอุดมทอง" : "Udomtong Farm",
@@ -48,6 +57,7 @@ export default function Home() {
     farmInfo3Desc:  lang === "th" ? "ยินดีต้อนรับผู้สนใจเข้าชมและเรียนรู้ นัดหมายล่วงหน้า" : "Welcome visitors by appointment — come learn and explore nature.",
     animalLabel:    lang === "th" ? "สัตว์" : "Animal",
     plantLabel:     lang === "th" ? "พืช" : "Plant",
+    badgeLoc:       lang === "th" ? "จ.นครราชสีมา ประเทศไทย" : "Nakhon Ratchasima, Thailand"
   };
 
   return (
@@ -55,62 +65,114 @@ export default function Home() {
 
       {/* ─── Hero ─── */}
       <section style={{
-        padding: "100px 24px 80px 24px",
+        padding: "120px 24px 100px 24px",
         textAlign: "center",
         background: "var(--gradient-hero)",
-        borderRadius: "0 0 60px 60px",
-        marginBottom: "60px",
         position: "relative",
         overflow: "hidden",
+        borderBottom: "1px solid var(--border-color)",
+        marginBottom: "80px"
       }}>
-        <div style={{ position: "absolute", top: -80, right: -80, width: 320, height: 320, borderRadius: "50%", background: "var(--primary)", opacity: 0.06, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -60, left: -60, width: 240, height: 240, borderRadius: "50%", background: "var(--accent)", opacity: 0.08, pointerEvents: "none" }} />
+        {/* Soft glowing ambient orbs */}
+        <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translate(-50%, -50%)", width: "90vw", maxWidth: 800, height: 400, background: "var(--primary)", opacity: 0.03, filter: "blur(100px)", borderRadius: "50%", pointerEvents: "none" }} />
 
         {/* Farm badge */}
-        <div className="fade-in-up" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--primary-light)", border: "1.5px solid var(--border-color)", borderRadius: 30, padding: "6px 18px", marginBottom: 24 }}>
+        <div className="fade-in-up" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--card-bg)", border: "1px solid var(--border-color)", borderRadius: 40, padding: "8px 20px", marginBottom: 32, boxShadow: "var(--shadow-sm)" }}>
           <IconLeaf size={14} />
-          <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--primary-hover)", letterSpacing: 0.5 }}>
-            {lang === "th" ? "จ.นครราชสีมา ประเทศไทย" : "Nakhon Ratchasima, Thailand"}
+          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-main)", letterSpacing: 0.5 }}>
+            {t.badgeLoc}
           </span>
         </div>
 
-        <h1 className="fade-in-up" style={{ fontSize: "clamp(3rem, 8vw, 5.5rem)", fontWeight: 900, marginBottom: 16, color: "var(--primary-hover)", letterSpacing: "-1px" }}>
+        <h1 className="fade-in-up" style={{ fontSize: "clamp(3.5rem, 8vw, 6rem)", fontWeight: 900, marginBottom: 24, color: "var(--text-main)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
           {t.title}
         </h1>
-        <div className="fade-in-up" style={{ animationDelay: "0.2s" }}>
-          <h2 style={{ fontSize: "1.4rem", color: "var(--text-main)", fontWeight: 600, marginBottom: 16 }}>{t.welcome}</h2>
-          <p style={{ fontSize: "1.05rem", color: "var(--text-muted)", maxWidth: 680, margin: "0 auto 40px auto", lineHeight: 1.85 }}>
+        <div className="fade-in-up" style={{ animationDelay: "0.15s" }}>
+          <p style={{ fontSize: "clamp(1.1rem, 3vw, 1.4rem)", color: "var(--text-muted)", maxWidth: 700, margin: "0 auto 48px auto", lineHeight: 1.6, fontWeight: 400 }}>
+            <span style={{ display: "block", color: "var(--text-main)", fontWeight: 600, marginBottom: 8 }}>{t.welcome}</span>
             {t.subtitle}
           </p>
         </div>
-        <div className="fade-in-up" style={{ animationDelay: "0.4s", display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link to="/encyclopedia" className="btn-primary" style={{ padding: "16px 36px", fontSize: "1rem", borderRadius: 16, display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <IconSearch size={18} /> {t.btnExplore}
+        <div className="fade-in-up hero-buttons" style={{ animationDelay: "0.3s", display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+          <Link to="/encyclopedia" className="btn-primary" style={{ padding: "18px 40px", fontSize: "1.05rem", borderRadius: 40, display: "inline-flex", alignItems: "center", gap: 10 }}>
+            <IconSearch size={20} /> {t.btnExplore}
           </Link>
-          <Link to="/contact" style={{ padding: "16px 32px", fontSize: "1rem", borderRadius: 16, border: "2px solid var(--primary)", color: "var(--primary-hover)", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.3s ease" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--primary-light)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+          <Link to="/contact" style={{ padding: "18px 40px", fontSize: "1.05rem", borderRadius: 40, border: "2px solid var(--border-color)", background: "var(--card-bg)", color: "var(--text-main)", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 10, transition: "all 0.3s ease", boxShadow: "var(--shadow-sm)" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--primary)"; (e.currentTarget as HTMLElement).style.color = "var(--primary)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-color)"; (e.currentTarget as HTMLElement).style.color = "var(--text-main)"; }}
           >
-            <IconPhone size={16} /> {t.btnContact}
+            <IconPhone size={18} /> {t.btnContact}
           </Link>
         </div>
       </section>
 
-      {/* ─── Farm Info Cards ─── */}
-      <div style={{ maxWidth: 1100, margin: "0 auto 64px auto", padding: "0 20px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
-          <FarmInfoCard icon={<IconStar />} title={t.farmInfo1} desc={t.farmInfo1Desc} delay="0.1s" />
-          <FarmInfoCard icon={<IconTree />} title={t.farmInfo2} desc={t.farmInfo2Desc} delay="0.2s" />
-          <FarmInfoCard icon={<IconUsers />} title={t.farmInfo3} desc={t.farmInfo3Desc} delay="0.3s" />
-        </div>
-      </div>
+      {/* ─── Promotional Banner (Clean Redesign) ─── */}
+      {appSettings.bannerItems.length > 0 && (
+        <div style={{ position: "relative", marginBottom: "100px", paddingBottom: "20px" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px" }}>
+            
+            {/* Header Area */}
+            {((lang === "th" && (appSettings.bannerTitleTh || appSettings.bannerSubtitleTh)) || 
+              (lang === "en" && (appSettings.bannerTitleEn || appSettings.bannerSubtitleEn))) && (
+              <div className="fade-in-up" style={{ textAlign: "center", marginBottom: 48, maxWidth: 800, margin: "0 auto 48px auto" }}>
+                <h2 style={{ fontSize: "clamp(2rem, 5vw, 2.8rem)", fontWeight: 900, marginBottom: 16, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
+                  {lang === "th" ? (appSettings.bannerTitleTh || "เกี่ยวกับเรา") : (appSettings.bannerTitleEn || "About Us")}
+                </h2>
+                {((lang === "th" && appSettings.bannerSubtitleTh) || (lang === "en" && appSettings.bannerSubtitleEn)) && (
+                  <p style={{ fontSize: "clamp(1.05rem, 2vw, 1.15rem)", color: "var(--text-muted)", lineHeight: 1.6, fontWeight: 500, margin: 0 }}>
+                    {lang === "th" ? appSettings.bannerSubtitleTh : appSettings.bannerSubtitleEn}
+                  </p>
+                )}
+              </div>
+            )}
 
-      {/* ─── Stats ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 24, maxWidth: 1100, margin: "0 auto 80px auto", padding: "0 20px" }}>
-        <StatCard title={t.statAnimal} value={loading ? "..." : stats.animals} unit={t.unitSpecies} icon={<IconPaw />} delay="0.5s" />
-        <StatCard title={t.statPlant}  value={loading ? "..." : stats.plants}  unit={t.unitSpecies} icon={<IconLeaf />} delay="0.6s" />
-        <StatCard title={t.statTotal}  value={loading ? "..." : stats.total}   unit={t.unitItems}   icon={<IconChart />} delay="0.7s" />
-      </div>
+            {/* Cards Area */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 32 }}>
+              {appSettings.bannerItems.map((item, idx) => (
+                <div 
+                  key={item.id} 
+                  className="glass-card fade-in-up hover-zoom"
+                  style={{ 
+                    padding: "40px 32px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    gap: "20px",
+                    animationDelay: `${idx * 0.15}s`,
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "28px",
+                    background: "var(--card-bg)"
+                  }}
+                >
+                  <div style={{ 
+                    width: 72, height: 72, 
+                    borderRadius: "24px", 
+                    background: "var(--primary-light)", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    fontSize: "2rem",
+                    color: "var(--primary)",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+                    marginBottom: "8px"
+                  }}>
+                    {item.icon || "✨"}
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: "1.35rem", fontWeight: 800, marginBottom: 12, color: "var(--text-main)", lineHeight: 1.3 }}>
+                      {lang === "th" ? item.titleTh : item.titleEn}
+                    </h3>
+                    <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", lineHeight: 1.6, margin: 0 }}>
+                      {lang === "th" ? item.descTh : item.descEn}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── ข่าวสารและประชาสัมพันธ์ ─── */}
       <div style={{ maxWidth: 1100, margin: "0 auto 80px auto", padding: "0 20px" }}>
@@ -124,9 +186,9 @@ export default function Home() {
         </div>
 
         {spotlight.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
             {spotlight.map((item, i) => (
-              <AnnouncementCard key={item.id} item={item} lang={lang} t={t} delay={i * 0.12} />
+              <AnnouncementBanner key={item.id} item={item} lang={lang} t={t} delay={i * 0.15} />
             ))}
           </div>
         )}
@@ -147,21 +209,10 @@ export default function Home() {
   );
 }
 
-// ─── Farm Info Card ───
-function FarmInfoCard({ icon, title, desc, delay }: { icon: React.ReactNode; title: string; desc: string; delay: string }) {
-  return (
-    <div className="glass-card fade-in-up" style={{ padding: "28px 24px", animationDelay: delay, display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {icon}
-      </div>
-      <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text-main)" }}>{title}</div>
-      <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.7 }}>{desc}</div>
-    </div>
-  );
-}
 
-// ─── Announcement Card ───
-function AnnouncementCard({ item, lang, t, delay }: { item: any; lang: string; t: any; delay: number }) {
+
+// ─── Announcement Banner ───
+function AnnouncementBanner({ item, lang, t, delay }: { item: Species; lang: string; t: Record<string, string>; delay: number }) {
   const ref = useRef<HTMLAnchorElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -171,29 +222,39 @@ function AnnouncementCard({ item, lang, t, delay }: { item: any; lang: string; t
     return () => obs.disconnect();
   }, []);
 
+  const title = lang === "th" ? item.name_th : item.name_en;
+  const desc = lang === "th" ? item.short_description || item.description : item.short_description_en || item.description_en;
+
   return (
-    <Link ref={ref} to={`/species/${item.type}/${item.id}`} className="announce-card" style={{ textDecoration: "none", animationDelay: `${delay}s` } as any}>
-      <div className="glass-card" style={{ overflow: "hidden", padding: 0 }}>
-        <div className="img-wrap" style={{ height: 180, position: "relative" }}>
-          <img src={item.image} alt={item.name_th} className="hover-zoom-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div className="badge-new" style={{ position: "absolute", top: 12, left: 12, background: "var(--primary)", color: "#fff", padding: "3px 10px", borderRadius: 20, fontSize: "0.72rem", fontWeight: 800, letterSpacing: 1 }}>
+    <Link ref={ref} to={`/species/${item.type}/${item.id}`} className="announce-card" style={{ textDecoration: "none", animationDelay: `${delay}s`, display: "block" }}>
+      <div className="glass-card hover-zoom" style={{ overflow: "hidden", padding: 0, display: "flex", flexDirection: "row", flexWrap: "wrap", minHeight: 320, alignItems: "stretch", boxShadow: "var(--shadow-md)" }}>
+        {/* Left: Image */}
+        <div className="img-wrap" style={{ flex: "1 1 300px", minWidth: 280, position: "relative", minHeight: 280 }}>
+          <img src={item.image} alt={title} className="hover-zoom-img" style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
+          <div className="badge-new" style={{ position: "absolute", top: 20, left: 20, background: "var(--primary)", color: "#fff", padding: "6px 16px", borderRadius: 24, fontSize: "0.85rem", fontWeight: 800, letterSpacing: 1, boxShadow: "var(--shadow-sm)" }}>
             {t.announceNew}
           </div>
-          <div style={{ position: "absolute", top: 12, right: 12, background: "rgba(0,0,0,0.45)", color: "#fff", padding: "3px 10px", borderRadius: 20, fontSize: "0.72rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
-            {item.type === "animal" ? <><IconPaw size={11} color="#fff" />{t.animalLabel}</> : <><IconLeaf size={11} color="#fff" />{t.plantLabel}</>}
+          <div style={{ position: "absolute", top: 20, right: 20, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", color: "#fff", padding: "6px 14px", borderRadius: 24, fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+            {item.type === "animal" ? <><IconPaw size={14} color="#fff" />{t.animalLabel}</> : <><IconLeaf size={14} color="#fff" />{t.plantLabel}</>}
           </div>
         </div>
-        <div style={{ padding: "18px 20px" }}>
-          <div style={{ fontWeight: 900, fontSize: "1.05rem", color: "var(--text-main)", marginBottom: 4 }}>
-            {lang === "th" ? item.name_th : item.name_en}
+        {/* Right: Content */}
+        <div style={{ flex: "2 1 400px", padding: "40px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 1, background: "var(--card-bg)" }}>
+          <div style={{ fontWeight: 900, fontSize: "clamp(1.5rem, 4vw, 2.2rem)", color: "var(--text-main)", marginBottom: 8, lineHeight: 1.2 }}>
+            {title}
           </div>
           {item.scientific_name && (
-            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", marginBottom: 10 }}>
+            <div style={{ fontSize: "1.05rem", color: "var(--text-muted)", fontStyle: "italic", marginBottom: 16 }}>
               {item.scientific_name}
             </div>
           )}
-          <div style={{ display: "inline-block", padding: "4px 12px", borderRadius: 20, background: "var(--primary-light)", color: "var(--primary-hover)", fontSize: "0.78rem", fontWeight: 700 }}>
-            {t.announceLabel}
+          {desc && (
+            <div style={{ fontSize: "1rem", color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 32 }}>
+              {desc}
+            </div>
+          )}
+          <div style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 30, background: "var(--primary-light)", border: "1px solid var(--border-color)", color: "var(--primary-hover)", fontSize: "0.95rem", fontWeight: 800, width: "fit-content", transition: "all 0.3s" }} className="banner-btn">
+            {t.announceLabel} <span style={{ fontSize: "1.2em", marginLeft: 4 }}>→</span>
           </div>
         </div>
       </div>
@@ -201,39 +262,7 @@ function AnnouncementCard({ item, lang, t, delay }: { item: any; lang: string; t
   );
 }
 
-// ─── Stat Card ───
-function StatCard({ title, value, unit, icon, delay }: { title: string; value: any; unit: string; icon: React.ReactNode; delay: string }) {
-  const [display, setDisplay] = useState(0);
 
-  useEffect(() => {
-    const target = typeof value === "number" ? value : 0;
-    if (target === 0) { setDisplay(0); return; }
-    let start = 0;
-    const duration = 1200, step = 16;
-    const increment = target / (duration / step);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= target) { setDisplay(target); clearInterval(timer); }
-      else { setDisplay(Math.floor(start)); }
-    }, step);
-    return () => clearInterval(timer);
-  }, [value]);
-
-  return (
-    <div className="glass-card fade-in-up" style={{ padding: 30, textAlign: "center", animationDelay: delay, position: "relative", overflow: "hidden" }}>
-      <div style={{ width: 56, height: 56, borderRadius: 16, margin: "0 auto 16px", background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {icon}
-      </div>
-      <div style={{ color: "var(--text-muted)", fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>
-        {title}
-      </div>
-      <div className="stat-number" style={{ fontSize: 46, fontWeight: 900, color: "var(--text-main)" }}>
-        {typeof value === "number" ? display : value}{" "}
-        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-muted)" }}>{unit}</span>
-      </div>
-    </div>
-  );
-}
 
 // ─── SVG Icons ───
 function IconSearch({ size = 20 }: { size?: number }) {
@@ -247,16 +276,4 @@ function IconPaw({ size = 20, color }: { size?: number; color?: string }) {
 }
 function IconLeaf({ size = 20, color }: { size?: number; color?: string }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color || "var(--primary-hover)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>;
-}
-function IconChart({ size = 20 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>;
-}
-function IconStar({ size = 22 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
-}
-function IconTree({ size = 22 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 22V4l-5-2-5 2v18"/><path d="M7 14H3l7-7 7 7h-4"/><path d="M7 22h10"/></svg>;
-}
-function IconUsers({ size = 22 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
 }

@@ -21,7 +21,7 @@ type SpeciesState = {
   resetToSeed: () => Promise<void>;
   exportJSON: () => string;
   importJSON: (jsonText: string) => Promise<{ ok: boolean; error?: string; count?: number }>;
-  mergeImportJSON: (jsonText: string) => Promise<any>;
+  mergeImportJSON: (jsonText: string) => Promise<{ok: boolean, count?: number, error?: string}>;
 };
 
 export const useSpeciesStore = create<SpeciesState>((set, get) => ({
@@ -36,7 +36,7 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
       if (!response.ok) throw new Error("API Offline");
       const data = await response.json();
       set({ items: data, updatedAt: Date.now(), loading: false });
-    } catch (err) {
+    } catch {
       console.warn("API Offline — using seed data fallback");
       // fallback to seed data only when store is empty
       if (get().items.length === 0) {
@@ -73,7 +73,7 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
     }
   },
 
-  remove: async (type, id) => {
+  remove: async (_type, id) => {
     try {
       await authFetch(`${API_URL}/${id}`, { method: "DELETE" });
     } finally {
@@ -95,7 +95,7 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
       }
       await get().fetchAll(); // โหลดข้อมูลใหม่หลังจากบันทึกเสร็จ
       alert("กู้คืนข้อมูลและอัปเดต Path รูปภาพลง Database สำเร็จแล้ว! ✨"); // 🟢 ปรับข้อความให้ชัดเจน
-    } catch (e) {
+    } catch {
       alert("เกิดข้อผิดพลาดในการกู้คืน");
     } finally {
       set({ loading: false });
@@ -120,9 +120,9 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
       await get().fetchAll();
       set({ loading: false });
       return { ok: true, count: incoming.length };
-    } catch (e: any) {
+    } catch (e: unknown) {
       set({ loading: false });
-      return { ok: false, error: e.message };
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
   },
 
@@ -144,9 +144,9 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
       await get().fetchAll();
       set({ loading: false });
       return { ok: true, count: newOnly.length };
-    } catch (e: any) {
+    } catch (e: unknown) {
       set({ loading: false });
-      return { ok: false, error: e.message };
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
   },
 }));

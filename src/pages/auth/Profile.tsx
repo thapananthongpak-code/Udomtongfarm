@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../store/AuthContext";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
@@ -24,6 +24,7 @@ function calcAge(birthDate: string): number | null {
 export default function Profile() {
   const { user, logout } = useAuth();
   const { lang } = useSettingsStore();
+  const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [saving, setSaving] = useState(false);
@@ -34,11 +35,29 @@ export default function Profile() {
   // Editable info state (loaded from user)
   const [editMode, setEditMode] = useState(false);
   const [editName, setEditName]       = useState(user?.name ?? "");
-  const [editNickname, setEditNickname] = useState((user as any)?.nickname ?? "");
-  const [editPhone, setEditPhone]     = useState((user as any)?.phone ?? "");
-  const [editBirth, setEditBirth]     = useState((user as any)?.birthDate ?? "");
+  const [editNickname, setEditNickname] = useState((user as {nickname?: string})?.nickname ?? "");
+  const [editPhone, setEditPhone]     = useState((user as {phone?: string})?.phone ?? "");
+  const [editBirth, setEditBirth]     = useState((user as {birthDate?: string})?.birthDate ?? "");
   const [infoSaving, setInfoSaving]   = useState(false);
   const [infoMsg, setInfoMsg]         = useState("");
+
+  // Admin → redirect to admin settings for profile management
+  useEffect(() => {
+    if (user?.role === "admin") {
+      navigate("/admin/settings", { replace: true });
+    }
+  }, [user, navigate]);
+
+  // Sync edit fields when user changes (remember last edited profile)
+  useEffect(() => {
+    if (user && !editMode) {
+      setPreview(user.avatar ?? "");
+      setEditName(user.name ?? "");
+      setEditNickname((user as {nickname?: string}).nickname ?? "");
+      setEditPhone((user as {phone?: string}).phone ?? "");
+      setEditBirth((user as {birthDate?: string}).birthDate ?? "");
+    }
+  }, [user, editMode]);
 
   const t = {
     title:       lang === "th" ? "โปรไฟล์ของฉัน" : "My Profile",
@@ -81,10 +100,18 @@ export default function Profile() {
     );
   }
 
+  function saveProfileCache(patch: { avatar?: string; name?: string; nickname?: string; phone?: string; birthDate?: string }) {
+    if (!user?.email) return;
+    const key = `uf_profile_${user.email}`;
+    const prev = JSON.parse(localStorage.getItem(key) || "{}");
+    localStorage.setItem(key, JSON.stringify({ ...prev, ...patch }));
+  }
+
   async function saveAvatar(avatarVal: string) {
     // บันทึก localStorage ทันที (optimistic)
     const updated = { ...user, avatar: avatarVal };
     localStorage.setItem("user", JSON.stringify(updated));
+    saveProfileCache({ avatar: avatarVal });
     window.dispatchEvent(new Event("auth-change"));
     setPreview(avatarVal);
 
@@ -129,21 +156,17 @@ export default function Profile() {
   async function saveInfo(e: React.FormEvent) {
     e.preventDefault();
     setInfoSaving(true); setInfoMsg("");
+    const name = editName.trim(), nickname = editNickname.trim(), phone = editPhone.trim(), birthDate = editBirth;
     try {
       const res = await fetch(`${API_BASE}/api/users/profile`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: user.email,
-          name: editName.trim(),
-          nickname: editNickname.trim(),
-          phone: editPhone.trim(),
-          birthDate: editBirth,
-        }),
+        body: JSON.stringify({ email: user!.email, name, nickname, phone, birthDate }),
       });
       // อัปเดต localStorage เสมอ
-      const updated = { ...user, name: editName.trim(), nickname: editNickname.trim(), phone: editPhone.trim(), birthDate: editBirth };
+      const updated = { ...user, name, nickname, phone, birthDate };
       localStorage.setItem("user", JSON.stringify(updated));
+      saveProfileCache({ name, nickname, phone, birthDate });
       window.dispatchEvent(new Event("auth-change"));
       setInfoMsg(res.ok ? t.successMsg : t.successMsg);
       setEditMode(false);
@@ -157,7 +180,7 @@ export default function Profile() {
 
   const isUrl = preview.startsWith("http");
   const isEmoji = preview.length <= 4 && !preview.startsWith("data:");
-  const age = calcAge(editBirth || (user as any)?.birthDate);
+  const age = calcAge(editBirth || (user as {birthDate?: string})?.birthDate || "");
 
   return (
     <div className="fade-in-up" style={{ maxWidth: 560, margin: "0 auto", padding: "40px 20px 100px" }}>
@@ -257,9 +280,9 @@ export default function Profile() {
           // View mode
           <div style={{ display: "grid", gap: 0 }}>
             <InfoRow label={t.name}  value={user.name || "-"} />
-            <InfoRow label={t.nickname} value={(user as any).nickname || "-"} />
-            <InfoRow label={t.phone}  value={(user as any).phone || "-"} />
-            <InfoRow label={t.birthDate} value={(user as any).birthDate ? new Date((user as any).birthDate).toLocaleDateString(lang === "th" ? "th-TH" : "en-GB") : "-"} />
+            <InfoRow label={t.nickname} value={(user as {nickname?: string}).nickname || "-"} />
+            <InfoRow label={t.phone}  value={(user as {phone?: string}).phone || "-"} />
+            <InfoRow label={t.birthDate} value={(user as {birthDate?: string}).birthDate ? new Date((user as {birthDate?: string}).birthDate!).toLocaleDateString(lang === "th" ? "th-TH" : "en-GB") : "-"} />
             {age !== null && (
               <InfoRow label={t.age} value={`${age} ${t.ageUnit}`} />
             )}
@@ -310,7 +333,7 @@ export default function Profile() {
               <button type="submit" disabled={infoSaving} className="btn-primary" style={{ flex: 1, padding: "11px", borderRadius: 12 }}>
                 {infoSaving ? t.saving : t.saveInfoBtn}
               </button>
-              <button type="button" onClick={() => { setEditMode(false); setEditName(user.name); setEditNickname((user as any).nickname ?? ""); setEditPhone((user as any).phone ?? ""); setEditBirth((user as any).birthDate ?? ""); }}
+              <button type="button" onClick={() => { setEditMode(false); setEditName(user.name); setEditNickname((user as {nickname?: string}).nickname ?? ""); setEditPhone((user as {phone?: string}).phone ?? ""); setEditBirth((user as {birthDate?: string}).birthDate ?? ""); }}
                 style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 700, cursor: "pointer" }}>
                 {t.cancelBtn}
               </button>

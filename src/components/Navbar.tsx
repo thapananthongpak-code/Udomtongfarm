@@ -48,14 +48,14 @@ export default function Navbar() {
       style={{
         background: "var(--card-bg)",
         borderBottom: "1px solid var(--border-color)",
-        padding: "14px 24px",
+        padding: "12px 24px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         position: "sticky",
         top: 0,
         zIndex: 100,
-        boxShadow: scrolled ? "0 4px 24px rgba(0,0,0,0.10)" : "0 2px 10px rgba(0,0,0,0.02)",
+        boxShadow: scrolled ? "var(--shadow-sm)" : "none",
         transition: "background 0.4s ease, border-color 0.4s ease, box-shadow 0.3s ease",
       }}
     >
@@ -80,7 +80,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="nav-desktop-links" style={{ display: "flex", gap: 20 }}>
+        <div className="nav-desktop-links" style={{ display: "flex", gap: 12, marginLeft: 20 }}>
           <Link to="/" className={navLinkClass("/")}>{t.home}</Link>
           <Link to="/encyclopedia" className={navLinkClass("/encyclopedia")}>{t.encyclo}</Link>
           <Link to="/contact" className={navLinkClass("/contact")}>{t.contact}</Link>
@@ -156,7 +156,7 @@ export default function Navbar() {
       {/* Mobile dropdown menu */}
       {menuOpen && (
         <div
-          className="nav-mobile-menu"
+          className="nav-mobile-menu fade-in"
           style={{
             position: "absolute",
             top: "100%",
@@ -164,24 +164,26 @@ export default function Navbar() {
             right: 0,
             background: "var(--card-bg)",
             borderBottom: "1px solid var(--border-color)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
-            padding: "16px 24px",
+            boxShadow: "var(--shadow-md)",
+            padding: "20px 24px",
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: 16,
             zIndex: 99,
           }}
         >
-          <Link to="/" onClick={() => setMenuOpen(false)} className={navLinkClass("/")} style={{ fontSize: "1rem" }}>{t.home}</Link>
-          <Link to="/encyclopedia" onClick={() => setMenuOpen(false)} className={navLinkClass("/encyclopedia")} style={{ fontSize: "1rem" }}>{t.encyclo}</Link>
-          <Link to="/contact" onClick={() => setMenuOpen(false)} className={navLinkClass("/contact")} style={{ fontSize: "1rem" }}>{t.contact}</Link>
+          <Link to="/" onClick={() => setMenuOpen(false)} className={navLinkClass("/")} style={{ fontSize: "1.05rem" }}>{t.home}</Link>
+          <Link to="/encyclopedia" onClick={() => setMenuOpen(false)} className={navLinkClass("/encyclopedia")} style={{ fontSize: "1.05rem" }}>{t.encyclo}</Link>
+          <Link to="/contact" onClick={() => setMenuOpen(false)} className={navLinkClass("/contact")} style={{ fontSize: "1.05rem" }}>{t.contact}</Link>
+
+          <div style={{ width: "100%", height: 1, background: "var(--border-color)", margin: "4px 0" }} />
 
           {/* Controls row */}
-          <div style={{ display: "flex", gap: 8, paddingTop: 4 }}>
-            <button onClick={() => setFontSize("small")} style={{ background: fontSize === "small" ? "var(--primary-light)" : "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 8, padding: "6px 12px", fontWeight: 700, cursor: "pointer" }}>A-</button>
-            <button onClick={() => setFontSize("large")} style={{ background: fontSize === "large" ? "var(--primary-light)" : "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 8, padding: "6px 12px", fontWeight: 700, cursor: "pointer" }}>A+</button>
-            <button onClick={toggleLang} style={{ background: "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 8, padding: "6px 12px", fontWeight: 800, cursor: "pointer" }}>{lang.toUpperCase()}</button>
-            <button onClick={toggleTheme} style={{ background: "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 8, padding: "6px 12px", fontSize: "1.1rem", cursor: "pointer" }}>{theme === "light" ? "🌙" : "☀️"}</button>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+            <button onClick={() => setFontSize("small")} style={{ background: fontSize === "small" ? "var(--primary-light)" : "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "8px", fontWeight: 700, cursor: "pointer" }}>A-</button>
+            <button onClick={() => setFontSize("large")} style={{ background: fontSize === "large" ? "var(--primary-light)" : "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "8px", fontWeight: 700, cursor: "pointer" }}>A+</button>
+            <button onClick={toggleLang} style={{ background: "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "8px", fontWeight: 800, cursor: "pointer" }}>{lang.toUpperCase()}</button>
+            <button onClick={toggleTheme} style={{ background: "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "8px", fontSize: "1.1rem", cursor: "pointer" }}>{theme === "light" ? "🌙" : "☀️"}</button>
           </div>
 
           {user ? (

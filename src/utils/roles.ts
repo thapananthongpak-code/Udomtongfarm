@@ -25,7 +25,7 @@ export function getCurrentUser() {
     user.role = calculatedRole;
     
     return user;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

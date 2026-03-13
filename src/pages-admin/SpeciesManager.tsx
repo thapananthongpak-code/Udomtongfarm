@@ -91,7 +91,7 @@ export default function SpeciesManager() {
         />
         <select 
           value={typeFilter} 
-          onChange={(e) => setTypeFilter(e.target.value as any)}
+          onChange={(e) => setTypeFilter(e.target.value as SpeciesType | "all")}
           style={{ padding: "0 16px", borderRadius: 12, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)" }}
         >
           <option value="all">{t.allTypes}</option>
@@ -207,13 +207,13 @@ export default function SpeciesManager() {
   );
 }
 
-function Field({ label, value, onChange, type="text", options, disabled, placeholder }: any) {
+function Field({ label, value, onChange, type="text", options, disabled, placeholder }: { label: string; value: string; onChange: (v: string) => void; type?: string; options?: Array<{v: string; l: string}>; disabled?: boolean; placeholder?: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <label style={{ fontSize: 13, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</label>
       {type === "select" ? (
         <select disabled={disabled} value={value} onChange={e => onChange(e.target.value)} style={inputStyle}>
-          {options.map((o:any)=><option key={o.v} value={o.v}>{o.l}</option>)}
+          {options?.map((o)=><option key={o.v} value={o.v}>{o.l}</option>)}
         </select>
       ) : (
         <input 

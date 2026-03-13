@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
@@ -12,6 +12,8 @@ const EMOJI_LIST = [
 export default function Register() {
   const navigate = useNavigate();
   const { lang } = useSettingsStore(); // 🟢
+
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
@@ -50,6 +52,22 @@ export default function Register() {
     loginLink: lang === "th" ? "เข้าสู่ระบบ" : "Login",
   };
 
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 500 * 1024) {
+      alert(lang === "th" ? "ขนาดรูปต้องไม่เกิน 500KB" : "Image size must be under 500KB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setAvatar(dataUrl);
+      setShowAvatarPicker(false);
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function onSubmitRegister(e: React.FormEvent) {
     e.preventDefault();
     if (!pdpa) return setError(lang === "th" ? "กรุณากดยอมรับเงื่อนไข PDPA ก่อนสมัครสมาชิก" : "Please accept the PDPA terms before registering.");
@@ -62,7 +80,7 @@ export default function Register() {
       });
       const data = await response.json();
       if (response.ok) { setStep("OTP"); } else { setError(data.error || (lang === "th" ? "เกิดข้อผิดพลาดในการสมัครสมาชิก" : "Registration failed")); }
-    } catch (err: any) {
+    } catch {
       setError(lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (โปรดตรวจสอบว่าเปิด API ทิ้งไว้หรือยัง)" : "Cannot connect to server (Is the API running?)");
     } finally { setLoading(false); }
   }
@@ -83,7 +101,7 @@ export default function Register() {
       } else {
         setError(data.error || (lang === "th" ? "รหัส OTP ไม่ถูกต้อง" : "Invalid OTP code"));
       }
-    } catch (err: any) { setError(lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" : "Cannot connect to server"); } finally { setLoading(false); }
+    } catch { setError(lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" : "Cannot connect to server"); } finally { setLoading(false); }
   }
 
   return (
@@ -138,15 +156,24 @@ export default function Register() {
                 <div style={{ marginBottom: "8px", fontWeight: 700, color: "var(--text-main)", fontSize: "0.95rem" }}>
                   {lang === "th" ? "รูปโปรไฟล์เริ่มต้น" : "Default Profile Picture"}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--primary-light)", border: "2px solid var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>
-                    {avatar}
+                <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                  <div style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--primary-light)", border: "2px solid var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0, overflow: "hidden" }}>
+                    {avatar.startsWith("data:") ? (
+                      <img src={avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      avatar
+                    )}
                   </div>
                   <button type="button" onClick={() => setShowAvatarPicker((v) => !v)}
                     style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid var(--border-color)", background: showAvatarPicker ? "var(--primary-light)" : "var(--bg-color)", color: "var(--text-main)", fontWeight: 700, cursor: "pointer", fontSize: "0.88rem" }}>
                     {lang === "th" ? "เลือกอีโมจิ" : "Pick Emoji"}
                   </button>
-                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                  <button type="button" onClick={() => fileRef.current?.click()}
+                    style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 700, cursor: "pointer", fontSize: "0.88rem" }}>
+                    {lang === "th" ? "อัปโหลดรูป" : "Upload Image"}
+                  </button>
+                  <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onFileChange} />
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginLeft: "4px" }}>
                     {lang === "th" ? "หรือเปลี่ยนได้ภายหลังในหน้าโปรไฟล์" : "or change later in Profile"}
                   </span>
                 </div>

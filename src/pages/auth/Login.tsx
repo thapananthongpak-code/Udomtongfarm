@@ -11,15 +11,22 @@ export default function Login() {
 
   const [email,      setEmail]      = useState("");
   const [password,   setPassword]   = useState("");
+  const [showPass,   setShowPass]   = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading,    setLoading]    = useState(false);
   const [googleLoad, setGoogleLoad] = useState(false);
   const [error,      setError]      = useState<string>("");
+  const [errorField, setErrorField] = useState<"email" | "password" | "both" | "">("");
   const [verifyMsg,  setVerifyMsg]  = useState<string>("");
 
   useEffect(() => {
-    const savedEmail = localStorage.getItem("saved_email");
-    if (savedEmail) { setEmail(savedEmail); setRememberMe(true); }
+    const savedEmail    = localStorage.getItem("saved_email");
+    const savedPassword = localStorage.getItem("saved_password");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+    if (savedPassword) setPassword(savedPassword);
   }, []);
 
   const t = {
@@ -28,7 +35,7 @@ export default function Login() {
     emailLabel:  lang === "th" ? "อีเมล" : "Email Address",
     passLabel:   lang === "th" ? "รหัสผ่าน" : "Password",
     forgotPass:  lang === "th" ? "ลืมรหัสผ่าน?" : "Forgot Password?",
-    rememberMe:  lang === "th" ? "จดจำอีเมลนี้" : "Remember my email",
+    rememberMe:  lang === "th" ? "จดจำอีเมลและรหัสผ่าน" : "Remember email & password",
     btnLogin:    lang === "th" ? "เข้าสู่ระบบ" : "Login",
     btnLoading:  lang === "th" ? "กำลังเข้าสู่ระบบ..." : "Logging in...",
     orDivider:   lang === "th" ? "หรือ" : "or",
@@ -41,9 +48,9 @@ export default function Login() {
   };
 
   // ─── Email/Password login ───
-  async function onSubmitEmail(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmitEmail(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError(""); setVerifyMsg("");
+    setError(""); setErrorField(""); setVerifyMsg("");
     setLoading(true);
     try {
       const res  = await fetch(`${API_BASE}/api/login`, {
@@ -53,27 +60,31 @@ export default function Login() {
       });
       const data = await res.json();
       if (res.ok) {
-        if (rememberMe) localStorage.setItem("saved_email", email.trim());
-        else            localStorage.removeItem("saved_email");
-        localStorage.removeItem("saved_password");
-        // merge กับ local profile เดิม (nickname, phone, birthDate, avatar) เพื่อไม่ให้หาย
-        const prev = JSON.parse(localStorage.getItem("user") || "{}");
+        if (rememberMe) {
+          localStorage.setItem("saved_email",    email.trim());
+          localStorage.setItem("saved_password", password);
+        } else {
+          localStorage.removeItem("saved_email");
+          localStorage.removeItem("saved_password");
+        }
+        // merge กับ profile cache ที่บันทึกแยกไว้ (ไม่โดน logout ลบ)
+        const cache = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");
         const merged = {
           ...data.user,
-          ...(prev.email === data.user.email ? {
-            avatar:    data.user.avatar    ?? prev.avatar,
-            nickname:  data.user.nickname  ?? prev.nickname,
-            phone:     data.user.phone     ?? prev.phone,
-            birthDate: data.user.birthDate ?? prev.birthDate,
-          } : {}),
+          avatar:    data.user.avatar    ?? cache.avatar,
+          nickname:  data.user.nickname  ?? cache.nickname,
+          phone:     data.user.phone     ?? cache.phone,
+          birthDate: data.user.birthDate ?? cache.birthDate,
         };
         localStorage.setItem("user", JSON.stringify(merged));
         window.dispatchEvent(new Event("auth-change"));
         navigate(merged.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
       } else if (res.status === 403) {
         setVerifyMsg(t.verifyNote);
+        setErrorField("email");
       } else {
         setError(data.error || (lang === "th" ? "เข้าสู่ระบบไม่สำเร็จ" : "Login failed"));
+        setErrorField(data.field || "");
       }
     } catch {
       setError(lang === "th"
@@ -100,16 +111,14 @@ export default function Login() {
       });
       const data = await res.json();
       if (res.ok) {
-        // merge กับ local profile เดิม เพื่อไม่ให้ข้อมูลที่แก้ไขหาย
-        const prev = JSON.parse(localStorage.getItem("user") || "{}");
+        // merge กับ profile cache ที่บันทึกแยกไว้ (ไม่โดน logout ลบ)
+        const cache = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");
         const merged = {
           ...data.user,
-          ...(prev.email === data.user.email ? {
-            avatar:    data.user.avatar    ?? prev.avatar,
-            nickname:  data.user.nickname  ?? prev.nickname,
-            phone:     data.user.phone     ?? prev.phone,
-            birthDate: data.user.birthDate ?? prev.birthDate,
-          } : {}),
+          avatar:    data.user.avatar    ?? cache.avatar,
+          nickname:  data.user.nickname  ?? cache.nickname,
+          phone:     data.user.phone     ?? cache.phone,
+          birthDate: data.user.birthDate ?? cache.birthDate,
         };
         localStorage.setItem("user", JSON.stringify(merged));
         window.dispatchEvent(new Event("auth-change"));
@@ -117,8 +126,8 @@ export default function Login() {
       } else {
         setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
       }
-    } catch (err: any) {
-      if (err?.code !== "auth/popup-closed-by-user") {
+    } catch (err: unknown) {
+      if ((err as {code?: string})?.code !== "auth/popup-closed-by-user") {
         setError(lang === "th"
           ? "Google Sign-In ล้มเหลว — กรุณาตั้งค่า Firebase ก่อน"
           : "Google Sign-In failed — please configure Firebase first");
@@ -133,7 +142,7 @@ export default function Login() {
       <div className="auth-blob blob-1" />
       <div className="auth-blob blob-2" />
 
-      <div className="auth-card fade-in-up">
+      <div className="auth-card auth-card-hover fade-in-up">
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{
@@ -179,9 +188,10 @@ export default function Login() {
           <div>
             <div style={{ marginBottom: 8, fontWeight: 700, color: "var(--text-main)", fontSize: "0.93rem" }}>{t.emailLabel}</div>
             <input
-              value={email} onChange={e => setEmail(e.target.value)}
+              value={email} onChange={e => { setEmail(e.target.value); setErrorField(""); setError(""); }}
               placeholder="name@email.com" type="email" required
               className="auth-input"
+              style={(errorField === "email" || errorField === "both") ? { borderColor: "#dc2626", boxShadow: "0 0 0 2px #fee2e2" } : {}}
             />
           </div>
 
@@ -190,11 +200,17 @@ export default function Login() {
               <span style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.93rem" }}>{t.passLabel}</span>
               <Link to="/forgot" style={{ color: "var(--primary-hover)", fontWeight: 600, fontSize: "0.88rem", textDecoration: "none" }}>{t.forgotPass}</Link>
             </div>
-            <input
-              value={password} onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••" type="password" required
-              className="auth-input"
-            />
+            <div className="input-password-wrap">
+              <input
+                value={password} onChange={e => { setPassword(e.target.value); setErrorField(""); setError(""); }}
+                placeholder="••••••••" type={showPass ? "text" : "password"} required
+                className="auth-input"
+                style={(errorField === "password" || errorField === "both") ? { borderColor: "#dc2626", boxShadow: "0 0 0 2px #fee2e2" } : {}}
+              />
+              <button type="button" className="btn-eye" onClick={() => setShowPass(v => !v)} tabIndex={-1} aria-label={showPass ? "Hide password" : "Show password"}>
+                {showPass ? <IconEyeOff /> : <IconEye />}
+              </button>
+            </div>
           </div>
 
           <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}>
@@ -252,4 +268,10 @@ function IconLeaf({ size = 24 }: { size?: number }) {
 }
 function IconMail({ size = 18 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>;
+}
+function IconEye() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>;
+}
+function IconEyeOff() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>;
 }
