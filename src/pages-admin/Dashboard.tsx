@@ -4,6 +4,11 @@ import { useSpeciesStore } from "../store/speciesStore";
 import { useSettingsStore } from "../store/settingsStore";
 import { API_BASE } from "../config/api";
 
+const VIEWS_KEY = "uf_views";
+function getViewData(): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(VIEWS_KEY) || "{}"); } catch { return {}; }
+}
+
 export default function Dashboard() {
   const { lang } = useSettingsStore();
   const { items, fetchAll } = useSpeciesStore();
@@ -15,6 +20,20 @@ export default function Dashboard() {
     fetch(`${API_BASE}/api/health`)
       .then((r) => setApiOk(r.ok))
       .catch(() => setApiOk(false));
+  }, []);
+
+  const topViewed = useMemo(() => {
+    const views = getViewData();
+    return items
+      .filter(s => views[s.id])
+      .sort((a, b) => (views[b.id] || 0) - (views[a.id] || 0))
+      .slice(0, 5)
+      .map(s => ({ ...s, views: views[s.id] || 0 }));
+  }, [items]);
+
+  const totalViews = useMemo(() => {
+    const views = getViewData();
+    return Object.values(views).reduce((a, b) => a + b, 0);
   }, []);
 
   const stats = useMemo(() => {
@@ -59,6 +78,11 @@ export default function Dashboard() {
     dbSyncDesc:    lang === "th" ? "เชื่อมต่อฐานข้อมูลเรียบร้อย" : "Database connected successfully",
     apiStatus:     lang === "th" ? "API Server" : "API Server",
     apiStatusDesc: lang === "th" ? (apiOk ? "พร้อมให้บริการ" : "ไม่สามารถเชื่อมต่อได้") : (apiOk ? "Running normally" : "Cannot connect"),
+    analyticsTitle:lang === "th" ? "สถิติการเข้าชม" : "View Analytics",
+    analyticsDesc: lang === "th" ? "ยอดเข้าชมสายพันธุ์จากผู้ใช้จริง (เก็บในเครื่อง)" : "Species page views from real users (client-side tracking)",
+    totalViewsLabel: lang === "th" ? "ยอดเข้าชมรวม" : "Total Views",
+    topViewedLabel: lang === "th" ? "สายพันธุ์ยอดนิยม" : "Most Viewed Species",
+    noViews:       lang === "th" ? "ยังไม่มีข้อมูลการเข้าชม" : "No view data yet",
   };
 
   return (
@@ -125,6 +149,44 @@ export default function Dashboard() {
           </div>
         </section>
       </div>
+
+      {/* ── Analytics section ── */}
+      <section className="glass-card" style={{ padding: 24, marginTop: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <h3 style={{ margin: 0, fontWeight: 800, color: "var(--text-main)" }}>{t.analyticsTitle}</h3>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-muted)" }}>{t.analyticsDesc}</p>
+          </div>
+          <span style={{ padding: "4px 14px", borderRadius: 20, background: "var(--primary-light)", color: "var(--primary-hover)", fontWeight: 800, fontSize: 13 }}>
+            {t.totalViewsLabel}: {totalViews}
+          </span>
+        </div>
+
+        {topViewed.length === 0 ? (
+          <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0 }}>{t.noViews}</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {topViewed.map((s, i) => {
+              const maxViews = topViewed[0].views;
+              const pct = maxViews > 0 ? (s.views / maxViews) * 100 : 0;
+              const name = lang === "th" ? s.name_th : s.name_en;
+              return (
+                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ width: 20, textAlign: "center", fontWeight: 800, fontSize: 13, color: "var(--text-muted)", flexShrink: 0 }}>{i + 1}</span>
+                  <img src={s.image} alt={name} style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-main)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
+                    <div style={{ height: 6, borderRadius: 4, background: "var(--bg-color)", marginTop: 4, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${pct}%`, background: "var(--gradient-primary)", borderRadius: 4, transition: "width 0.5s ease" }} />
+                    </div>
+                  </div>
+                  <span style={{ fontWeight: 800, fontSize: 13, color: "var(--primary-hover)", flexShrink: 0, minWidth: 32, textAlign: "right" }}>{s.views}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

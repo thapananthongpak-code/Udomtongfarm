@@ -71,7 +71,7 @@ export default function Login() {
         const cache = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");
         const merged = {
           ...data.user,
-          avatar:    data.user.avatar    ?? cache.avatar,
+          avatar:    data.user.avatar    || cache.avatar,
           nickname:  data.user.nickname  ?? cache.nickname,
           phone:     data.user.phone     ?? cache.phone,
           birthDate: data.user.birthDate ?? cache.birthDate,
@@ -115,12 +115,13 @@ export default function Login() {
         const cache = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");
         const merged = {
           ...data.user,
-          avatar:    data.user.avatar    ?? cache.avatar,
+          avatar:    data.user.avatar    || photoURL || cache.avatar,
           nickname:  data.user.nickname  ?? cache.nickname,
           phone:     data.user.phone     ?? cache.phone,
           birthDate: data.user.birthDate ?? cache.birthDate,
         };
         localStorage.setItem("user", JSON.stringify(merged));
+        sessionStorage.setItem("uf_show_greeting", "1");
         window.dispatchEvent(new Event("auth-change"));
         navigate(merged.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
       } else {

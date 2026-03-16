@@ -1,13 +1,16 @@
-import { useMemo, useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useSpeciesStore } from "../../store/speciesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import type { Species, SpeciesType } from "../../types/species";
 
 type FilterTab = "all" | SpeciesType;
+type SortMode = "default" | "az" | "za";
 
 const HISTORY_KEY = "uf_search_history";
+const FAVORITES_KEY = "uf_favorites";
 const MAX_HISTORY = 8;
+const PAGE_SIZE = 12;
 
 function getHistory(): string[] {
   try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch { return []; }
@@ -18,18 +21,32 @@ function saveHistory(q: string) {
 }
 function clearHistory() { localStorage.removeItem(HISTORY_KEY); }
 
+function getFavorites(): string[] {
+  try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]"); } catch { return []; }
+}
+
 export default function Encyclopedia() {
   const { items, fetchAll, loading } = useSpeciesStore();
   const { lang } = useSettingsStore();
-  const [tab, setTab] = useState<FilterTab>("all");
-  const [query, setQuery] = useState("");
-  const [inputValue, setInputValue] = useState("");
+  const location = useLocation();
+  const _initState = (location.state ?? {}) as { q?: string; type?: FilterTab };
+  const [tab, setTab] = useState<FilterTab>(_initState.type || "all");
+  const [query, setQuery] = useState(_initState.q || "");
+  const [inputValue, setInputValue] = useState(_initState.q || "");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [history, setHistory] = useState<string[]>(getHistory());
+  const [sortMode, setSortMode] = useState<SortMode>("az");
+  const [page, setPage] = useState(1);
+  const [favorites, setFavorites] = useState<string[]>(getFavorites);
+  const [activeTag, setActiveTag] = useState<string>("");
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Reset page on filter/search change
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setPage(1); }, [tab, query, sortMode, activeTag]);
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -40,6 +57,16 @@ export default function Encyclopedia() {
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  const toggleFavorite = useCallback((id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setFavorites(prev => {
+      const next = prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id];
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+      return next;
+    });
   }, []);
 
   const t = {
@@ -60,6 +87,14 @@ export default function Encyclopedia() {
     animalLabel:       lang === "th" ? "สัตว์" : "Animal",
     plantLabel:        lang === "th" ? "พืช" : "Plant",
     backHome:          lang === "th" ? "กลับหน้าแรก" : "Back to Home",
+    sortLabel:         lang === "th" ? "เรียงลำดับ" : "Sort",
+    sortAZ:            lang === "th" ? "ก-ฮ (A-Z)" : "A–Z",
+    sortZA:            lang === "th" ? "ฮ-ก (Z-A)" : "Z–A",
+    sortDefault:       lang === "th" ? "ค่าเริ่มต้น" : "Default",
+    viewDetails:       lang === "th" ? "ดูรายละเอียด →" : "View Details →",
+    prev:              lang === "th" ? "ก่อนหน้า" : "Prev",
+    next:              lang === "th" ? "ถัดไป" : "Next",
+    page:              lang === "th" ? "หน้า" : "Page",
   };
 
   const counts = useMemo(() => ({
@@ -67,6 +102,12 @@ export default function Encyclopedia() {
     animal: items.filter((x) => x.type === "animal").length,
     plant: items.filter((x) => x.type === "plant").length,
   }), [items]);
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach(x => (x.tags ?? []).forEach(t => set.add(t)));
+    return Array.from(set).sort();
+  }, [items]);
 
   const filteredSpecies = useMemo(() => {
     let list: Species[] = items;
@@ -80,8 +121,19 @@ export default function Encyclopedia() {
         return th.includes(q) || en.includes(q) || sci.includes(q);
       });
     }
-    return [...list].sort((a, b) => (a.name_en || "").localeCompare(b.name_en || ""));
-  }, [items, tab, query]);
+    if (activeTag) {
+      list = list.filter(x => (x.tags ?? []).includes(activeTag));
+    }
+    if (sortMode === "az") {
+      list = [...list].sort((a, b) => (lang === "th" ? a.name_th : a.name_en || "").localeCompare(lang === "th" ? b.name_th : b.name_en || ""));
+    } else if (sortMode === "za") {
+      list = [...list].sort((a, b) => (lang === "th" ? b.name_th : b.name_en || "").localeCompare(lang === "th" ? a.name_th : a.name_en || ""));
+    }
+    return list;
+  }, [items, tab, query, sortMode, lang, activeTag]);
+
+  const totalPages = Math.ceil(filteredSpecies.length / PAGE_SIZE);
+  const pagedSpecies = filteredSpecies.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function commitSearch(val: string) {
     const trimmed = val.trim();
@@ -115,7 +167,6 @@ export default function Encyclopedia() {
 
       {/* Header */}
       <header style={{ padding: "80px 24px 48px", textAlign: "center", background: "linear-gradient(180deg, var(--primary-light) 0%, var(--bg-color) 100%)", borderRadius: "0 0 50px 50px", marginBottom: "48px" }}>
-        {/* Back button */}
         <div style={{ marginBottom: 20, textAlign: "left", maxWidth: 1000, margin: "0 auto 20px" }}>
           <Link to="/" className="btn-back" style={{ display: "inline-flex" }}>
             <IconArrowLeft size={16} /> {t.backHome}
@@ -177,25 +228,63 @@ export default function Encyclopedia() {
             )}
           </div>
 
-          {/* Filter pills */}
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
-            <FilterPill active={tab === "all"}    onClick={() => setTab("all")}    label={t.all}     count={counts.all}    />
-            <FilterPill active={tab === "animal"} onClick={() => setTab("animal")} label={t.animals} count={counts.animal} icon={<IconPaw size={14} color={tab === "animal" ? "#fff" : undefined} />} />
-            <FilterPill active={tab === "plant"}  onClick={() => setTab("plant")}  label={t.plants}  count={counts.plant}  icon={<IconLeaf size={14} color={tab === "plant" ? "#fff" : undefined} />} />
+          {/* Filter pills + Sort */}
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <FilterPill active={tab === "all"}    onClick={() => setTab("all")}    label={t.all}     count={counts.all}    />
+              <FilterPill active={tab === "animal"} onClick={() => setTab("animal")} label={t.animals} count={counts.animal} icon={<IconPaw size={14} color={tab === "animal" ? "#fff" : undefined} />} />
+              <FilterPill active={tab === "plant"}  onClick={() => setTab("plant")}  label={t.plants}  count={counts.plant}  icon={<IconLeaf size={14} color={tab === "plant" ? "#fff" : undefined} />} />
+            </div>
+            <select
+              className="sort-select"
+              value={sortMode}
+              onChange={e => setSortMode(e.target.value as SortMode)}
+            >
+              <option value="default">{t.sortDefault}</option>
+              <option value="az">{t.sortAZ}</option>
+              <option value="za">{t.sortZA}</option>
+            </select>
           </div>
+
+          {/* Tag filter */}
+          {allTags.length > 0 && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", flexShrink: 0 }}>
+                🏷️ {lang === "th" ? "หมวดหมู่:" : "Tags:"}
+              </span>
+              {activeTag && (
+                <button onClick={() => setActiveTag("")} style={{ padding: "4px 12px", borderRadius: 20, border: "1.5px solid var(--primary)", background: "var(--primary)", color: "#fff", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                  #{activeTag} ✕
+                </button>
+              )}
+              {allTags.filter(t => t !== activeTag).map(tag => (
+                <button key={tag} onClick={() => setActiveTag(tag)} style={{ padding: "4px 12px", borderRadius: 20, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-muted)", fontWeight: 600, fontSize: "0.78rem", cursor: "pointer", transition: "all 0.15s" }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--primary)"; (e.currentTarget as HTMLElement).style.color = "var(--primary-hover)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-color)"; (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Grid */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-        <div style={{ marginBottom: "20px", color: "var(--text-muted)", fontWeight: 600, fontSize: "0.9rem" }}>
-          {t.showing} <strong style={{ color: "var(--text-main)" }}>{filteredSpecies.length}</strong> {t.of} {counts[tab === "all" ? "all" : tab]} {t.unit}
+        <div style={{ marginBottom: "20px", color: "var(--text-muted)", fontWeight: 600, fontSize: "0.9rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <span>{t.showing} <strong style={{ color: "var(--text-main)" }}>{filteredSpecies.length}</strong> {t.of} {counts[tab === "all" ? "all" : tab]} {t.unit}</span>
+          {favorites.length > 0 && (
+            <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#f87171", fontWeight: 700 }}>
+              <IconHeart size={14} filled /> {favorites.length} {lang === "th" ? "รายการที่บันทึก" : "saved"}
+            </span>
+          )}
         </div>
 
         {loading ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="glass-card" style={{ padding: 16, overflow: "hidden" }}>
+              <div key={i} className="glass-card" style={{ padding: 16, overflow: "hidden", height: 360 }}>
                 <div className="skeleton" style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 16 }} />
                 <div className="skeleton" style={{ width: "40%", height: 20, marginBottom: 10 }} />
                 <div className="skeleton" style={{ width: "80%", height: 24, marginBottom: 8 }} />
@@ -203,43 +292,63 @@ export default function Encyclopedia() {
               </div>
             ))}
           </div>
-        ) : filteredSpecies.length > 0 ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
-            {filteredSpecies.map((sp, idx) => (
-              <Link
-                to={`/species/${sp.type}/${sp.id}`}
-                key={`${sp.type}-${sp.id}`}
-                className="glass-card fade-in-up"
-                style={{ padding: "16px", textDecoration: "none", animationDelay: `${0.05 * (idx % 10)}s` }}
-              >
-                <div style={{ width: "100%", height: "200px", borderRadius: "12px", overflow: "hidden", marginBottom: "16px" }}>
-                  <img src={sp.image} alt="" className="hover-zoom-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                </div>
+        ) : pagedSpecies.length > 0 ? (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+              {pagedSpecies.map((sp, idx) => (
+                <SpeciesCard
+                  key={`${sp.type}-${sp.id}`}
+                  sp={sp}
+                  lang={lang}
+                  t={t}
+                  idx={idx}
+                  isFav={favorites.includes(sp.id)}
+                  onToggleFav={toggleFavorite}
+                />
+              ))}
+            </div>
 
-                <span style={{ background: sp.type === "animal" ? "var(--primary-light)" : "#fef3c7", color: sp.type === "animal" ? "var(--primary-hover)" : "#d97706", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 5 }}>
-                  {sp.type === "animal"
-                    ? <><IconPaw size={12} />{t.animalLabel}</>
-                    : <><IconLeaf size={12} color="#d97706" />{t.plantLabel}</>}
-                </span>
-
-                <h3 style={{ marginTop: "12px", marginBottom: "4px", fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.3 }}>
-                  {lang === "th" ? sp.name_th : sp.name_en}
-                </h3>
-                {sp.name_en && lang === "th" && (
-                  <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "4px", fontWeight: 500 }}>
-                    {sp.name_en}
-                  </p>
-                )}
-                <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", fontStyle: "italic", marginBottom: "16px" }}>
-                  {sp.scientific_name}
-                </p>
-
-                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 4, color: "var(--primary-hover)", fontWeight: 700, fontSize: "0.88rem" }}>
-                  {t.readMore} <IconArrowRight size={14} />
-                </div>
-              </Link>
-            ))}
-          </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  className="page-btn"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  ← {t.prev}
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                  .reduce<(number | "...")[]>((acc, p, i, arr) => {
+                    if (i > 0 && p - (arr[i-1] as number) > 1) acc.push("...");
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, i) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${i}`} style={{ padding: "0 4px", color: "var(--text-muted)" }}>…</span>
+                    ) : (
+                      <button
+                        key={p}
+                        className={`page-btn${page === p ? " active" : ""}`}
+                        onClick={() => setPage(p as number)}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )
+                }
+                <button
+                  className="page-btn"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  {t.next} →
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div style={{ textAlign: "center", padding: "80px 20px", color: "var(--text-muted)" }}>
             <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--primary-light)", margin: "0 auto 20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -251,6 +360,82 @@ export default function Encyclopedia() {
         )}
       </div>
     </div>
+  );
+}
+
+// ─── Species Card (Flip) ───
+function SpeciesCard({ sp, lang, t, idx, isFav, onToggleFav }: {
+  sp: Species;
+  lang: string;
+  t: Record<string, string>;
+  idx: number;
+  isFav: boolean;
+  onToggleFav: (id: string, e: React.MouseEvent) => void;
+}) {
+  const name = lang === "th" ? sp.name_th : sp.name_en;
+  const shortDesc = lang === "th" ? sp.short_description : sp.short_description_en || sp.short_description;
+
+  return (
+    <Link
+      to={`/species/${sp.type}/${sp.id}`}
+      className="species-flip-card fade-in-up"
+      style={{ textDecoration: "none", display: "block", height: 360, animationDelay: `${0.05 * (idx % 10)}s` }}
+    >
+      <div className="species-flip-inner" style={{ height: "100%" }}>
+        {/* Front */}
+        <div className="species-flip-front glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column" }}>
+          <div style={{ width: "100%", height: "200px", borderRadius: "12px", overflow: "hidden", marginBottom: "16px", flexShrink: 0 }}>
+            <img src={sp.image} alt="" className="hover-zoom-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ background: sp.type === "animal" ? "var(--primary-light)" : "#fef3c7", color: sp.type === "animal" ? "var(--primary-hover)" : "#d97706", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 5 }}>
+              {sp.type === "animal"
+                ? <><IconPaw size={12} />{t.animalLabel}</>
+                : <><IconLeaf size={12} color="#d97706" />{t.plantLabel}</>}
+            </span>
+            <button
+              className={`btn-fav${isFav ? " active" : ""}`}
+              onClick={(e) => onToggleFav(sp.id, e)}
+              aria-label="Toggle favorite"
+            >
+              <IconHeart size={16} filled={isFav} />
+            </button>
+          </div>
+
+          <h3 style={{ margin: "0 0 4px 0", fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.3 }}>
+            {name}
+          </h3>
+          {sp.name_en && lang === "th" && (
+            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "4px", fontWeight: 500, margin: "0 0 4px 0" }}>
+              {sp.name_en}
+            </p>
+          )}
+          <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", fontStyle: "italic", margin: 0 }}>
+            {sp.scientific_name}
+          </p>
+        </div>
+
+        {/* Back */}
+        <div className="species-flip-back">
+          <div style={{ fontSize: "2.5rem", lineHeight: 1 }}>
+            {sp.type === "animal" ? "🐾" : "🌿"}
+          </div>
+          <div>
+            <h3 style={{ margin: "0 0 10px 0", fontSize: "1.15rem", fontWeight: 800, color: "var(--text-main)" }}>{name}</h3>
+            {sp.scientific_name && (
+              <p style={{ margin: "0 0 12px 0", fontSize: "0.82rem", fontStyle: "italic", color: "var(--text-muted)" }}>{sp.scientific_name}</p>
+            )}
+            <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
+              {shortDesc || (lang === "th" ? "แตะเพื่อดูรายละเอียด" : "Tap to view details")}
+            </p>
+          </div>
+          <div style={{ marginTop: 8, padding: "10px 24px", borderRadius: 24, background: "var(--primary)", color: "#fff", fontWeight: 800, fontSize: "0.9rem" }}>
+            {t.viewDetails}
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 }
 
@@ -280,12 +465,12 @@ function IconLeaf({ size = 14, color }: { size?: number; color?: string }) {
 function IconArrowLeft({ size = 16 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
 }
-function IconArrowRight({ size = 14 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
-}
 function IconX({ size = 16 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
 }
 function IconClock({ size = 14 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+}
+function IconHeart({ size = 16, filled = false }: { size?: number; filled?: boolean }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? "#f87171" : "none"} stroke={filled ? "#f87171" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>;
 }

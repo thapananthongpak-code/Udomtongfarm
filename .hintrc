@@ -1,0 +1,10 @@
+{
+  "hints": {
+    "no-inline-styles": 0,
+    "axe/name-role-value": 0,
+    "axe/label": 0,
+    "typescript-config/strict": 0,
+    "typescript-config/consistent-casing": 0,
+    "typescript-config/is-valid": 0
+  }
+}

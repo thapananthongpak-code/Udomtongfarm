@@ -1,0 +1,25 @@
+{
+  "name": "ฟาร์มอุดมทอง - Nature Encyclopedia",
+  "short_name": "UdomtongFarm",
+  "description": "สารานุกรมธรรมชาติ ฟาร์มอุดมทอง — Conservation & Nature Encyclopedia",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f9f6",
+  "theme_color": "#2b5740",
+  "orientation": "portrait-primary",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "nature", "reference"],
+  "shortcuts": [
+    { "name": "สารานุกรม", "short_name": "Encyclopedia", "url": "/encyclopedia" },
+    { "name": "แกลเลอรี",  "short_name": "Gallery",      "url": "/gallery" }
+  ]
+}

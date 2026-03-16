@@ -7,6 +7,7 @@ import { authFetch } from "../utils/authFetch";
 import { ADMIN_EMAILS } from "../config/admin";
 import { FOUNDER_KEY, FOUNDER_DEFAULTS, getFounderData, type FounderData } from "../utils/founder";
 import { useAppSettingsStore } from "../store/appSettingsStore";
+import { useGalleryStore } from "../store/galleryStore";
 
 const EMOJI_LIST = [
   "🐦","🦜","🦚","🦋","🐸","🐢","🌿","🌸","🌺","🌻","🍃","🌾",
@@ -56,7 +57,7 @@ export default function AdminSettings() {
   const [pwLogs,   setPwLogs]   = useState<{ id: number; email: string; changed_at: string }[]>([]);
   
   // Tab state
-  const [activeTab, setActiveTab] = useState<"profile" | "users" | "logs" | "settings">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "users" | "logs" | "settings" | "gallery">("profile");
 
   // Site settings
   const saved = getSiteSettings();
@@ -80,6 +81,18 @@ export default function AdminSettings() {
   const importJSON  = useSpeciesStore((s) => s.importJSON);
   const mergeImportJSON = useSpeciesStore((s) => s.mergeImportJSON);
   const resetToSeed = useSpeciesStore((s) => s.resetToSeed);
+
+  // ── Gallery state ──
+  const galleryItems   = useGalleryStore((s) => s.items);
+  const addGalleryItem = useGalleryStore((s) => s.addItem);
+  const removeGalleryItem = useGalleryStore((s) => s.removeItem);
+  const galleryImgRef  = useRef<HTMLInputElement | null>(null);
+  const [galTitleTh, setGalTitleTh] = useState("");
+  const [galTitleEn, setGalTitleEn] = useState("");
+  const [galCategory, setGalCategory] = useState<"animal" | "plant" | "other">("other");
+  const [galImgPreview, setGalImgPreview] = useState("");
+  const [galUrlInput, setGalUrlInput] = useState("");
+  const [galAddMode, setGalAddMode] = useState<"url" | "upload">("url");
 
   const fileRestoreRef = useRef<HTMLInputElement | null>(null);
   const fileMergeRef   = useRef<HTMLInputElement | null>(null);
@@ -480,12 +493,13 @@ export default function AdminSettings() {
         {[
           { id: "profile", label: lang === "th" ? "โปรไฟล์ของฉัน" : "My Profile", icon: <IconUser /> },
           { id: "users", label: lang === "th" ? "จัดการผู้ใช้งาน" : "Manage Users", icon: <IconShield /> },
+          { id: "gallery", label: lang === "th" ? "จัดการแกลเลอรี" : "Gallery", icon: <IconImage /> },
           { id: "logs", label: lang === "th" ? "ประวัติการเข้าใช้งาน" : "Activity Logs", icon: <IconHistory /> },
           { id: "settings", label: lang === "th" ? "ตั้งค่าระบบ" : "System Settings", icon: <IconGlobe /> },
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as "profile" | "users" | "logs" | "settings")}
+            onClick={() => setActiveTab(tab.id as "profile" | "users" | "gallery" | "logs" | "settings")}
             className={`admin-tab-btn${activeTab === tab.id ? " active" : ""}`}
             style={{
               display: "flex", alignItems: "center", gap: 8,
@@ -775,6 +789,122 @@ export default function AdminSettings() {
           </form>
         )}
       </Section>
+      </div>
+      )}
+
+      {/* ── Tab: Gallery ── */}
+      {activeTab === "gallery" && (
+      <div className="fade-in-up">
+        <Section title={lang === "th" ? "เพิ่มรูปภาพในแกลเลอรี" : "Add Gallery Image"} icon={<IconImage />}>
+          {/* Mode switch */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            {(["url", "upload"] as const).map(m => (
+              <button key={m} onClick={() => { setGalAddMode(m); setGalImgPreview(""); setGalUrlInput(""); }}
+                style={{ ...ghostBtn, background: galAddMode === m ? "var(--primary-light)" : "var(--card-bg)", color: galAddMode === m ? "var(--primary-hover)" : "var(--text-muted)", border: `1px solid ${galAddMode === m ? "var(--primary)" : "var(--border-color)"}` }}>
+                {m === "url" ? (lang === "th" ? "ใส่ URL รูป" : "Image URL") : (lang === "th" ? "อัปโหลดรูป" : "Upload File")}
+              </button>
+            ))}
+          </div>
+
+          {galAddMode === "url" ? (
+            <div style={{ marginBottom: 16 }}>
+              <label style={profileLabelStyle}>{lang === "th" ? "URL รูปภาพ" : "Image URL"}</label>
+              <div style={{ display: "flex", gap: 10 }}>
+                <input value={galUrlInput} onChange={e => { setGalUrlInput(e.target.value); setGalImgPreview(e.target.value); }}
+                  placeholder="https://example.com/image.jpg" style={{ ...profileInputStyle, flex: 1 }} />
+              </div>
+            </div>
+          ) : (
+            <div style={{ marginBottom: 16 }}>
+              <button onClick={() => galleryImgRef.current?.click()} style={ghostBtn}>
+                <IconUpload /> {lang === "th" ? "เลือกรูปภาพ" : "Choose Image"}
+              </button>
+              <input ref={galleryImgRef} type="file" accept="image/*" style={{ display: "none" }}
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 1024 * 1024) { alert(lang === "th" ? "รูปต้องไม่เกิน 1MB" : "Image must be under 1MB"); return; }
+                  const reader = new FileReader();
+                  reader.onload = ev => setGalImgPreview(ev.target?.result as string);
+                  reader.readAsDataURL(file);
+                  e.currentTarget.value = "";
+                }} />
+            </div>
+          )}
+
+          {/* Preview */}
+          {galImgPreview && (
+            <div style={{ marginBottom: 16 }}>
+              <img src={galImgPreview} alt="preview"
+                style={{ width: 180, height: 120, objectFit: "cover", borderRadius: 10, border: "1px solid var(--border-color)" }}
+                onError={() => setGalImgPreview("")} />
+            </div>
+          )}
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+            <div>
+              <label style={profileLabelStyle}>{lang === "th" ? "ชื่อภาพ (ไทย)" : "Title (TH)"}</label>
+              <input value={galTitleTh} onChange={e => setGalTitleTh(e.target.value)} style={profileInputStyle} placeholder="ชื่อภาพ" />
+            </div>
+            <div>
+              <label style={profileLabelStyle}>{lang === "th" ? "ชื่อภาพ (อังกฤษ)" : "Title (EN)"}</label>
+              <input value={galTitleEn} onChange={e => setGalTitleEn(e.target.value)} style={profileInputStyle} placeholder="Image title" />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={profileLabelStyle}>{lang === "th" ? "หมวดหมู่" : "Category"}</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {(["animal", "plant", "other"] as const).map(c => (
+                <button key={c} onClick={() => setGalCategory(c)}
+                  style={{ ...ghostBtn, background: galCategory === c ? "var(--primary)" : "var(--card-bg)", color: galCategory === c ? "#fff" : "var(--text-muted)", border: `1px solid ${galCategory === c ? "var(--primary)" : "var(--border-color)"}` }}>
+                  {c === "animal" ? "🐾 " : c === "plant" ? "🌿 " : "🖼️ "}
+                  {c === "animal" ? (lang === "th" ? "สัตว์" : "Animal") : c === "plant" ? (lang === "th" ? "พืช" : "Plant") : (lang === "th" ? "ทั่วไป" : "General")}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            className="btn-primary"
+            disabled={!galImgPreview}
+            onClick={() => {
+              if (!galImgPreview) return;
+              addGalleryItem({ image: galImgPreview, titleTh: galTitleTh || (lang === "th" ? "ภาพฟาร์ม" : "Farm Photo"), titleEn: galTitleEn || "Farm Photo", category: galCategory });
+              setGalImgPreview(""); setGalUrlInput(""); setGalTitleTh(""); setGalTitleEn(""); setGalCategory("other");
+            }}
+            style={{ padding: "11px 28px", borderRadius: 12, opacity: !galImgPreview ? 0.5 : 1 }}>
+            + {lang === "th" ? "เพิ่มรูปในแกลเลอรี" : "Add to Gallery"}
+          </button>
+        </Section>
+
+        <Section title={lang === "th" ? `รูปในแกลเลอรีทั้งหมด (${galleryItems.length})` : `Gallery Images (${galleryItems.length})`} icon={<IconImage />}>
+          {galleryItems.length === 0 ? (
+            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{lang === "th" ? "ยังไม่มีรูปในแกลเลอรี" : "No gallery images yet"}</p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 14 }}>
+              {galleryItems.map(item => (
+                <div key={item.id} style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border-color)", background: "var(--card-bg)" }}>
+                  <img src={item.image} alt={item.titleTh} style={{ width: "100%", height: 120, objectFit: "cover", display: "block" }} />
+                  <div style={{ padding: "8px 10px" }}>
+                    <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text-main)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {lang === "th" ? item.titleTh : item.titleEn}
+                    </div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2 }}>
+                      {item.category === "animal" ? "🐾" : item.category === "plant" ? "🌿" : "🖼️"} {item.category}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { if (confirm(lang === "th" ? "ลบรูปนี้ออกจากแกลเลอรี?" : "Remove this image from gallery?")) removeGalleryItem(item.id); }}
+                    style={{ position: "absolute", top: 6, right: 6, width: 26, height: 26, borderRadius: "50%", background: "#dc2626", border: "none", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}
+                    title={lang === "th" ? "ลบรูปนี้" : "Delete"}>
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
       </div>
       )}
 
@@ -1198,6 +1328,7 @@ function IconMerge()   { return <svg width="14" height="14" viewBox="0 0 24 24" 
 function IconUser()    { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>; }
 function IconFarm()    { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>; }
 function IconStar()    { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>; }
+function IconImage()   { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>; }
 
 // ── Admin Profile Helpers ──
 function AdminInfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {

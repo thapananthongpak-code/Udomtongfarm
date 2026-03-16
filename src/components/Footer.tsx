@@ -15,7 +15,7 @@ export default function Footer() {
     login: lang === "th" ? "เข้าสู่ระบบ" : "Login",
     contact: lang === "th" ? "ติดต่อเรา" : "Contact",
     address: lang === "th" ? "ที่อยู่" : "Address",
-    addressText: lang === "th" ? "ฟาร์มอุดมทอง จ.นครราชสีมา" : "Udomtong Farm, Nakhon Ratchasima",
+    addressText: lang === "th" ? "ฟาร์มอุดมทอง จ.ชัยภูมิ" : "Udomtong Farm, Chaiyaphum",
     rights: lang === "th" ? "สงวนลิขสิทธิ์" : "All rights reserved",
   };
 

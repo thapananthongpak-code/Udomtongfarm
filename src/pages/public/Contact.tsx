@@ -25,7 +25,7 @@ export default function Contact() {
     facebookNote:   lang === "th" ? "ติดตามข่าวสารและอัปเดตล่าสุด" : "Follow for latest news and updates",
     facebookBtn:    lang === "th" ? "เปิด Facebook" : "Open Facebook",
     locationLabel:  lang === "th" ? "ที่ตั้งฟาร์ม" : "Farm Location",
-    locationText:   lang === "th" ? "ฟาร์มอุดมทอง จ.นครราชสีมา" : "Udomtong Farm, Nakhon Ratchasima",
+    locationText:   lang === "th" ? "ฟาร์มอุดมทอง จ.ชัยภูมิ" : "Udomtong Farm, Chaiyaphum",
     openMap:        lang === "th" ? "เปิดใน Google Maps" : "Open in Google Maps",
     howToReach:     lang === "th" ? "วิธีการเดินทาง" : "How to Reach Us",
     directions:     lang === "th"

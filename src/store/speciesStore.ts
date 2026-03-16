@@ -37,7 +37,7 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
       const data = await response.json();
       set({ items: data, updatedAt: Date.now(), loading: false });
     } catch {
-      console.warn("API Offline — using seed data fallback");
+      if (import.meta.env.DEV) console.warn("API Offline — using seed data fallback");
       // fallback to seed data only when store is empty
       if (get().items.length === 0) {
         set({ items: SEED_ITEMS, updatedAt: Date.now(), loading: false });
