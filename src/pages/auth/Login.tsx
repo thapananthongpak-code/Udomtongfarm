@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithRedirect, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
 import { auth, googleProvider } from "../../config/firebase";
@@ -125,17 +125,20 @@ export default function Login() {
     }
   }
 
-  // ─── Google Sign-In (redirect) ───
+  // ─── Google Sign-In (popup) ───
   async function onGoogleLogin() {
     setError(""); setVerifyMsg("");
     setGoogleLoad(true);
     try {
-      await signInWithRedirect(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
+      // result handled by onAuthStateChanged
     } catch (err: unknown) {
       console.error("[Google Sign-In Error]", err);
-      setError(lang === "th"
-        ? "Google Sign-In ล้มเหลว — กรุณาตั้งค่า Firebase ก่อน"
-        : "Google Sign-In failed — please configure Firebase first");
+      if ((err as {code?: string})?.code !== "auth/popup-closed-by-user") {
+        setError(lang === "th"
+          ? "Google Sign-In ล้มเหลว"
+          : "Google Sign-In failed");
+      }
       setGoogleLoad(false);
     }
   }
