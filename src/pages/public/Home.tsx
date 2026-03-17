@@ -6,23 +6,6 @@ import { useAppSettingsStore } from "../../store/appSettingsStore";
 import type { Species } from "../../types/species";
 import { RECENTLY_VIEWED_KEY } from "./SpeciesPage";
 
-// ─── CountUp ────────────────────────────────────────────────
-function CountUp({ to, duration }: { to: number; duration: number }) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    const start = Date.now();
-    const tick = () => {
-      const elapsed = Date.now() - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * to));
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [to, duration]);
-  return <>{count}</>;
-}
-
 // ─── Typewriter ─────────────────────────────────────────────
 function Typewriter({ text, delay = 800, speed = 22 }: { text: string; delay?: number; speed?: number }) {
   const [displayed, setDisplayed] = useState("");
@@ -116,15 +99,6 @@ export default function Home() {
   }, [items]);
 
   const [quickSearch, setQuickSearch] = useState("");
-  const [statsVisible, setStatsVisible] = useState(false);
-  const statsRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = statsRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setStatsVisible(true); obs.disconnect(); } }, { threshold: 0.3 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
 
   function handleQuickSearch(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -132,10 +106,6 @@ export default function Home() {
     navigate("/encyclopedia", q ? { state: { q } } : undefined);
     setQuickSearch("");
   }
-
-  const animalCount = items.filter((x) => x.type === "animal").length;
-  const plantCount  = items.filter((x) => x.type === "plant").length;
-  const availCount  = items.filter((x) => x.available !== false).length;
 
   const t = {
     badgeLoc:      lang === "th" ? "จ.ชัยภูมิ ประเทศไทย" : "Chaiyaphum, Thailand",
@@ -183,13 +153,11 @@ export default function Home() {
       </div>
 
       {/* ════════════════════════════════════════
-          HERO — split layout
+          HERO — centered
       ════════════════════════════════════════ */}
-      <section ref={heroRef} className="home-hero">
-        {/* Cursor orb */}
+      <section ref={heroRef} className="home-hero" style={{ textAlign: "center" }}>
         <div className="cursor-orb" style={{ left: `${orbPos.x}%`, top: `${orbPos.y}%` }} />
 
-        {/* Particles */}
         {PARTICLES.map((p, i) => (
           <div key={i} className="particle" style={{
             position: "absolute", left: p.left, top: p.top,
@@ -199,65 +167,47 @@ export default function Home() {
           }} />
         ))}
 
-        <div className="home-hero-inner">
-
-          {/* ── Left: text ── */}
-          <div className="home-hero-left">
-            <div className="fade-in-up home-hero-badge">
-              <IconLeaf size={13} />
-              <span>{t.badgeLoc}</span>
-            </div>
-
-            <h1 className="fade-in-up home-hero-title" style={{ animationDelay: "0.1s" }}>
-              {t.title}
-            </h1>
-            <p className="fade-in-up home-hero-sub-label" style={{ animationDelay: "0.18s" }}>
-              {t.welcome}
-            </p>
-            <p className="fade-in-up home-hero-subtitle" style={{ animationDelay: "0.25s" }}>
-              <Typewriter key={t.subtitle} text={t.subtitle} delay={700} speed={20} />
-            </p>
-
-            {/* Search bar */}
-            <form onSubmit={handleQuickSearch} className="fade-in-up" style={{ animationDelay: "0.35s", marginBottom: 28 }}>
-              <div className="home-search-bar">
-                <IconSearch size={17} />
-                <input
-                  value={quickSearch}
-                  onChange={e => setQuickSearch(e.target.value)}
-                  placeholder={t.searchPlaceholder}
-                  className="home-search-input"
-                />
-                <button type="submit" className="btn-primary home-search-btn">
-                  <IconSearch size={15} />
-                </button>
-              </div>
-            </form>
-
-            {/* CTA buttons */}
-            <div className="fade-in-up home-hero-btns" style={{ animationDelay: "0.45s" }}>
-              <Link to="/encyclopedia" className="btn-primary" style={{ padding: "15px 34px", fontSize: "1rem", borderRadius: 40, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <IconSearch size={18} /> {t.btnExplore}
-              </Link>
-              <Link to="/contact" className="home-btn-outline">
-                <IconPhone size={16} /> {t.btnContact}
-              </Link>
-            </div>
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 800, margin: "0 auto" }}>
+          <div className="fade-in-up home-hero-badge" style={{ margin: "0 auto 24px", width: "fit-content" }}>
+            <IconLeaf size={13} />
+            <span>{t.badgeLoc}</span>
           </div>
 
-          {/* ── Right: SOTD floating card ── */}
-          <div className="home-hero-right fade-in-up" style={{ animationDelay: "0.2s" }}>
-            {todaySpecies ? (
-              <SotdHeroCard species={todaySpecies} lang={lang} t={t} />
-            ) : loading ? (
-              <div className="home-sotd-skeleton">
-                <div className="skeleton" style={{ height: "100%", borderRadius: 24 }} />
-              </div>
-            ) : null}
+          <h1 className="fade-in-up home-hero-title" style={{ animationDelay: "0.1s" }}>
+            {t.title}
+          </h1>
+          <p className="fade-in-up home-hero-sub-label" style={{ animationDelay: "0.18s" }}>
+            {t.welcome}
+          </p>
+          <p className="fade-in-up home-hero-subtitle" style={{ animationDelay: "0.25s", margin: "0 auto 28px" }}>
+            <Typewriter key={t.subtitle} text={t.subtitle} delay={700} speed={20} />
+          </p>
+
+          <form onSubmit={handleQuickSearch} className="fade-in-up" style={{ animationDelay: "0.35s", marginBottom: 28, display: "flex", justifyContent: "center" }}>
+            <div className="home-search-bar" style={{ maxWidth: 480, width: "100%" }}>
+              <IconSearch size={17} />
+              <input
+                value={quickSearch}
+                onChange={e => setQuickSearch(e.target.value)}
+                placeholder={t.searchPlaceholder}
+                className="home-search-input"
+              />
+              <button type="submit" className="btn-primary home-search-btn">
+                <IconSearch size={15} />
+              </button>
+            </div>
+          </form>
+
+          <div className="fade-in-up home-hero-btns" style={{ animationDelay: "0.45s", justifyContent: "center" }}>
+            <Link to="/encyclopedia" className="btn-primary" style={{ padding: "15px 34px", fontSize: "1rem", borderRadius: 40, display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <IconSearch size={18} /> {t.btnExplore}
+            </Link>
+            <Link to="/contact" className="home-btn-outline">
+              <IconPhone size={16} /> {t.btnContact}
+            </Link>
           </div>
         </div>
 
-        {/* Wave divider */}
         <div className="hero-wave">
           <svg viewBox="0 0 1440 72" preserveAspectRatio="none" style={{ width: "100%", height: 72, display: "block" }}>
             <path className="wave-fill" d="M0,36 C320,72 640,0 960,36 C1120,54 1280,18 1440,36 L1440,72 L0,72 Z" />
@@ -267,29 +217,13 @@ export default function Home() {
       </section>
 
       {/* ════════════════════════════════════════
-          STATS BENTO
+          SOTD
       ════════════════════════════════════════ */}
-      <div className="home-container">
-        <div ref={statsRef} className="home-stats-bento">
-          {[
-            { icon: "🌿", value: items.length,  label: t.statTotal,  accent: "var(--primary)" },
-            { icon: "🐾", value: animalCount,   label: t.statAnimal, accent: "#f59e0b" },
-            { icon: "🌱", value: plantCount,    label: t.statPlant,  accent: "#10b981" },
-            { icon: "🏷️", value: availCount,   label: t.statAvail,  accent: "#6366f1" },
-          ].map((s, i) => (
-            <div key={i} className="home-stat-card fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
-              <div className="home-stat-icon" style={{ background: `${s.accent}18`, color: s.accent }}>
-                {s.icon}
-              </div>
-              <div className="home-stat-num" style={{ color: s.accent }}>
-                {statsVisible ? <CountUp to={s.value} duration={1000 + i * 200} /> : 0}
-                <span className="home-stat-plus">+</span>
-              </div>
-              <div className="home-stat-label">{s.label}</div>
-            </div>
-          ))}
+      {items.length > 0 && todaySpecies && (
+        <div className="home-container home-section">
+          <SotdHeroCard species={todaySpecies} lang={lang} t={t} />
         </div>
-      </div>
+      )}
 
       {/* ════════════════════════════════════════
           SPOTLIGHT GRID
@@ -323,35 +257,6 @@ export default function Home() {
             ))}
           </div>
         )}
-      </section>
-
-      {/* ════════════════════════════════════════
-          FARM VALUES
-      ════════════════════════════════════════ */}
-      <section className="home-values-section">
-        <div className="home-container">
-          <div className="home-section-head" style={{ justifyContent: "center", textAlign: "center", marginBottom: 40 }}>
-            <div>
-              <div className="home-section-label">🌳 {lang === "th" ? "ปรัชญาของเรา" : "Our Philosophy"}</div>
-              <h2 className="home-section-title">{t.valTitle}</h2>
-            </div>
-          </div>
-          <div className="home-values-grid">
-            {[
-              { icon: "🦋", title: t.val1, desc: t.val1Desc, color: "#10b981" },
-              { icon: "🌾", title: t.val2, desc: t.val2Desc, color: "#f59e0b" },
-              { icon: "🏡", title: t.val3, desc: t.val3Desc, color: "#6366f1" },
-            ].map((v, i) => (
-              <div key={i} className="home-value-card fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
-                <div className="home-value-icon" style={{ background: `${v.color}18`, border: `1.5px solid ${v.color}30` }}>
-                  <span style={{ fontSize: "2rem" }}>{v.icon}</span>
-                </div>
-                <h3 className="home-value-title">{v.title}</h3>
-                <p className="home-value-desc">{v.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* ════════════════════════════════════════
