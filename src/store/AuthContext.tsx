@@ -1,6 +1,7 @@
 // src/store/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser, type Role } from "../utils/roles";
+import { auth } from "../config/firebase";
 
 // 1. สร้าง Type สำหรับ User ของระบบเราเอง (แทน User ของ Firebase)
 export type CustomUser = {
@@ -52,9 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 2. ฟังก์ชัน Logout ของระบบเรา
   function logout() {
-    localStorage.removeItem("user"); // ลบข้อมูลออกจากเครื่อง
-    setUser(null); // ล้างค่าใน State
-    window.dispatchEvent(new Event("auth-change")); // สั่งให้ทุกหน้าเว็บรู้ว่า "ออกระบบแล้วนะ!"
+    localStorage.removeItem("user");
+    setUser(null);
+    auth.signOut().catch(() => {});
+    window.dispatchEvent(new Event("auth-change"));
   }
 
   const value: AuthState = { user, role, loading, logout };
