@@ -128,6 +128,7 @@ export default function Login() {
         setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
       }
     } catch (err: unknown) {
+      console.error("[Google Sign-In Error]", err);
       if ((err as {code?: string})?.code !== "auth/popup-closed-by-user") {
         setError(lang === "th"
           ? "Google Sign-In ล้มเหลว — กรุณาตั้งค่า Firebase ก่อน"
