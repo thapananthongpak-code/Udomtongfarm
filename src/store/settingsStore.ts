@@ -11,7 +11,7 @@ type SettingsState = {
 
 // ดึงค่าเก่าจากเครื่องผู้ใช้ ถ้าไม่มีให้ใช้ค่าเริ่มต้น
 const getSavedTheme = () => (localStorage.getItem("theme") as "light" | "dark") || "light";
-const getSavedLang = () => (localStorage.getItem("lang") as "th" | "en") || "th";
+const getSavedLang = () => (localStorage.getItem("lang") as "th" | "en") || "en";
 const getSavedFontSize = () => (localStorage.getItem("fontSize") as "small" | "medium" | "large") || "medium";
 
 export const useSettingsStore = create<SettingsState>((set) => {

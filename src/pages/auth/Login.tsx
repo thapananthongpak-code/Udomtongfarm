@@ -133,7 +133,6 @@ export default function Login() {
       await signInWithPopup(auth, googleProvider);
       // result handled by onAuthStateChanged
     } catch (err: unknown) {
-      console.error("[Google Sign-In Error]", err);
       if ((err as {code?: string})?.code !== "auth/popup-closed-by-user") {
         setError(lang === "th"
           ? "Google Sign-In ล้มเหลว"

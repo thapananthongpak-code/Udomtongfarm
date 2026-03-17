@@ -53,7 +53,7 @@ function LoginGreeting() {
   if (!visible || !user) return null;
 
   const g = getTimeGreeting(lang);
-  const name = user.nickname || user.name || (lang === "th" ? "ผู้ใช้งาน" : "User");
+  const name = user.nickname || user.name || "User";
   const isUrl   = typeof user.avatar === "string" && user.avatar.startsWith("http");
   const isEmoji = typeof user.avatar === "string" && !user.avatar.startsWith("http") && user.avatar.trim().length > 0;
 
@@ -150,8 +150,8 @@ function SplashScreen() {
     <div className="splash-screen">
       <div className="splash-content fade-in-up">
         <div className="splash-icon">🌿</div>
-        <div className="splash-title">ฟาร์มอุดมทอง</div>
-        <div className="splash-sub">Udomtong Farm · Nature Encyclopedia</div>
+        <div className="splash-title">Udomtong Farm</div>
+        <div className="splash-sub">Nature Encyclopedia</div>
         <div className="spinner" style={{ marginTop: 28 }} />
       </div>
     </div>

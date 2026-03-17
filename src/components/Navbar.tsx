@@ -134,43 +134,35 @@ contact:    lang === "th" ? "ติดต่อเรา"  : "Contact",
       </div>
 
       {/* Right: Controls + Auth (desktop) */}
-      <div className="nav-desktop-links" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="nav-desktop-links" style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {/* Control panel */}
-        <div style={{ display: "flex", background: "var(--bg-color)", padding: "4px", borderRadius: "12px", gap: "4px", border: "1px solid var(--border-color)" }}>
-          <button onClick={() => setFontSize("small")} style={{ background: fontSize === "small" ? "var(--primary-light)" : "transparent", color: "var(--text-main)", border: "none", borderRadius: "8px", padding: "4px 10px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>A-</button>
-          <button onClick={() => setFontSize("large")} style={{ background: fontSize === "large" ? "var(--primary-light)" : "transparent", color: "var(--text-main)", border: "none", borderRadius: "8px", padding: "4px 10px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>A+</button>
-          <div style={{ width: "1px", background: "var(--border-color)", margin: "4px" }} />
-          <button onClick={toggleLang} style={{ background: "transparent", color: "var(--text-main)", border: "none", padding: "4px 10px", fontWeight: 800, cursor: "pointer" }}>{lang.toUpperCase()}</button>
-          <button onClick={toggleTheme} style={{ background: "transparent", color: "var(--text-main)", border: "none", padding: "4px 10px", fontSize: "1.1rem", cursor: "pointer" }}>
+        <div style={{ display: "flex", background: "var(--bg-color)", padding: "3px", borderRadius: "10px", gap: "2px", border: "1px solid var(--border-color)" }}>
+          <button onClick={() => setFontSize("small")} title="Small text" style={{ background: fontSize === "small" ? "var(--primary-light)" : "transparent", color: "var(--text-main)", border: "none", borderRadius: "7px", padding: "3px 8px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", transition: "all 0.2s" }}>A-</button>
+          <button onClick={() => setFontSize("large")} title="Large text" style={{ background: fontSize === "large" ? "var(--primary-light)" : "transparent", color: "var(--text-main)", border: "none", borderRadius: "7px", padding: "3px 8px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", transition: "all 0.2s" }}>A+</button>
+          <div style={{ width: "1px", background: "var(--border-color)", margin: "3px 1px" }} />
+          <button onClick={toggleLang} title="Toggle language" style={{ background: "transparent", color: "var(--text-main)", border: "none", padding: "3px 7px", fontWeight: 800, fontSize: "0.75rem", cursor: "pointer", letterSpacing: "0.05em" }}>{lang.toUpperCase()}</button>
+          <button onClick={toggleTheme} title={theme === "light" ? "Dark mode" : "Light mode"} style={{ background: "transparent", color: "var(--text-main)", border: "none", padding: "3px 7px", fontSize: "1rem", cursor: "pointer" }}>
             {theme === "light" ? "🌙" : "☀️"}
           </button>
         </div>
 
         {user ? (
           <>
-            {/* Avatar + email + role */}
-            <Link to="/profile" style={{ textDecoration: "none", flexShrink: 0, display: "flex", alignItems: "center", gap: 10, padding: "4px 10px", borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--bg-color)" }}>
-              <AvatarBubble avatar={user.avatar} name={user.name} role={role} />
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {user.email}
-                </span>
-                <span style={{ fontSize: 10, fontWeight: 800, padding: "1px 8px", borderRadius: 20, background: role === "admin" ? "#fee2e2" : "var(--primary-light)", color: role === "admin" ? "#991b1b" : "var(--primary-hover)" }}>
-                  {role === "admin" ? t.adminBadge : t.memberBadge}
-                </span>
-              </div>
-            </Link>
             {role === "admin" && (
-              <Link to="/admin" style={{ color: "var(--text-muted)", fontWeight: 600, textDecoration: "none", fontSize: "0.9rem" }}>{t.sysSettings}</Link>
+              <Link to="/admin" style={{ color: "var(--text-muted)", fontWeight: 600, textDecoration: "none", fontSize: "0.82rem", whiteSpace: "nowrap" }}>{t.sysSettings}</Link>
             )}
-            <button onClick={onLogout} style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)", cursor: "pointer", fontWeight: 600, fontSize: 14, transition: "all 0.2s ease" }}>
-              {t.logoutBtn}
+            {/* Avatar only — tooltip shows name + role */}
+            <Link to="/profile" title={`${user.nickname || user.name} · ${role === "admin" ? t.adminBadge : t.memberBadge}`} style={{ textDecoration: "none", flexShrink: 0, position: "relative" }}>
+              <AvatarBubble avatar={user.avatar} name={user.name} role={role} />
+            </Link>
+            <button onClick={onLogout} title={t.logoutBtn} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 8, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600, transition: "all 0.2s ease" }}>
+              <IconLogout />
             </button>
           </>
         ) : (
           <>
-            <Link to="/login" style={{ color: "var(--text-main)", fontWeight: 600, textDecoration: "none" }}>{t.loginBtn}</Link>
-            <Link to="/register" style={{ background: "var(--primary)", color: "white", padding: "8px 16px", borderRadius: 10, fontWeight: 600, textDecoration: "none", transition: "all 0.2s ease" }}>
+            <Link to="/login" style={{ color: "var(--text-main)", fontWeight: 600, textDecoration: "none", fontSize: "0.9rem" }}>{t.loginBtn}</Link>
+            <Link to="/register" style={{ background: "var(--primary)", color: "white", padding: "6px 14px", borderRadius: 8, fontWeight: 600, textDecoration: "none", fontSize: "0.9rem", transition: "all 0.2s ease" }}>
               {t.regBtn}
             </Link>
           </>
@@ -270,6 +262,16 @@ function AvatarBubble({ avatar, name, role }: { avatar?: string; name: string; r
         : <span>{name?.[0]?.toUpperCase() ?? "U"}</span>
       }
     </div>
+  );
+}
+
+function IconLogout() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
   );
 }
 

@@ -225,7 +225,7 @@ export default function AdminSettings() {
       const res = await authFetch(ADMINS_URL);
       const data = await res.json();
       setAdminsList(data);
-    } catch { console.error("Error loading admins"); }
+    } catch { /* silently ignore admin list fetch errors */ }
   }
 
   async function addEmail() {
