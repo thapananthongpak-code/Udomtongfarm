@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
 import { auth, googleProvider } from "../../config/firebase";
@@ -27,6 +27,39 @@ export default function Login() {
       setRememberMe(true);
     }
     if (savedPassword) setPassword(savedPassword);
+  }, []);
+
+  // Handle Google redirect result
+  useEffect(() => {
+    setGoogleLoad(true);
+    getRedirectResult(auth).then(async (result) => {
+      if (!result) { setGoogleLoad(false); return; }
+      const { email: gEmail, displayName, uid, photoURL } = result.user;
+      if (!gEmail) { setGoogleLoad(false); return; }
+      try {
+        const res  = await fetch(`${API_BASE}/api/google-login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: gEmail, name: displayName ?? gEmail, uid, photoURL }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const cache  = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");
+          const merged = { ...data.user, avatar: data.user.avatar || photoURL || cache.avatar, nickname: data.user.nickname ?? cache.nickname, phone: data.user.phone ?? cache.phone, birthDate: data.user.birthDate ?? cache.birthDate };
+          localStorage.setItem("user", JSON.stringify(merged));
+          sessionStorage.setItem("uf_show_greeting", "1");
+          window.dispatchEvent(new Event("auth-change"));
+          navigate(merged.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
+        } else {
+          setError(data.error || "Google Sign-In failed");
+        }
+      } catch { setError("Cannot connect to server"); }
+      finally { setGoogleLoad(false); }
+    }).catch((err) => {
+      console.error("[Google Redirect Error]", err);
+      setGoogleLoad(false);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const t = {
@@ -95,46 +128,17 @@ export default function Login() {
     }
   }
 
-  // ─── Google Sign-In ───
+  // ─── Google Sign-In (redirect) ───
   async function onGoogleLogin() {
     setError(""); setVerifyMsg("");
     setGoogleLoad(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const { email: gEmail, displayName, uid, photoURL } = result.user;
-      if (!gEmail) throw new Error("No email from Google");
-
-      const res  = await fetch(`${API_BASE}/api/google-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: gEmail, name: displayName ?? gEmail, uid, photoURL }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        // merge กับ profile cache ที่บันทึกแยกไว้ (ไม่โดน logout ลบ)
-        const cache = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");
-        const merged = {
-          ...data.user,
-          avatar:    data.user.avatar    || photoURL || cache.avatar,
-          nickname:  data.user.nickname  ?? cache.nickname,
-          phone:     data.user.phone     ?? cache.phone,
-          birthDate: data.user.birthDate ?? cache.birthDate,
-        };
-        localStorage.setItem("user", JSON.stringify(merged));
-        sessionStorage.setItem("uf_show_greeting", "1");
-        window.dispatchEvent(new Event("auth-change"));
-        navigate(merged.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
-      } else {
-        setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
-      }
+      await signInWithRedirect(auth, googleProvider);
     } catch (err: unknown) {
       console.error("[Google Sign-In Error]", err);
-      if ((err as {code?: string})?.code !== "auth/popup-closed-by-user") {
-        setError(lang === "th"
-          ? "Google Sign-In ล้มเหลว — กรุณาตั้งค่า Firebase ก่อน"
-          : "Google Sign-In failed — please configure Firebase first");
-      }
-    } finally {
+      setError(lang === "th"
+        ? "Google Sign-In ล้มเหลว — กรุณาตั้งค่า Firebase ก่อน"
+        : "Google Sign-In failed — please configure Firebase first");
       setGoogleLoad(false);
     }
   }
