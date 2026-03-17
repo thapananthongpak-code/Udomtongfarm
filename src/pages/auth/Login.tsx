@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithRedirect, getRedirectResult } from "firebase/auth";
+import { signInWithRedirect, onAuthStateChanged } from "firebase/auth";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
 import { auth, googleProvider } from "../../config/firebase";
@@ -29,13 +29,12 @@ export default function Login() {
     if (savedPassword) setPassword(savedPassword);
   }, []);
 
-  // Handle Google redirect result
+  // Handle Google Sign-In result via onAuthStateChanged
   useEffect(() => {
-    setGoogleLoad(true);
-    getRedirectResult(auth).then(async (result) => {
-      if (!result) { setGoogleLoad(false); return; }
-      const { email: gEmail, displayName, uid, photoURL } = result.user;
-      if (!gEmail) { setGoogleLoad(false); return; }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser?.email) return;
+      const { email: gEmail, displayName, uid, photoURL } = firebaseUser;
+      setGoogleLoad(true);
       try {
         const res  = await fetch(`${API_BASE}/api/google-login`, {
           method: "POST",
@@ -55,10 +54,8 @@ export default function Login() {
         }
       } catch { setError("Cannot connect to server"); }
       finally { setGoogleLoad(false); }
-    }).catch((err) => {
-      console.error("[Google Redirect Error]", err);
-      setGoogleLoad(false);
     });
+    return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
