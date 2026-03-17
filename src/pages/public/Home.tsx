@@ -4,6 +4,7 @@ import { useSpeciesStore } from "../../store/speciesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useAppSettingsStore } from "../../store/appSettingsStore";
 import type { Species } from "../../types/species";
+import { RECENTLY_VIEWED_KEY } from "./SpeciesPage";
 
 // ─── Species of the Day ──────────────────────────────────────
 function SpeciesOfTheDay({ items, lang }: { items: Species[]; lang: string }) {
@@ -475,6 +476,9 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── Recently Viewed ── */}
+      <RecentlyViewed items={items} lang={lang} />
+
       {/* ── Back to Top Button ── */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -501,6 +505,68 @@ export default function Home() {
 }
 
 
+
+// ─── Recently Viewed ─────────────────────────────────────────
+function RecentlyViewed({ items, lang }: { items: Species[]; lang: string }) {
+  const [viewed, setViewed] = useState<{ id: string; type: string }[]>([]);
+
+  useEffect(() => {
+    try {
+      setViewed(JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY) || "[]"));
+    } catch { /* ignore */ }
+  }, []);
+
+  const recentSpecies = viewed
+    .map((v) => items.find((x) => x.id === v.id && x.type === v.type))
+    .filter((x): x is Species => !!x)
+    .slice(0, 6);
+
+  if (recentSpecies.length === 0) return null;
+
+  return (
+    <section style={{ maxWidth: 1100, margin: "0 auto 60px", padding: "0 24px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
+        <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--text-main)", margin: 0 }}>
+          🕐 {lang === "th" ? "ดูล่าสุด" : "Recently Viewed"}
+        </h2>
+        <button
+          onClick={() => { localStorage.removeItem(RECENTLY_VIEWED_KEY); setViewed([]); }}
+          style={{ fontSize: "0.8rem", color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+        >
+          {lang === "th" ? "ล้าง" : "Clear"}
+        </button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 16 }}>
+        {recentSpecies.map((sp) => (
+          <Link
+            key={sp.id}
+            to={`/species/${sp.type}/${sp.id}`}
+            style={{ textDecoration: "none" }}
+          >
+            <div className="glass-card" style={{ padding: 0, overflow: "hidden", transition: "transform 0.2s ease" }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = "translateY(0)"}
+            >
+              <img
+                src={sp.image}
+                alt={lang === "th" ? sp.name_th : sp.name_en}
+                style={{ width: "100%", height: 110, objectFit: "cover", display: "block" }}
+              />
+              <div style={{ padding: "10px 12px" }}>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-main)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {lang === "th" ? sp.name_th : sp.name_en}
+                </div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2 }}>
+                  {sp.type === "animal" ? (lang === "th" ? "🐾 สัตว์" : "🐾 Animal") : (lang === "th" ? "🌿 พืช" : "🌿 Plant")}
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 // ─── Announcement Banner (with diagonal ribbon) ───
 function AnnouncementBanner({ item, lang, t, delay }: { item: Species; lang: string; t: Record<string, string>; delay: number }) {

@@ -37,16 +37,25 @@ function QRModal({ url, onClose, lang }: { url: string; onClose: () => void; lan
   );
 }
 
-const FAVORITES_KEY = "uf_favorites";
-const VIEWS_KEY     = "uf_views";
+const FAVORITES_KEY      = "uf_favorites";
+const VIEWS_KEY          = "uf_views";
+export const RECENTLY_VIEWED_KEY = "uf_recently_viewed";
+const MAX_RECENTLY_VIEWED = 10;
+
 function getFavorites(): string[] {
   try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]"); } catch { return []; }
 }
-function trackView(id: string) {
+function trackView(id: string, type: string) {
   try {
     const raw = JSON.parse(localStorage.getItem(VIEWS_KEY) || "{}");
     raw[id] = (raw[id] || 0) + 1;
     localStorage.setItem(VIEWS_KEY, JSON.stringify(raw));
+  } catch { /* ignore */ }
+  try {
+    const prev: { id: string; type: string }[] = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY) || "[]");
+    const filtered = prev.filter((x) => x.id !== id);
+    filtered.unshift({ id, type });
+    localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(filtered.slice(0, MAX_RECENTLY_VIEWED)));
   } catch { /* ignore */ }
 }
 
@@ -62,10 +71,10 @@ export default function SpeciesPage() {
     if (items.length === 0) fetchAll();
   }, [items.length, fetchAll]);
 
-  // Track view count when species loads
+  // Track view count + recently viewed when species loads
   useEffect(() => {
-    if (id) trackView(id);
-  }, [id]);
+    if (id && type) trackView(id, type);
+  }, [id, type]);
 
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [favorites, setFavorites] = useState<string[]>(getFavorites);

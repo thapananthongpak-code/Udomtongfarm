@@ -3,6 +3,8 @@ import { RouterProvider } from "react-router-dom";
 import { router } from "./app/router";
 import { useAuth } from "./store/AuthContext";
 import { useSettingsStore } from "./store/settingsStore";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { ToastProvider } from "./components/Toast";
 
 const GREETING_KEY = "uf_show_greeting";
 
@@ -137,11 +139,13 @@ export default function App() {
 
   if (splash) return <SplashScreen />;
   return (
-    <>
-      <CustomCursor />
-      <RouterProvider router={router} />
-      <LoginGreeting />
-    </>
+    <ErrorBoundary>
+      <ToastProvider>
+        <CustomCursor />
+        <RouterProvider router={router} />
+        <LoginGreeting />
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

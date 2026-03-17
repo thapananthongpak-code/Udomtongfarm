@@ -19,14 +19,14 @@ export default function Login() {
   const [errorField, setErrorField] = useState<"email" | "password" | "both" | "">("");
   const [verifyMsg,  setVerifyMsg]  = useState<string>("");
 
+  // Remove any previously stored plaintext password (security cleanup)
   useEffect(() => {
-    const savedEmail    = localStorage.getItem("saved_email");
-    const savedPassword = localStorage.getItem("saved_password");
+    localStorage.removeItem("saved_password");
+    const savedEmail = localStorage.getItem("saved_email");
     if (savedEmail) {
       setEmail(savedEmail);
       setRememberMe(true);
     }
-    if (savedPassword) setPassword(savedPassword);
   }, []);
 
   // Handle Google Sign-In result via onAuthStateChanged
@@ -65,7 +65,7 @@ export default function Login() {
     emailLabel:  lang === "th" ? "อีเมล" : "Email Address",
     passLabel:   lang === "th" ? "รหัสผ่าน" : "Password",
     forgotPass:  lang === "th" ? "ลืมรหัสผ่าน?" : "Forgot Password?",
-    rememberMe:  lang === "th" ? "จดจำอีเมลและรหัสผ่าน" : "Remember email & password",
+    rememberMe:  lang === "th" ? "จดจำอีเมล" : "Remember my email",
     btnLogin:    lang === "th" ? "เข้าสู่ระบบ" : "Login",
     btnLoading:  lang === "th" ? "กำลังเข้าสู่ระบบ..." : "Logging in...",
     orDivider:   lang === "th" ? "หรือ" : "or",
@@ -91,11 +91,9 @@ export default function Login() {
       const data = await res.json();
       if (res.ok) {
         if (rememberMe) {
-          localStorage.setItem("saved_email",    email.trim());
-          localStorage.setItem("saved_password", password);
+          localStorage.setItem("saved_email", email.trim());
         } else {
           localStorage.removeItem("saved_email");
-          localStorage.removeItem("saved_password");
         }
         // merge กับ profile cache ที่บันทึกแยกไว้ (ไม่โดน logout ลบ)
         const cache = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");

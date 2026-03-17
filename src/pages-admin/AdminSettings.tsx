@@ -8,6 +8,7 @@ import { ADMIN_EMAILS } from "../config/admin";
 import { FOUNDER_KEY, FOUNDER_DEFAULTS, getFounderData, type FounderData } from "../utils/founder";
 import { useAppSettingsStore } from "../store/appSettingsStore";
 import { useGalleryStore } from "../store/galleryStore";
+import { useToast } from "../components/Toast";
 
 const EMOJI_LIST = [
   "🐦","🦜","🦚","🦋","🐸","🐢","🌿","🌸","🌺","🌻","🍃","🌾",
@@ -47,6 +48,7 @@ function saveSiteSettings(s: SiteSettings) {
 export default function AdminSettings() {
   const { user } = useAuth();
   const { lang, theme, toggleTheme } = useSettingsStore();
+  const { toast } = useToast();
 
   const [input, setInput] = useState("");
   const [adminsList, setAdminsList] = useState<{ email: string }[]>([]);
@@ -191,15 +193,15 @@ export default function AdminSettings() {
         headers: { Authorization: `Bearer ${btoa(JSON.stringify({ role: token.role }))}` },
       });
       if (res.ok) {
-        alert(lang === "th" ? "ลบผู้ใช้สำเร็จ" : "User deleted successfully");
+        toast(lang === "th" ? "ลบผู้ใช้สำเร็จ" : "User deleted successfully", "success");
         fetchAllUsers();
         fetchDeletedUsers();
       } else {
         const data = await res.json();
-        alert(data.error || "Delete failed");
+        toast(data.error || "Delete failed", "error");
       }
     } catch {
-      alert("Error connecting to server");
+      toast("Error connecting to server", "error");
     }
   }
 
@@ -234,9 +236,9 @@ export default function AdminSettings() {
     try {
       const res = await authFetch(ADMINS_URL, { method: "POST", body: JSON.stringify({ email }) });
       const data = await res.json();
-      if (res.ok) { alert(data.message); setInput(""); fetchAdmins(); }
-      else { alert(data.error); }
-    } catch { alert("Error connecting to server"); }
+      if (res.ok) { toast(data.message, "success"); setInput(""); fetchAdmins(); }
+      else { toast(data.error, "error"); }
+    } catch { toast("Error connecting to server", "error"); }
   }
 
   async function removeEmail(email: string) {
@@ -244,13 +246,13 @@ export default function AdminSettings() {
     try {
       const res = await authFetch(`${ADMINS_URL}/${encodeURIComponent(email)}`, { method: "DELETE" });
       const data = await res.json();
-      if (res.ok) { fetchAdmins(); } else { alert(data.error); }
-    } catch { alert("Error connecting to server"); }
+      if (res.ok) { fetchAdmins(); } else { toast(data.error, "error"); }
+    } catch { toast("Error connecting to server", "error"); }
   }
 
   function saveSite() {
     saveSiteSettings({ siteName, maintenanceMode, carouselCount, spotlightCount });
-    alert(lang === "th" ? "บันทึกการตั้งค่าเรียบร้อย" : "Settings saved");
+    toast(lang === "th" ? "บันทึกการตั้งค่าเรียบร้อย" : "Settings saved", "success");
   }
 
   async function savePromoBanner() {
@@ -266,7 +268,7 @@ export default function AdminSettings() {
       },
       btoa(JSON.stringify({ role: token.role }))
     );
-    if(success) alert(lang === "th" ? "บันทึกแบนเนอร์เรียบร้อย" : "Banner saved successfully");
+    if(success) toast(lang === "th" ? "บันทึกแบนเนอร์เรียบร้อย" : "Banner saved successfully", "success");
   }
 
   function downloadBackup() {
@@ -283,22 +285,22 @@ export default function AdminSettings() {
   const MAX_JSON_MB = 5;
 
   async function handleImportFile(file: File) {
-    if (file.size > MAX_JSON_MB * 1024 * 1024) { alert(`File too large (max ${MAX_JSON_MB} MB)`); return; }
+    if (file.size > MAX_JSON_MB * 1024 * 1024) { toast(`File too large (max ${MAX_JSON_MB} MB)`, "error"); return; }
     if (!confirm(lang === "th" ? "นำเข้าไฟล์จะทับข้อมูลเดิมทั้งหมด แน่ใจหรือไม่?" : "This will overwrite all existing data. Continue?")) return;
     const text = await file.text();
     const res  = await importJSON(text);
-    if (!res.ok) { alert("Import failed: " + (res.error || "")); return; }
-    alert(`Import success: ${res.count ?? 0} items`);
+    if (!res.ok) { toast("Import failed: " + (res.error || ""), "error"); return; }
+    toast(`Import success: ${res.count ?? 0} items`, "success");
   }
 
   async function handleMergeImportFile(file: File) {
-    if (file.size > MAX_JSON_MB * 1024 * 1024) { alert(`File too large (max ${MAX_JSON_MB} MB)`); return; }
+    if (file.size > MAX_JSON_MB * 1024 * 1024) { toast(`File too large (max ${MAX_JSON_MB} MB)`, "error"); return; }
     if (!confirm(lang === "th" ? "ผสานข้อมูลกับของเดิม แน่ใจหรือไม่?" : "Merge data with existing? Continue?")) return;
     if (typeof mergeImportJSON !== "function") return;
     const text = await file.text();
     const res  = await mergeImportJSON(text);
-    if (!res?.ok) { alert("Merge failed: " + (res?.error || "")); return; }
-    alert("Merge success");
+    if (!res?.ok) { toast("Merge failed: " + (res?.error || ""), "error"); return; }
+    toast(lang === "th" ? "ผสานข้อมูลสำเร็จ" : "Merge success", "success");
   }
 
   const t = {
@@ -386,7 +388,7 @@ export default function AdminSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 500 * 1024) {
-      alert(lang === "th" ? "รูปต้องไม่เกิน 500KB" : "Image must be under 500KB");
+      toast(lang === "th" ? "รูปต้องไม่เกิน 500KB" : "Image must be under 500KB", "error");
       return;
     }
     const reader = new FileReader();
@@ -441,7 +443,7 @@ export default function AdminSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 1024 * 1024) {
-      alert(lang === "th" ? "รูปต้องไม่เกิน 1MB" : "Image must be under 1MB");
+      toast(lang === "th" ? "รูปต้องไม่เกิน 1MB" : "Image must be under 1MB", "error");
       return;
     }
     const reader = new FileReader();
@@ -473,7 +475,7 @@ export default function AdminSettings() {
 
   function clearAllSearchHistory() {
     localStorage.removeItem("uf_search_history");
-    alert(lang === "th" ? "ล้างประวัติการค้นหาเรียบร้อย" : "Search history cleared");
+    toast(lang === "th" ? "ล้างประวัติการค้นหาเรียบร้อย" : "Search history cleared", "success");
   }
 
   const founderAvatarIsImg = fdAvatar.startsWith("data:") || fdAvatar.startsWith("http");
@@ -823,7 +825,7 @@ export default function AdminSettings() {
                 onChange={e => {
                   const file = e.target.files?.[0];
                   if (!file) return;
-                  if (file.size > 1024 * 1024) { alert(lang === "th" ? "รูปต้องไม่เกิน 1MB" : "Image must be under 1MB"); return; }
+                  if (file.size > 1024 * 1024) { toast(lang === "th" ? "รูปต้องไม่เกิน 1MB" : "Image must be under 1MB", "error"); return; }
                   const reader = new FileReader();
                   reader.onload = ev => setGalImgPreview(ev.target?.result as string);
                   reader.readAsDataURL(file);

@@ -39,8 +39,15 @@ export default function Encyclopedia() {
   const [page, setPage] = useState(1);
   const [favorites, setFavorites] = useState<string[]>(getFavorites);
   const [activeTag, setActiveTag] = useState<string>("");
+  const [showTop, setShowTop] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onScroll = () => setShowTop(document.documentElement.scrollTop > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -359,6 +366,26 @@ export default function Encyclopedia() {
           </div>
         )}
       </div>
+      {/* Back to Top */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        style={{
+          position: "fixed", bottom: 32, right: 28, zIndex: 900,
+          width: 48, height: 48, borderRadius: "50%",
+          background: "var(--gradient-primary)",
+          color: "#fff", border: "none", cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "var(--shadow-primary)",
+          opacity: showTop ? 1 : 0,
+          transform: showTop ? "translateY(0) scale(1)" : "translateY(16px) scale(0.85)",
+          transition: "opacity 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1)",
+          pointerEvents: showTop ? "auto" : "none",
+          fontSize: "1.2rem",
+        }}
+        aria-label="Back to top"
+      >
+        ↑
+      </button>
     </div>
   );
 }
