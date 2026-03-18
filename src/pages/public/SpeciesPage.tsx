@@ -2,6 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useSpeciesStore } from "../../store/speciesStore";
 import { useSettingsStore } from "../../store/settingsStore";
+import { useCartStore } from "../../store/cartStore";
 
 // ─── QR Code Modal ───────────────────────────────────────────
 function QRModal({ url, onClose, lang }: { url: string; onClose: () => void; lang: string }) {
@@ -76,10 +77,15 @@ export default function SpeciesPage() {
     if (id && type) trackView(id, type);
   }, [id, type]);
 
+  const { addItem } = useCartStore();
+
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [favorites, setFavorites] = useState<string[]>(getFavorites);
   const [shareCopied, setShareCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [cartQty, setCartQty] = useState(1);
+  const [cartGender, setCartGender] = useState("");
+  const [addedFlash, setAddedFlash] = useState(false);
 
   const item = items.find((x) => x.id === id && x.type === type);
 
@@ -295,6 +301,82 @@ export default function SpeciesPage() {
               <span style={{ fontStyle: "italic", color: "var(--text-main)", fontSize: "1.1rem" }}>{item.scientific_name}</span>
             </div>
           )}
+
+          {/* Buy section */}
+          {typeof item.price === "number" && item.price > 0 && (() => {
+            const inStock = (item.stock ?? 0) > 0 || item.available !== false;
+            const fmt = (n: number) => n.toLocaleString("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 });
+            const genderOptions = item.type === "animal"
+              ? (lang === "th" ? ["ผสม", "เพศผู้", "เพศเมีย", "คู่ผสมพันธุ์"] : ["Mixed", "Male", "Female", "Breeding Pair"])
+              : [];
+            function handleAdd() {
+              if (!inStock) return;
+              addItem({
+                cart_key: `${item!.id}|${cartGender}`,
+                species_id: item!.id,
+                species_name: item!.name_th,
+                species_name_en: item!.name_en,
+                species_image: item!.image,
+                species_type: item!.type,
+                unit_price: item!.price!,
+                quantity: cartQty,
+                unit: item!.unit ?? (item!.type === "animal" ? "ตัว" : "ต้น"),
+                gender: cartGender || undefined,
+              });
+              setAddedFlash(true);
+              setTimeout(() => setAddedFlash(false), 1800);
+            }
+            return (
+              <div style={{ marginTop: 24, padding: "20px", background: "var(--bg-color)", borderRadius: 16, border: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
+                  <div>
+                    <div style={{ color: "var(--primary-hover)", fontWeight: 900, fontSize: "1.8rem" }}>{fmt(item.price)}</div>
+                    <div style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>/ {item.unit ?? (item.type === "animal" ? "ตัว" : "ต้น")}</div>
+                  </div>
+                  {typeof item.stock === "number" && item.stock > 0 && (
+                    <div style={{ background: "var(--primary-light)", color: "var(--primary-hover)", borderRadius: 8, padding: "4px 12px", fontWeight: 700, fontSize: "0.85rem" }}>
+                      {lang === "th" ? "เหลือ" : "Stock"} {item.stock} {item.unit ?? (item.type === "animal" ? "ตัว" : "ต้น")}
+                    </div>
+                  )}
+                  {!inStock && (
+                    <div style={{ background: "#fee2e2", color: "#991b1b", borderRadius: 8, padding: "4px 12px", fontWeight: 700, fontSize: "0.85rem" }}>
+                      {lang === "th" ? "สินค้าหมด" : "Out of Stock"}
+                    </div>
+                  )}
+                </div>
+                {genderOptions.length > 0 && (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--text-muted)", marginBottom: 8 }}>⚥ {lang === "th" ? "เพศ" : "Gender"}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {["", ...genderOptions].map(g => (
+                        <button key={g} onClick={() => setCartGender(g)}
+                          style={{ padding: "6px 14px", borderRadius: 20, border: `2px solid ${cartGender === g ? "var(--primary)" : "var(--border-color)"}`, background: cartGender === g ? "var(--primary-light)" : "var(--bg-color)", color: cartGender === g ? "var(--primary-hover)" : "var(--text-muted)", fontWeight: 700, cursor: "pointer", fontSize: "0.82rem" }}>
+                          {g || (lang === "th" ? "ไม่ระบุ" : "Any")}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button onClick={() => setCartQty(q => Math.max(1, q - 1))} style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--card-bg)", fontWeight: 900, fontSize: "1.1rem", cursor: "pointer", color: "var(--text-main)" }}>−</button>
+                    <input type="number" min={1} max={item.stock ?? 999} value={cartQty}
+                      onChange={e => setCartQty(Math.max(1, parseInt(e.target.value) || 1))}
+                      style={{ width: 56, textAlign: "center", padding: "8px", borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--card-bg)", color: "var(--text-main)", fontWeight: 900, fontSize: "1rem" }} />
+                    <button onClick={() => setCartQty(q => q + 1)} style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--card-bg)", fontWeight: 900, fontSize: "1.1rem", cursor: "pointer", color: "var(--text-main)" }}>+</button>
+                    <span style={{ color: "var(--primary-hover)", fontWeight: 900 }}>= {fmt(item.price * cartQty)}</span>
+                  </div>
+                  <button
+                    onClick={handleAdd}
+                    disabled={!inStock}
+                    style={{ padding: "12px 28px", borderRadius: 12, background: inStock ? "var(--primary)" : "var(--border-color)", color: inStock ? "white" : "var(--text-muted)", border: "none", fontWeight: 800, fontSize: "1rem", cursor: inStock ? "pointer" : "not-allowed", transition: "all 0.2s" }}
+                  >
+                    {addedFlash ? (lang === "th" ? "✓ เพิ่มแล้ว!" : "✓ Added!") : (lang === "th" ? "🛒 เพิ่มเข้าตะกร้า" : "🛒 Add to Cart")}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Watermark */}
           <div style={{ position: "absolute", top: -20, right: -20, fontSize: "10rem", opacity: 0.03, transform: "rotate(15deg)", pointerEvents: "none" }}>
