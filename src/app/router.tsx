@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
 // Layouts
 import PublicLayout from "../layouts/PublicLayout";
@@ -9,7 +9,7 @@ import Home from "../pages/public/Home";
 import Encyclopedia from "../pages/public/Encyclopedia";
 import SpeciesPage from "../pages/public/SpeciesPage";
 import Contact from "../pages/public/Contact";
-import NotFound from "../pages/public/NotFound";
+
 import About from "../pages/public/About";
 import Gallery from "../pages/public/Gallery";
 import Wishlist from "../pages/public/Wishlist";
@@ -59,7 +59,7 @@ export const router = createBrowserRouter([
       { path: "/register",             element: <Register />     },
       { path: "/forgot",               element: <ForgotPassword /> },
       { path: "/profile",              element: <Profile />      },
-      { path: "*",                     element: <NotFound />     },
+      { path: "*",                     element: <Navigate to="/" replace /> },
     ],
   },
   {
