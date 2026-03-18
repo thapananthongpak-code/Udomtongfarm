@@ -126,18 +126,6 @@ export default function Home() {
     statAnimal:    lang === "th" ? "สัตว์" : "Animals",
     statPlant:     lang === "th" ? "พืช" : "Plants",
     statAvail:     lang === "th" ? "พร้อมจำหน่าย" : "Available",
-    quickNavTitle: lang === "th" ? "เมนูด่วน" : "Quick Access",
-    navEncyclopedia: lang === "th" ? "สารานุกรม" : "Encyclopedia",
-    navShop:       lang === "th" ? "สั่งซื้อ" : "Shop",
-    navGallery:    lang === "th" ? "แกลเลอรี" : "Gallery",
-    navAbout:      lang === "th" ? "เกี่ยวกับเรา" : "About Us",
-    navContact:    lang === "th" ? "ติดต่อ" : "Contact",
-    navFaq:        lang === "th" ? "คำถามที่พบบ่อย" : "FAQ",
-    navMap:        lang === "th" ? "แผนที่" : "Map",
-    navWishlist:   lang === "th" ? "รายการโปรด" : "Wishlist",
-    latestTitle:   lang === "th" ? "อัปเดตล่าสุด" : "Latest Updates",
-    latestAnimal:  lang === "th" ? "สัตว์ใหม่" : "New Animals",
-    latestPlant:   lang === "th" ? "พืชใหม่" : "New Plants",
     sotdLabel:     lang === "th" ? "สายพันธุ์แนะนำวันนี้" : "Species of the Day",
     sotdFlip:      lang === "th" ? "คลิกเพื่อดูข้อมูล" : "Click to reveal",
     sotdDetail:    lang === "th" ? "ดูรายละเอียด →" : "View Details →",
@@ -146,10 +134,6 @@ export default function Home() {
     viewAll:       lang === "th" ? "ดูทั้งหมด →" : "View All →",
     animalLabel:   lang === "th" ? "สัตว์" : "Animal",
     plantLabel:    lang === "th" ? "พืช" : "Plant",
-    bannerTitle:   lang === "th" ? "ข่าวสารและประชาสัมพันธ์" : "News & Announcements",
-    ctaTitle:      lang === "th" ? "สนใจสายพันธุ์หรือนัดชมฟาร์ม?" : "Interested in species or a farm visit?",
-    ctaDesc:       lang === "th" ? "เราพร้อมต้อนรับและให้ข้อมูลทุกสายพันธุ์ที่คุณสนใจ" : "We are ready to welcome you and provide info on any species.",
-    ctaBtn:        lang === "th" ? "ติดต่อสอบถาม" : "Contact Us",
     recentTitle:   lang === "th" ? "ดูล่าสุด" : "Recently Viewed",
     recentClear:   lang === "th" ? "ล้าง" : "Clear",
   };
@@ -225,22 +209,6 @@ export default function Home() {
             <Link to="/contact" className="home-btn-outline"><IconPhone size={16} /> {t.btnContact}</Link>
           </div>
 
-          {/* Quick Nav links */}
-          <div className="fade-in-up" style={{ animationDelay: "0.46s", display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, marginBottom: 8 }}>
-            {[
-              { to: "/encyclopedia", icon: "📚", label: t.navEncyclopedia },
-              { to: "/gallery",      icon: "🖼️",  label: t.navGallery },
-              { to: "/about",        icon: "🌿",  label: t.navAbout },
-              { to: "/faq",          icon: "❓",  label: t.navFaq },
-              { to: "/map",          icon: "🗺️",  label: t.navMap },
-              { to: "/wishlist",     icon: "❤️",  label: t.navWishlist },
-              { to: "/contact",      icon: "📞",  label: t.navContact },
-            ].map(n => (
-              <Link key={n.to} to={n.to} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 20, background: "rgba(255,255,255,0.1)", backdropFilter: "blur(6px)", border: "1px solid rgba(255,255,255,0.2)", color: "var(--text-main)", textDecoration: "none", fontSize: "0.82rem", fontWeight: 600, transition: "background 0.2s" }}>
-                {n.icon} {n.label}
-              </Link>
-            ))}
-          </div>
         </div>
 
         <div className="hero-wave">
@@ -250,82 +218,6 @@ export default function Home() {
           </svg>
         </div>
       </section>
-
-      {/* ════════════════════════════════════════
-          BANNER 2 — ข่าวสาร + อัปเดตสายพันธุ์
-      ════════════════════════════════════════ */}
-      <section className="home-section home-container">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }} className="home-two-col">
-
-          {/* แบนเนอร์ประชาสัมพันธ์ */}
-          <div className="glass-card" style={{ padding: 24 }}>
-            <div className="home-section-label" style={{ marginBottom: 10 }}>📣 {lang === "th" ? "ประชาสัมพันธ์" : "Announcements"}</div>
-            <h2 className="home-section-title" style={{ marginBottom: 16, fontSize: "1.3rem" }}>
-              {lang === "th" ? appSettings.bannerTitleTh || t.bannerTitle : appSettings.bannerTitleEn || t.bannerTitle}
-            </h2>
-            {appSettings.bannerItems.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {appSettings.bannerItems.slice(0, 4).map((item) => (
-                  <div key={item.id} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid var(--border-color)" }}>
-                    <div style={{ fontSize: "1.5rem", flexShrink: 0 }}>{item.icon || "✨"}</div>
-                    <div>
-                      <div style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: 2 }}>{lang === "th" ? item.titleTh : item.titleEn}</div>
-                      <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: 1.5 }}>{lang === "th" ? item.descTh : item.descEn}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", padding: "20px 0" }}>
-                {lang === "th" ? "ยังไม่มีประกาศในขณะนี้" : "No announcements at this time."}
-              </div>
-            )}
-            <Link to="/contact" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 16, color: "var(--primary-hover)", fontWeight: 700, textDecoration: "none", fontSize: "0.9rem" }}>
-              <IconPhone size={14} /> {t.btnContact} →
-            </Link>
-          </div>
-
-          {/* อัปเดตสายพันธุ์ล่าสุด */}
-          <div className="glass-card" style={{ padding: 24 }}>
-            <div className="home-section-label" style={{ marginBottom: 10 }}>🆕 {t.latestTitle}</div>
-            <h2 className="home-section-title" style={{ marginBottom: 16, fontSize: "1.3rem" }}>
-              🐾 {t.latestAnimal} & 🌱 {t.latestPlant}
-            </h2>
-            {loading && items.length === 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[0,1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 52, borderRadius: 10 }} />)}
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[...items].slice(-6).reverse().map(sp => {
-                  const name = lang === "th" ? sp.name_th : sp.name_en;
-                  return (
-                    <Link key={sp.id} to={`/species/${sp.type}/${sp.id}`} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, background: "var(--bg-color)", textDecoration: "none", border: "1px solid var(--border-color)" }}>
-                      {sp.image ? <img src={sp.image} alt={name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} /> : <div style={{ width: 40, height: 40, borderRadius: 8, background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>{sp.type === "animal" ? "🐾" : "🌿"}</div>}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.9rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{sp.type === "animal" ? `🐾 ${t.animalLabel}` : `🌿 ${t.plantLabel}`}</div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-            <Link to="/encyclopedia" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 16, color: "var(--primary-hover)", fontWeight: 700, textDecoration: "none", fontSize: "0.9rem" }}>
-              <IconSearch size={14} /> {t.viewAll}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════
-          SOTD
-      ════════════════════════════════════════ */}
-      {items.length > 0 && todaySpecies && (
-        <div className="home-container home-section">
-          <SotdHeroCard species={todaySpecies} lang={lang} t={t} />
-        </div>
-      )}
 
       {/* ════════════════════════════════════════
           SPOTLIGHT GRID
@@ -361,24 +253,6 @@ export default function Home() {
           RECENTLY VIEWED
       ════════════════════════════════════════ */}
       <RecentlyViewed items={items} lang={lang} t={t} />
-
-      {/* ════════════════════════════════════════
-          CTA BANNER
-      ════════════════════════════════════════ */}
-      <section className="home-cta-section">
-        <div className="home-container">
-          <div className="home-cta-inner">
-            <div className="home-cta-decor">🌿</div>
-            <div className="home-cta-text">
-              <h2 className="home-cta-title">{t.ctaTitle}</h2>
-              <p className="home-cta-desc">{t.ctaDesc}</p>
-            </div>
-            <Link to="/contact" className="home-cta-btn">
-              <IconPhone size={18} /> {t.ctaBtn}
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* ── Back to Top ── */}
       <button
