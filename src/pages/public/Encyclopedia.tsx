@@ -447,6 +447,14 @@ function SpeciesCard({ sp, lang, t, idx, isFav, onToggleFav }: {
 
   return (
     <div style={{ position: "relative" }}>
+      {/* + button outside flip card so it's always clickable */}
+      {hasPrice && inStock && (
+        <button
+          onClick={e => { e.preventDefault(); e.stopPropagation(); setShowModal(true); }}
+          style={{ position: "absolute", top: 24, right: 24, zIndex: 10, width: 36, height: 36, borderRadius: "50%", background: "var(--primary)", color: "white", border: "none", fontSize: "1.4rem", fontWeight: 900, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.3)", lineHeight: 1 }}
+          title={lang === "th" ? "เพิ่มเข้าตะกร้า" : "Add to Cart"}
+        >+</button>
+      )}
       <Link
         to={`/species/${sp.type}/${sp.id}`}
         className="species-flip-card fade-in-up"
@@ -457,14 +465,6 @@ function SpeciesCard({ sp, lang, t, idx, isFav, onToggleFav }: {
           <div className="species-flip-front glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column" }}>
             <div style={{ width: "100%", height: "200px", borderRadius: "12px", overflow: "hidden", marginBottom: "16px", flexShrink: 0, position: "relative" }}>
               <img src={sp.image} alt="" className="hover-zoom-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              {/* + Add to Cart button */}
-              {hasPrice && inStock && (
-                <button
-                  onClick={e => { e.preventDefault(); e.stopPropagation(); setShowModal(true); }}
-                  style={{ position: "absolute", top: 8, right: 8, width: 34, height: 34, borderRadius: "50%", background: "var(--primary)", color: "white", border: "none", fontSize: "1.3rem", fontWeight: 900, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", lineHeight: 1 }}
-                  title={lang === "th" ? "เพิ่มเข้าตะกร้า" : "Add to Cart"}
-                >+</button>
-              )}
               {hasPrice && !inStock && (
                 <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "12px" }}>
                   <span style={{ background: "#ef4444", color: "white", borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: "0.85rem" }}>{lang === "th" ? "สินค้าหมด" : "Out of Stock"}</span>
