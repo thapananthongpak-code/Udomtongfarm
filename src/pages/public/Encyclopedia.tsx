@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSpeciesStore } from "../../store/speciesStore";
 import { useSettingsStore } from "../../store/settingsStore";
+import { useCartStore } from "../../store/cartStore";
 import type { Species, SpeciesType } from "../../types/species";
 
 type FilterTab = "all" | SpeciesType;
@@ -399,70 +400,185 @@ function SpeciesCard({ sp, lang, t, idx, isFav, onToggleFav }: {
   isFav: boolean;
   onToggleFav: (id: string, e: React.MouseEvent) => void;
 }) {
+  const { addItem } = useCartStore();
   const name = lang === "th" ? sp.name_th : sp.name_en;
   const shortDesc = lang === "th" ? sp.short_description : sp.short_description_en || sp.short_description;
+  const hasPrice = typeof sp.price === "number" && sp.price > 0;
+  const inStock  = (sp.stock ?? 0) > 0 || sp.available !== false;
+  const [showModal, setShowModal] = useState(false);
+  const [qty, setQty]             = useState(1);
+  const [gender, setGender]       = useState("");
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showModal) { setQty(1); setGender(sp.gender ?? ""); }
+  }, [showModal, sp.gender]);
+
+  useEffect(() => {
+    if (!showModal) return;
+    function handleClick(e: MouseEvent) {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node)) setShowModal(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showModal]);
+
+  const fmt = (n: number) => n.toLocaleString("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 });
+  const genderOptions = sp.type === "animal"
+    ? (lang === "th" ? ["ผสม", "เพศผู้", "เพศเมีย", "คู่ผสมพันธุ์"] : ["Mixed", "Male", "Female", "Breeding Pair"])
+    : [];
+
+  function handleAdd() {
+    if (!hasPrice || !inStock) return;
+    addItem({
+      cart_key: `${sp.id}|${gender}`,
+      species_id: sp.id,
+      species_name: sp.name_th,
+      species_name_en: sp.name_en,
+      species_image: sp.image,
+      species_type: sp.type,
+      unit_price: sp.price!,
+      quantity: qty,
+      unit: sp.unit ?? (sp.type === "animal" ? "ตัว" : "ต้น"),
+      gender: gender || undefined,
+    });
+    setShowModal(false);
+  }
 
   return (
-    <Link
-      to={`/species/${sp.type}/${sp.id}`}
-      className="species-flip-card fade-in-up"
-      style={{ textDecoration: "none", display: "block", height: 360, animationDelay: `${0.05 * (idx % 10)}s` }}
-    >
-      <div className="species-flip-inner" style={{ height: "100%" }}>
-        {/* Front */}
-        <div className="species-flip-front glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column" }}>
-          <div style={{ width: "100%", height: "200px", borderRadius: "12px", overflow: "hidden", marginBottom: "16px", flexShrink: 0 }}>
-            <img src={sp.image} alt="" className="hover-zoom-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+    <div style={{ position: "relative" }}>
+      <Link
+        to={`/species/${sp.type}/${sp.id}`}
+        className="species-flip-card fade-in-up"
+        style={{ textDecoration: "none", display: "block", height: 360, animationDelay: `${0.05 * (idx % 10)}s` }}
+      >
+        <div className="species-flip-inner" style={{ height: "100%" }}>
+          {/* Front */}
+          <div className="species-flip-front glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column" }}>
+            <div style={{ width: "100%", height: "200px", borderRadius: "12px", overflow: "hidden", marginBottom: "16px", flexShrink: 0, position: "relative" }}>
+              <img src={sp.image} alt="" className="hover-zoom-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              {/* + Add to Cart button */}
+              {hasPrice && inStock && (
+                <button
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); setShowModal(true); }}
+                  style={{ position: "absolute", top: 8, right: 8, width: 34, height: 34, borderRadius: "50%", background: "var(--primary)", color: "white", border: "none", fontSize: "1.3rem", fontWeight: 900, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", lineHeight: 1 }}
+                  title={lang === "th" ? "เพิ่มเข้าตะกร้า" : "Add to Cart"}
+                >+</button>
+              )}
+              {hasPrice && !inStock && (
+                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "12px" }}>
+                  <span style={{ background: "#ef4444", color: "white", borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: "0.85rem" }}>{lang === "th" ? "สินค้าหมด" : "Out of Stock"}</span>
+                </div>
+              )}
+              {hasPrice && typeof sp.stock === "number" && sp.stock > 0 && (
+                <div style={{ position: "absolute", bottom: 6, left: 6, background: "rgba(0,0,0,0.55)", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: "0.72rem", fontWeight: 700 }}>
+                  {lang === "th" ? "เหลือ" : "Stock"} {sp.stock}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ background: sp.type === "animal" ? "var(--primary-light)" : "#fef3c7", color: sp.type === "animal" ? "var(--primary-hover)" : "#d97706", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                {sp.type === "animal"
+                  ? <><IconPaw size={12} />{t.animalLabel}</>
+                  : <><IconLeaf size={12} color="#d97706" />{t.plantLabel}</>}
+              </span>
+              <button
+                className={`btn-fav${isFav ? " active" : ""}`}
+                onClick={(e) => onToggleFav(sp.id, e)}
+                aria-label="Toggle favorite"
+              >
+                <IconHeart size={16} filled={isFav} />
+              </button>
+            </div>
+
+            <h3 style={{ margin: "0 0 4px 0", fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.3 }}>
+              {name}
+            </h3>
+            {sp.name_en && lang === "th" && (
+              <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "4px", fontWeight: 500, margin: "0 0 4px 0" }}>
+                {sp.name_en}
+              </p>
+            )}
+            {hasPrice ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 6 }}>
+                <span style={{ color: "var(--primary-hover)", fontWeight: 900, fontSize: "1rem" }}>{fmt(sp.price!)}</span>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>/ {sp.unit ?? (sp.type === "animal" ? "ตัว" : "ต้น")}</span>
+              </div>
+            ) : (
+              <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", fontStyle: "italic", margin: 0 }}>{sp.scientific_name}</p>
+            )}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ background: sp.type === "animal" ? "var(--primary-light)" : "#fef3c7", color: sp.type === "animal" ? "var(--primary-hover)" : "#d97706", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 5 }}>
-              {sp.type === "animal"
-                ? <><IconPaw size={12} />{t.animalLabel}</>
-                : <><IconLeaf size={12} color="#d97706" />{t.plantLabel}</>}
-            </span>
-            <button
-              className={`btn-fav${isFav ? " active" : ""}`}
-              onClick={(e) => onToggleFav(sp.id, e)}
-              aria-label="Toggle favorite"
-            >
-              <IconHeart size={16} filled={isFav} />
+          {/* Back */}
+          <div className="species-flip-back">
+            <div style={{ fontSize: "2.5rem", lineHeight: 1 }}>
+              {sp.type === "animal" ? "🐾" : "🌿"}
+            </div>
+            <div>
+              <h3 style={{ margin: "0 0 10px 0", fontSize: "1.15rem", fontWeight: 800, color: "var(--text-main)" }}>{name}</h3>
+              {sp.scientific_name && (
+                <p style={{ margin: "0 0 12px 0", fontSize: "0.82rem", fontStyle: "italic", color: "var(--text-muted)" }}>{sp.scientific_name}</p>
+              )}
+              <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
+                {shortDesc || (lang === "th" ? "แตะเพื่อดูรายละเอียด" : "Tap to view details")}
+              </p>
+            </div>
+            <div style={{ marginTop: 8, padding: "10px 24px", borderRadius: 24, background: "var(--primary)", color: "#fff", fontWeight: 800, fontSize: "0.9rem" }}>
+              {t.viewDetails}
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      {/* Cart Modal */}
+      {showModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(3px)" }}>
+          <div ref={modalRef} style={{ background: "var(--card-bg)", borderRadius: 18, padding: 24, width: "min(360px, 92vw)", boxShadow: "0 8px 40px rgba(0,0,0,0.25)", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 18 }}>
+              <img src={sp.image} alt={sp.name_th} style={{ width: 54, height: 54, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+              <div>
+                <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "1rem" }}>{lang === "th" ? sp.name_th : sp.name_en}</div>
+                <div style={{ color: "var(--primary-hover)", fontWeight: 900, fontSize: "1.1rem" }}>{fmt(sp.price!)}</div>
+              </div>
+              <button onClick={() => setShowModal(false)} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+            {genderOptions.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: 8, fontSize: "0.9rem" }}>⚥ {lang === "th" ? "เพศ" : "Gender"}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {["", ...genderOptions].map(g => (
+                    <button key={g} onClick={() => setGender(g)}
+                      style={{ padding: "6px 14px", borderRadius: 20, border: `2px solid ${gender === g ? "var(--primary)" : "var(--border-color)"}`, background: gender === g ? "var(--primary-light)" : "var(--bg-color)", color: gender === g ? "var(--primary-hover)" : "var(--text-muted)", fontWeight: 700, cursor: "pointer", fontSize: "0.82rem" }}>
+                      {g || (lang === "th" ? "ไม่ระบุ" : "Any")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: 8, fontSize: "0.9rem" }}>
+                📦 {lang === "th" ? "จำนวน" : "Quantity"}
+                {typeof sp.stock === "number" && sp.stock > 0 && (
+                  <span style={{ marginLeft: 8, color: "var(--text-muted)", fontWeight: 400, fontSize: "0.8rem" }}>({lang === "th" ? "เหลือ" : "Stock"} {sp.stock})</span>
+                )}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: 38, height: 38, borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--bg-color)", fontWeight: 900, fontSize: "1.2rem", cursor: "pointer", color: "var(--text-main)" }}>−</button>
+                <input type="number" min={1} max={sp.stock ?? 999} value={qty}
+                  onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+                  style={{ width: 60, textAlign: "center", padding: "8px", borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 900, fontSize: "1.1rem" }} />
+                <button onClick={() => setQty(q => q + 1)} style={{ width: 38, height: 38, borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--bg-color)", fontWeight: 900, fontSize: "1.2rem", cursor: "pointer", color: "var(--text-main)" }}>+</button>
+                <span style={{ marginLeft: 4, color: "var(--primary-hover)", fontWeight: 900, fontSize: "1rem" }}>= {fmt(sp.price! * qty)}</span>
+              </div>
+            </div>
+            <button onClick={handleAdd} style={{ width: "100%", padding: "13px", borderRadius: 12, background: "var(--primary)", color: "white", border: "none", fontWeight: 800, fontSize: "1rem", cursor: "pointer" }}>
+              🛒 {lang === "th" ? "เพิ่มเข้าตะกร้า" : "Add to Cart"}
             </button>
           </div>
-
-          <h3 style={{ margin: "0 0 4px 0", fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.3 }}>
-            {name}
-          </h3>
-          {sp.name_en && lang === "th" && (
-            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "4px", fontWeight: 500, margin: "0 0 4px 0" }}>
-              {sp.name_en}
-            </p>
-          )}
-          <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", fontStyle: "italic", margin: 0 }}>
-            {sp.scientific_name}
-          </p>
         </div>
-
-        {/* Back */}
-        <div className="species-flip-back">
-          <div style={{ fontSize: "2.5rem", lineHeight: 1 }}>
-            {sp.type === "animal" ? "🐾" : "🌿"}
-          </div>
-          <div>
-            <h3 style={{ margin: "0 0 10px 0", fontSize: "1.15rem", fontWeight: 800, color: "var(--text-main)" }}>{name}</h3>
-            {sp.scientific_name && (
-              <p style={{ margin: "0 0 12px 0", fontSize: "0.82rem", fontStyle: "italic", color: "var(--text-muted)" }}>{sp.scientific_name}</p>
-            )}
-            <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
-              {shortDesc || (lang === "th" ? "แตะเพื่อดูรายละเอียด" : "Tap to view details")}
-            </p>
-          </div>
-          <div style={{ marginTop: 8, padding: "10px 24px", borderRadius: 24, background: "var(--primary)", color: "#fff", fontWeight: 800, fontSize: "0.9rem" }}>
-            {t.viewDetails}
-          </div>
-        </div>
-      </div>
-    </Link>
+      )}
+    </div>
   );
 }
 
