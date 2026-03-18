@@ -21,12 +21,18 @@ export default function ProductManager() {
   const fmt = (n: number) =>
     n.toLocaleString("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 });
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
+  // sync ค่าจาก store แต่ไม่ reset row ที่กำลัง edit
   useEffect(() => {
-    setRows(items.map(it => ({ ...it, editing: false })));
+    setRows(prev => {
+      if (prev.length === 0) return items.map(it => ({ ...it, editing: false }));
+      return items.map(it => {
+        const existing = prev.find(r => r.id === it.id);
+        if (existing?.editing) return existing; // ยังแก้ไขอยู่ อย่า reset
+        return { ...it, editing: false };
+      });
+    });
   }, [items]);
 
   const filtered = useMemo(() => {
@@ -41,18 +47,24 @@ export default function ProductManager() {
     setRows(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r));
   }
 
+  function rowPayload(r: ProductRow) {
+    return {
+      price:     r.price ?? 0,
+      stock:     r.stock ?? 0,
+      unit:      r.unit ?? (r.type === "animal" ? "ตัว" : "ต้น"),
+      available: r.available !== false,
+      age:       r.age ?? null,
+      gender:    r.gender ?? null,
+    };
+  }
+
   async function saveRow(row: ProductRow) {
     setSaving(row.id);
     setError(""); setSuccess("");
     try {
       const res = await authFetch(`${API_BASE}/api/products/${row.id}`, {
         method: "PUT",
-        body: JSON.stringify({
-          price:     row.price ?? 0,
-          stock:     row.stock ?? 0,
-          unit:      row.unit ?? (row.type === "animal" ? "ตัว" : "ต้น"),
-          available: row.available !== false,
-        }),
+        body: JSON.stringify(rowPayload(row)),
       });
       if (!res.ok) {
         const d = await res.json();
@@ -76,11 +88,7 @@ export default function ProductManager() {
     try {
       const res = await authFetch(`${API_BASE}/api/products`, {
         method: "PUT",
-        body: JSON.stringify(changed.map(r => ({
-          id: r.id, price: r.price ?? 0, stock: r.stock ?? 0,
-          unit: r.unit ?? (r.type === "animal" ? "ตัว" : "ต้น"),
-          available: r.available !== false,
-        }))),
+        body: JSON.stringify(changed.map(r => ({ id: r.id, ...rowPayload(r) }))),
       });
       if (!res.ok) {
         const d = await res.json();
@@ -94,7 +102,7 @@ export default function ProductManager() {
     finally { setSaving(null); }
   }
 
-  const editCount = rows.filter(r => r.editing).length;
+  const editCount  = rows.filter(r => r.editing).length;
   const totalValue = rows.reduce((s, r) => s + (r.price ?? 0) * (r.stock ?? 0), 0);
   const availCount = rows.filter(r => r.available !== false && (r.price ?? 0) > 0).length;
 
@@ -106,18 +114,24 @@ export default function ProductManager() {
     price:     lang === "th" ? "ราคา (฿)" : "Price (฿)",
     stock:     lang === "th" ? "สต็อก" : "Stock",
     unit:      lang === "th" ? "หน่วย" : "Unit",
+    age:       lang === "th" ? "อายุ" : "Age",
+    gender:    lang === "th" ? "เพศ" : "Gender",
     avail:     lang === "th" ? "จำหน่าย" : "Available",
     action:    lang === "th" ? "บันทึก" : "Save",
     totalVal:  lang === "th" ? "มูลค่าสต็อก" : "Stock Value",
     available: lang === "th" ? "สินค้าวางขาย" : "Listed Products",
   };
 
+  const GENDER_OPTIONS_ANIMAL = lang === "th"
+    ? ["ผสม", "เพศผู้", "เพศเมีย", "คู่ผสมพันธุ์"]
+    : ["Mixed", "Male", "Female", "Breeding Pair"];
+
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ margin: "0 0 6px 0", fontWeight: 900, color: "var(--text-main)" }}>🏷️ {t.title}</h1>
         <p style={{ margin: 0, color: "var(--text-muted)" }}>
-          {lang === "th" ? "กำหนดราคา สต็อก และสถานะจำหน่ายสำหรับพืชและสัตว์แต่ละชนิด" : "Set price, stock and availability for each species."}
+          {lang === "th" ? "กำหนดราคา สต็อก อายุ เพศ และสถานะจำหน่ายสำหรับพืชและสัตว์แต่ละชนิด" : "Set price, stock, age, gender and availability for each species."}
         </p>
       </div>
 
@@ -174,7 +188,7 @@ export default function ProductManager() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "var(--bg-color)", borderBottom: "1px solid var(--border-color)" }}>
-                  {[t.name, t.price, t.stock, t.unit, t.avail, t.action].map(h => (
+                  {[t.name, t.price, t.stock, t.unit, t.age, t.gender, t.avail, t.action].map(h => (
                     <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontWeight: 700, color: "var(--text-muted)", fontSize: "0.85rem", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
@@ -218,6 +232,31 @@ export default function ProductManager() {
                         onChange={e => setRow(row.id, { unit: e.target.value, editing: true })}
                         style={{ width: 72, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)" }}
                       />
+                    </td>
+                    {/* Age */}
+                    <td style={{ padding: "10px 16px" }}>
+                      <input
+                        type="text"
+                        value={row.age ?? ""}
+                        placeholder={lang === "th" ? "เช่น 1-2 ปี" : "e.g. 1-2 yr"}
+                        onChange={e => setRow(row.id, { age: e.target.value, editing: true })}
+                        style={{ width: 90, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)", fontSize: "0.85rem" }}
+                      />
+                    </td>
+                    {/* Gender */}
+                    <td style={{ padding: "10px 16px" }}>
+                      {row.type === "animal" ? (
+                        <select
+                          value={row.gender ?? ""}
+                          onChange={e => setRow(row.id, { gender: e.target.value || null as any, editing: true })}
+                          style={{ width: 100, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)", fontSize: "0.85rem", cursor: "pointer" }}
+                        >
+                          <option value="">{lang === "th" ? "ไม่ระบุ" : "Any"}</option>
+                          {GENDER_OPTIONS_ANIMAL.map(g => <option key={g} value={g}>{g}</option>)}
+                        </select>
+                      ) : (
+                        <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>—</span>
+                      )}
                     </td>
                     {/* Available toggle */}
                     <td style={{ padding: "10px 16px" }}>

@@ -27,6 +27,8 @@ export type Species = {
   price?: number;       // ราคาขาย (บาท)
   stock?: number;       // จำนวนสต็อก
   unit?: string;        // หน่วย เช่น "ตัว", "ต้น", "คู่"
+  age?: string;         // อายุ เช่น "6 เดือน - 1 ปี"
+  gender?: string;      // เพศที่มีจำหน่าย เช่น "ผสม", "เพศผู้", "เพศเมีย"
 
   references: Reference[];
 };

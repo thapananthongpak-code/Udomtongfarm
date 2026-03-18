@@ -1,4 +1,5 @@
 export type CartItem = {
+  cart_key: string;         // species_id + '|' + (gender || '') — unique per gender
   species_id: string;
   species_name: string;     // ชื่อภาษาไทย
   species_name_en: string;  // ชื่อภาษาอังกฤษ
@@ -7,6 +8,7 @@ export type CartItem = {
   unit_price: number;
   quantity: number;
   unit: string;
+  gender?: string;          // เพศที่เลือก
 };
 
 export type Address = {

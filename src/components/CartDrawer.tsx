@@ -93,7 +93,7 @@ export default function CartDrawer() {
             </div>
           ) : (
             items.map((item) => (
-              <div key={item.species_id} style={{
+              <div key={item.cart_key} style={{
                 display: "flex", gap: 12, padding: "12px",
                 background: "var(--bg-color)", borderRadius: 12,
                 border: "1px solid var(--border-color)", alignItems: "flex-start",
@@ -108,25 +108,32 @@ export default function CartDrawer() {
                   <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-main)", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {lang === "th" ? item.species_name : item.species_name_en}
                   </div>
-                  <div style={{ color: "var(--primary-hover)", fontWeight: 800, fontSize: "0.95rem", marginBottom: 8 }}>
-                    {fmt(item.unit_price)} / {item.unit}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                    <span style={{ color: "var(--primary-hover)", fontWeight: 800, fontSize: "0.9rem" }}>
+                      {fmt(item.unit_price)} / {item.unit}
+                    </span>
+                    {item.gender && (
+                      <span style={{ background: "var(--primary-light)", color: "var(--primary-hover)", borderRadius: 6, padding: "1px 8px", fontSize: "0.75rem", fontWeight: 700 }}>
+                        {item.gender}
+                      </span>
+                    )}
                   </div>
                   {/* Quantity controls */}
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <button
-                      onClick={() => updateQty(item.species_id, item.quantity - 1)}
+                      onClick={() => updateQty(item.cart_key, item.quantity - 1)}
                       style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--border-color)", background: "var(--card-bg)", cursor: "pointer", fontWeight: 700, fontSize: "1rem", color: "var(--text-main)", display: "flex", alignItems: "center", justifyContent: "center" }}
                     >−</button>
                     <span style={{ fontWeight: 700, minWidth: 24, textAlign: "center", color: "var(--text-main)" }}>{item.quantity}</span>
                     <button
-                      onClick={() => updateQty(item.species_id, item.quantity + 1)}
+                      onClick={() => updateQty(item.cart_key, item.quantity + 1)}
                       style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--border-color)", background: "var(--card-bg)", cursor: "pointer", fontWeight: 700, fontSize: "1rem", color: "var(--text-main)", display: "flex", alignItems: "center", justifyContent: "center" }}
                     >+</button>
                     <span style={{ marginLeft: "auto", fontWeight: 700, color: "var(--primary-hover)" }}>
                       {fmt(item.unit_price * item.quantity)}
                     </span>
                     <button
-                      onClick={() => removeItem(item.species_id)}
+                      onClick={() => removeItem(item.cart_key)}
                       title={t.remove}
                       style={{ background: "#fee2e2", border: "none", borderRadius: 6, width: 28, height: 28, cursor: "pointer", color: "#991b1b", fontSize: "0.85rem", display: "flex", alignItems: "center", justifyContent: "center" }}
                     >🗑</button>

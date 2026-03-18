@@ -21,8 +21,8 @@ type CartState = {
   drawerOpen: boolean;
 
   addItem: (item: CartItem) => void;
-  removeItem: (species_id: string) => void;
-  updateQty: (species_id: string, qty: number) => void;
+  removeItem: (cart_key: string) => void;
+  updateQty: (cart_key: string, qty: number) => void;
   clearCart: () => void;
   openDrawer: () => void;
   closeDrawer: () => void;
@@ -37,7 +37,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   addItem: (incoming) => {
     const items = get().items;
-    const idx = items.findIndex((i) => i.species_id === incoming.species_id);
+    const idx = items.findIndex((i) => i.cart_key === incoming.cart_key);
     let updated: CartItem[];
     if (idx >= 0) {
       updated = items.map((i, n) =>
@@ -50,19 +50,19 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ items: updated, drawerOpen: true });
   },
 
-  removeItem: (species_id) => {
-    const updated = get().items.filter((i) => i.species_id !== species_id);
+  removeItem: (cart_key) => {
+    const updated = get().items.filter((i) => i.cart_key !== cart_key);
     saveCart(updated);
     set({ items: updated });
   },
 
-  updateQty: (species_id, qty) => {
+  updateQty: (cart_key, qty) => {
     if (qty <= 0) {
-      get().removeItem(species_id);
+      get().removeItem(cart_key);
       return;
     }
     const updated = get().items.map((i) =>
-      i.species_id === species_id ? { ...i, quantity: qty } : i
+      i.cart_key === cart_key ? { ...i, quantity: qty } : i
     );
     saveCart(updated);
     set({ items: updated });

@@ -454,7 +454,7 @@ export default function Checkout() {
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontWeight: 700, marginBottom: 10, color: "var(--text-main)", fontSize: "0.88rem" }}>🛒 {lang === "th" ? "รายการสินค้า" : "Items"}</div>
                 {items.map(item => (
-                  <div key={item.species_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border-color)", fontSize: "0.88rem" }}>
+                  <div key={item.cart_key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border-color)", fontSize: "0.88rem" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <img src={item.species_image} style={{ width: 34, height: 34, borderRadius: 6, objectFit: "cover" }} />
                       <div>
@@ -489,7 +489,7 @@ export default function Checkout() {
           </h4>
           <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 12 }}>
             {items.map(item => (
-              <div key={item.species_id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+              <div key={item.cart_key} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                 <span style={{ color: "var(--text-muted)" }}>{lang === "th" ? item.species_name : item.species_name_en} ×{item.quantity}</span>
                 <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{fmt(item.unit_price * item.quantity)}</span>
               </div>

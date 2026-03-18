@@ -80,7 +80,7 @@ export default function Cart() {
         {/* Item list */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {items.map((item) => (
-            <div key={item.species_id} style={{
+            <div key={item.cart_key} style={{
               display: "grid", gridTemplateColumns: isMobile ? "64px 1fr" : "80px 1fr auto auto auto", alignItems: "center",
               gap: 16, padding: "16px", background: "var(--card-bg)", borderRadius: 14,
               border: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)",
@@ -95,19 +95,24 @@ export default function Cart() {
                 <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: isMobile ? "0.92rem" : "1rem" }}>
                   {lang === "th" ? item.species_name : item.species_name_en}
                 </div>
-                <div style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginTop: 2 }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
                   {item.species_type === "animal" ? "🐾 สัตว์" : "🌿 พืช"} · {item.unit}
+                  {item.gender && (
+                    <span style={{ background: "var(--primary-light)", color: "var(--primary-hover)", borderRadius: 6, padding: "1px 7px", fontSize: "0.75rem", fontWeight: 700 }}>
+                      {item.gender}
+                    </span>
+                  )}
                 </div>
                 <div style={{ color: "var(--primary-hover)", fontWeight: 700, marginTop: 4, fontSize: "0.9rem" }}>
                   {fmt(item.unit_price)} / {item.unit}
                 </div>
                 {isMobile && (
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-                    <button onClick={() => updateQty(item.species_id, item.quantity - 1)} style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid var(--border-color)", background: "var(--bg-color)", cursor: "pointer", fontWeight: 700, fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                    <button onClick={() => updateQty(item.cart_key, item.quantity - 1)} style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid var(--border-color)", background: "var(--bg-color)", cursor: "pointer", fontWeight: 700, fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                     <span style={{ fontWeight: 700, minWidth: 22, textAlign: "center", color: "var(--text-main)" }}>{item.quantity}</span>
-                    <button onClick={() => updateQty(item.species_id, item.quantity + 1)} style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid var(--border-color)", background: "var(--bg-color)", cursor: "pointer", fontWeight: 700, fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                    <button onClick={() => updateQty(item.cart_key, item.quantity + 1)} style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid var(--border-color)", background: "var(--bg-color)", cursor: "pointer", fontWeight: 700, fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                     <span style={{ fontWeight: 900, color: "var(--primary-hover)", marginLeft: 4 }}>{fmt(item.unit_price * item.quantity)}</span>
-                    <button onClick={() => removeItem(item.species_id)} style={{ background: "#fee2e2", border: "none", borderRadius: 7, padding: "4px 8px", cursor: "pointer", color: "#991b1b", fontWeight: 700, marginLeft: "auto" }}>🗑</button>
+                    <button onClick={() => removeItem(item.cart_key)} style={{ background: "#fee2e2", border: "none", borderRadius: 7, padding: "4px 8px", cursor: "pointer", color: "#991b1b", fontWeight: 700, marginLeft: "auto" }}>🗑</button>
                   </div>
                 )}
               </div>
@@ -115,12 +120,12 @@ export default function Cart() {
               {!isMobile && (
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <button onClick={() => updateQty(item.species_id, item.quantity - 1)} style={{ width: 30, height: 30, borderRadius: 7, border: "1px solid var(--border-color)", background: "var(--bg-color)", cursor: "pointer", fontWeight: 700, fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-                    <input type="number" min={1} value={item.quantity} onChange={(e) => updateQty(item.species_id, parseInt(e.target.value) || 1)} style={{ width: 46, textAlign: "center", border: "1px solid var(--border-color)", borderRadius: 7, padding: "4px", background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 700, fontSize: "0.95rem" }} />
-                    <button onClick={() => updateQty(item.species_id, item.quantity + 1)} style={{ width: 30, height: 30, borderRadius: 7, border: "1px solid var(--border-color)", background: "var(--bg-color)", cursor: "pointer", fontWeight: 700, fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                    <button onClick={() => updateQty(item.cart_key, item.quantity - 1)} style={{ width: 30, height: 30, borderRadius: 7, border: "1px solid var(--border-color)", background: "var(--bg-color)", cursor: "pointer", fontWeight: 700, fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                    <input type="number" min={1} value={item.quantity} onChange={(e) => updateQty(item.cart_key, parseInt(e.target.value) || 1)} style={{ width: 46, textAlign: "center", border: "1px solid var(--border-color)", borderRadius: 7, padding: "4px", background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 700, fontSize: "0.95rem" }} />
+                    <button onClick={() => updateQty(item.cart_key, item.quantity + 1)} style={{ width: 30, height: 30, borderRadius: 7, border: "1px solid var(--border-color)", background: "var(--bg-color)", cursor: "pointer", fontWeight: 700, fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                   </div>
                   <div style={{ fontWeight: 900, color: "var(--primary-hover)", fontSize: "1.05rem", minWidth: 80, textAlign: "right" }}>{fmt(item.unit_price * item.quantity)}</div>
-                  <button onClick={() => removeItem(item.species_id)} style={{ background: "#fee2e2", border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: "#991b1b", fontWeight: 700 }}>🗑</button>
+                  <button onClick={() => removeItem(item.cart_key)} style={{ background: "#fee2e2", border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: "#991b1b", fontWeight: 700 }}>🗑</button>
                 </>
               )}
             </div>
