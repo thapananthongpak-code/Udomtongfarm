@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSpeciesStore } from "../../store/speciesStore";
 import { useSettingsStore } from "../../store/settingsStore";
-import { useAppSettingsStore } from "../../store/appSettingsStore";
 import type { Species } from "../../types/species";
 import { RECENTLY_VIEWED_KEY } from "./SpeciesPage";
 
@@ -44,10 +43,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { items, fetchAll, loading } = useSpeciesStore();
   const { lang } = useSettingsStore();
-  const appSettings = useAppSettingsStore();
-  const fetchAppSettings = useAppSettingsStore((s) => s.fetchSettings);
-
-  useEffect(() => { fetchAll(); fetchAppSettings(); }, [fetchAll, fetchAppSettings]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const [isDark, setIsDark] = useState(() => document.documentElement.dataset.theme === "dark");
   useEffect(() => {
@@ -89,13 +85,6 @@ export default function Home() {
   const spotlight = useMemo(() => {
     if (items.length === 0) return [];
     return [...items].sort(() => 0.5 - Math.random()).slice(0, 3);
-  }, [items]);
-
-  const todaySpecies = useMemo(() => {
-    if (items.length === 0) return null;
-    const d = new Date();
-    const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-    return items[seed % items.length];
   }, [items]);
 
   const [quickSearch, setQuickSearch] = useState("");
@@ -273,57 +262,6 @@ export default function Home() {
       >
         <IconChevronUp size={22} />
       </button>
-    </div>
-  );
-}
-
-// ─── SOTD Hero Card (right side flip card) ──────────────────
-function SotdHeroCard({ species, lang, t }: { species: Species; lang: string; t: Record<string, string> }) {
-  const [flipped, setFlipped] = useState(false);
-  const name = lang === "th" ? species.name_th : species.name_en;
-  const desc = (lang === "th" ? species.short_description : species.short_description_en) || species.short_description;
-
-  return (
-    <div className="sotd-hero-wrap">
-      <div className="sotd-hero-label">
-        <span>✨</span>
-        <span>{t.sotdLabel}</span>
-        <span className="sotd-hero-date">
-          {new Date().toLocaleDateString(lang === "th" ? "th-TH" : "en-US", { day: "numeric", month: "long" })}
-        </span>
-      </div>
-      <div
-        className={`sotd-hero-card${flipped ? " flipped" : ""}`}
-        onClick={() => setFlipped(v => !v)}
-        title={t.sotdFlip}
-      >
-        {/* Front */}
-        <div className="sotd-hero-face sotd-hero-front">
-          <img src={species.image} alt={name} className="sotd-hero-img" />
-          <div className="sotd-hero-overlay">
-            <span className="sotd-hero-type">{species.type === "animal" ? "🐾" : "🌿"}</span>
-            <h3 className="sotd-hero-name">{name}</h3>
-            {species.scientific_name && <em className="sotd-hero-sci">{species.scientific_name}</em>}
-            <div className="sotd-hero-hint">{t.sotdFlip} 👆</div>
-          </div>
-        </div>
-        {/* Back */}
-        <div className="sotd-hero-face sotd-hero-back">
-          <div className="sotd-hero-back-content">
-            <h3 className="sotd-hero-name" style={{ color: "var(--text-main)" }}>{name}</h3>
-            {species.scientific_name && <em className="sotd-hero-sci" style={{ color: "var(--text-muted)" }}>{species.scientific_name}</em>}
-            <p className="sotd-hero-desc">{desc}</p>
-            <Link
-              to={`/species/${species.type}/${species.id}`}
-              className="btn-primary"
-              style={{ padding: "11px 24px", borderRadius: 32, fontSize: "0.9rem" }}
-              onClick={e => e.stopPropagation()}
-            >
-              {t.sotdDetail}
-            </Link>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
