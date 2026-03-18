@@ -15,6 +15,11 @@ import Gallery from "../pages/public/Gallery";
 import Wishlist from "../pages/public/Wishlist";
 import MapPage from "../pages/public/MapPage";
 import Compare from "../pages/public/Compare";
+import Cart from "../pages/public/Cart";
+import Checkout from "../pages/public/Checkout";
+import Orders from "../pages/public/Orders";
+import OrderDetail from "../pages/public/OrderDetail";
+
 // Auth pages
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -25,6 +30,8 @@ import Profile from "../pages/auth/Profile";
 import Dashboard from "../pages-admin/Dashboard";
 import AdminSettings from "../pages-admin/AdminSettings";
 import SpeciesManager from "../pages-admin/SpeciesManager";
+import ProductManager from "../pages-admin/ProductManager";
+import OrderManager from "../pages-admin/OrderManager";
 
 // Guards
 import AdminGuard from "../routes/AdminGuard";
@@ -42,6 +49,12 @@ export const router = createBrowserRouter([
       { path: "/map",                  element: <MapPage />      },
       { path: "/compare",              element: <Compare />      },
       { path: "/contact",              element: <Contact />      },
+      // Shop
+      { path: "/cart",                 element: <Cart />         },
+      { path: "/checkout",             element: <Checkout />     },
+      { path: "/orders",               element: <Orders />       },
+      { path: "/orders/:id",           element: <OrderDetail />  },
+      // Auth
       { path: "/login",                element: <Login />        },
       { path: "/register",             element: <Register />     },
       { path: "/forgot",               element: <ForgotPassword /> },
@@ -56,9 +69,11 @@ export const router = createBrowserRouter([
         path: "/admin",
         element: <AdminLayout />,
         children: [
-          { index: true,          element: <Dashboard />     },
-          { path: "species",      element: <SpeciesManager /> },
-          { path: "settings",     element: <AdminSettings />  },
+          { index: true,           element: <Dashboard />      },
+          { path: "species",       element: <SpeciesManager />  },
+          { path: "products",      element: <ProductManager />  },
+          { path: "orders",        element: <OrderManager />    },
+          { path: "settings",      element: <AdminSettings />   },
         ],
       },
     ],

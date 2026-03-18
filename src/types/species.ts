@@ -23,7 +23,10 @@ export type Species = {
   tags?: string[];
 
   available?: boolean;  // พร้อมจำหน่าย (default = true)
-  quantity?: number;    // จำนวนที่มีพร้อมขาย
+  quantity?: number;    // จำนวนที่มีพร้อมขาย (legacy)
+  price?: number;       // ราคาขาย (บาท)
+  stock?: number;       // จำนวนสต็อก
+  unit?: string;        // หน่วย เช่น "ตัว", "ต้น", "คู่"
 
   references: Reference[];
 };

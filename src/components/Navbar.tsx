@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
 import { useSettingsStore } from "../store/settingsStore";
 import { useSpeciesStore } from "../store/speciesStore";
+import { useCartStore } from "../store/cartStore";
 import { useState, useEffect, useMemo } from "react";
 import SpotlightSearch from "./SpotlightSearch";
 
@@ -14,6 +15,7 @@ export default function Navbar() {
   const { user, role, logout } = useAuth();
   const { lang, theme, fontSize, toggleLang, toggleTheme, setFontSize } = useSettingsStore();
   const { items } = useSpeciesStore();
+  const { totalItems, openDrawer } = useCartStore();
 
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -62,12 +64,14 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const cartCount = totalItems();
+
   const t = {
     home:       lang === "th" ? "หน้าแรก"    : "Home",
     encyclo:    lang === "th" ? "สารานุกรม"  : "Encyclopedia",
     about:      lang === "th" ? "เกี่ยวกับ"  : "About",
     gallery:    lang === "th" ? "แกลเลอรี"   : "Gallery",
-contact:    lang === "th" ? "ติดต่อเรา"  : "Contact",
+    contact:    lang === "th" ? "ติดต่อเรา"  : "Contact",
     adminBadge: lang === "th" ? "แอดมิน"     : "Admin",
     memberBadge:lang === "th" ? "สมาชิก"     : "Member",
     sysSettings:lang === "th" ? "ตั้งค่าระบบ": "Settings",
@@ -75,6 +79,7 @@ contact:    lang === "th" ? "ติดต่อเรา"  : "Contact",
     loginBtn:   lang === "th" ? "เข้าสู่ระบบ": "Login",
     regBtn:     lang === "th" ? "สมัครสมาชิก": "Register",
     wishlist:   lang === "th" ? "รายการบันทึก": "Wishlist",
+    cart:       lang === "th" ? "ตะกร้า"      : "Cart",
   };
 
   function onLogout() {
@@ -146,6 +151,34 @@ contact:    lang === "th" ? "ติดต่อเรา"  : "Contact",
           </button>
         </div>
 
+        {/* Cart button */}
+        <button
+          onClick={openDrawer}
+          title={t.cart}
+          style={{
+            position: "relative", display: "flex", alignItems: "center", gap: 5,
+            padding: "6px 12px", borderRadius: 8, border: "1px solid var(--border-color)",
+            background: cartCount > 0 ? "var(--primary-light)" : "var(--bg-color)",
+            color: cartCount > 0 ? "var(--primary-hover)" : "var(--text-muted)",
+            cursor: "pointer", fontSize: "0.82rem", fontWeight: 700, transition: "all 0.2s ease",
+          }}
+        >
+          <IconCart />
+          {lang === "th" ? "ตะกร้า" : "Cart"}
+          {cartCount > 0 && (
+            <span style={{
+              position: "absolute", top: -6, right: -6,
+              background: "var(--primary)", color: "white",
+              borderRadius: "50%", width: 18, height: 18,
+              fontSize: "0.7rem", fontWeight: 900,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              lineHeight: 1,
+            }}>
+              {cartCount > 99 ? "99+" : cartCount}
+            </span>
+          )}
+        </button>
+
         {user ? (
           <>
             {role === "admin" && (
@@ -197,6 +230,12 @@ contact:    lang === "th" ? "ติดต่อเรา"  : "Contact",
           </Link>
           <Link to="/gallery"     onClick={() => setMenuOpen(false)} className={navLinkClass("/gallery")}     style={{ fontSize: "1.05rem" }}>{t.gallery}</Link>
           <Link to="/contact"     onClick={() => setMenuOpen(false)} className={navLinkClass("/contact")}     style={{ fontSize: "1.05rem" }}>{t.contact}</Link>
+          <button
+            onClick={() => { setMenuOpen(false); openDrawer(); }}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: cartCount > 0 ? "var(--primary-light)" : "var(--bg-color)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "10px 14px", fontWeight: 700, cursor: "pointer", color: cartCount > 0 ? "var(--primary-hover)" : "var(--text-main)", fontSize: "1rem" }}
+          >
+            <IconCart /> {t.cart} {cartCount > 0 && <span style={{ background: "var(--primary)", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: "0.8rem" }}>{cartCount}</span>}
+          </button>
 
           <div style={{ width: "100%", height: 1, background: "var(--border-color)", margin: "4px 0" }} />
 
@@ -209,6 +248,9 @@ contact:    lang === "th" ? "ติดต่อเรา"  : "Contact",
 
           {user ? (
             <>
+              <Link to="/orders" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700, color: "var(--text-main)", textDecoration: "none", fontSize: "1.05rem" }}>
+                📦 {lang === "th" ? "คำสั่งซื้อของฉัน" : "My Orders"}
+              </Link>
               <Link to="/profile" onClick={() => setMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
                 <AvatarBubble avatar={user.avatar} name={user.name} role={role} />
                 <div>
@@ -271,6 +313,15 @@ function IconLogout() {
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
       <polyline points="16 17 21 12 16 7"/>
       <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+  );
+}
+
+function IconCart() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
     </svg>
   );
 }
