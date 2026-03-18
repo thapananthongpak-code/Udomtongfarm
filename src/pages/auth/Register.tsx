@@ -3,6 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
 
+const THAI_PROVINCES = [
+  "กรุงเทพมหานคร","กระบี่","กาญจนบุรี","กาฬสินธุ์","กำแพงเพชร","ขอนแก่น","จันทบุรี","ฉะเชิงเทรา",
+  "ชลบุรี","ชัยนาท","ชัยภูมิ","ชุมพร","เชียงราย","เชียงใหม่","ตรัง","ตราด","ตาก","นครนายก",
+  "นครปฐม","นครพนม","นครราชสีมา","นครศรีธรรมราช","นครสวรรค์","นนทบุรี","นราธิวาส","น่าน",
+  "บึงกาฬ","บุรีรัมย์","ปทุมธานี","ประจวบคีรีขันธ์","ปราจีนบุรี","ปัตตานี","พระนครศรีอยุธยา",
+  "พะเยา","พังงา","พัทลุง","พิจิตร","พิษณุโลก","เพชรบุรี","เพชรบูรณ์","แพร่","ภูเก็ต",
+  "มหาสารคาม","มุกดาหาร","แม่ฮ่องสอน","ยโสธร","ยะลา","ร้อยเอ็ด","ระนอง","ระยอง","ราชบุรี",
+  "ลพบุรี","ลำปาง","ลำพูน","เลย","ศรีสะเกษ","สกลนคร","สงขลา","สตูล","สมุทรปราการ",
+  "สมุทรสงคราม","สมุทรสาคร","สระแก้ว","สระบุรี","สิงห์บุรี","สุโขทัย","สุพรรณบุรี",
+  "สุราษฎร์ธานี","สุรินทร์","หนองคาย","หนองบัวลำภู","อ่างทอง","อำนาจเจริญ","อุดรธานี",
+  "อุตรดิตถ์","อุทัยธานี","อุบลราชธานี",
+];
+
 const EMOJI_LIST = [
   "🐦","🦜","🦚","🦋","🐸","🐢","🌿","🌸","🌺","🌻","🍃","🌾",
   "🐆","🦁","🐘","🦒","🐊","🦎","🌴","🌵","🍀","🌱","🐠","🦀",
@@ -21,6 +34,10 @@ export default function Register() {
   const [birthDate, setBirthDate] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [district, setDistrict] = useState("");
+  const [province, setProvince] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [pdpa, setPdpa] = useState(false);
   const [avatar, setAvatar] = useState("🌿");
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -41,6 +58,11 @@ export default function Register() {
     emailLabel: lang === "th" ? "อีเมล (Email)" : "Email Address",
     passLabel: lang === "th" ? "รหัสผ่าน (Password)" : "Password",
     passPlaceholder: lang === "th" ? "ตั้งรหัสผ่านอย่างน้อย 6 ตัวอักษร" : "At least 6 characters",
+    addrLabel: lang === "th" ? "ที่อยู่สำหรับจัดส่ง" : "Shipping Address",
+    addrLine: lang === "th" ? "บ้านเลขที่ / ถนน / ซอย" : "House No. / Street / Soi",
+    districtLabel: lang === "th" ? "อำเภอ/เขต" : "District",
+    provinceLabel: lang === "th" ? "จังหวัด" : "Province",
+    postalLabel: lang === "th" ? "รหัสไปรษณีย์" : "Postal Code",
     pdpaDesc: lang === "th" ? "ข้าพเจ้ายินยอมให้ Udomtongfarm เก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคล เพื่อวัตถุประสงค์ในการให้บริการ ตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)" : "I consent to Udomtongfarm collecting, using, and disclosing my personal data for service purposes according to the PDPA.",
     btnRegister: lang === "th" ? "สมัครสมาชิกเลย" : "Register Now",
     btnCreating: lang === "th" ? "กำลังสร้างบัญชี..." : "Creating account...",
@@ -68,7 +90,7 @@ export default function Register() {
     reader.readAsDataURL(file);
   }
 
-  async function onSubmitRegister(e: React.FormEvent) {
+  async function onSubmitRegister(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!pdpa) return setError(lang === "th" ? "กรุณากดยอมรับเงื่อนไข PDPA ก่อนสมัครสมาชิก" : "Please accept the PDPA terms before registering.");
     setError("");
@@ -85,14 +107,14 @@ export default function Register() {
     } finally { setLoading(false); }
   }
 
-  async function onSubmitVerifyOTP(e: React.FormEvent) {
+  async function onSubmitVerifyOTP(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE}/api/verify-otp`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), otpCode })
+        body: JSON.stringify({ email: email.trim(), otpCode, name: name.trim(), phone: phone.trim(), addressLine: addressLine.trim(), district: district.trim(), province, postalCode: postalCode.trim() })
       });
       const data = await response.json();
       if (response.ok) {
@@ -149,6 +171,36 @@ export default function Register() {
               <div>
                 <div style={{ marginBottom: "8px", fontWeight: 700, color: "var(--text-main)", fontSize: "0.95rem" }}>{t.passLabel}</div>
                 <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.passPlaceholder} type="password" required minLength={6} className="auth-input" />
+              </div>
+
+              {/* ─── ที่อยู่จัดส่ง ─── */}
+              <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: 16 }}>
+                <div style={{ marginBottom: 12, fontWeight: 800, color: "var(--primary-hover)", fontSize: "0.95rem" }}>
+                  📦 {t.addrLabel}
+                </div>
+                <div style={{ display: "grid", gap: 14 }}>
+                  <div>
+                    <div style={{ marginBottom: 6, fontWeight: 700, color: "var(--text-main)", fontSize: "0.9rem" }}>{t.addrLine}</div>
+                    <input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} required placeholder={t.addrLine} className="auth-input" />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
+                    <div>
+                      <div style={{ marginBottom: 6, fontWeight: 700, color: "var(--text-main)", fontSize: "0.9rem" }}>{t.districtLabel}</div>
+                      <input value={district} onChange={(e) => setDistrict(e.target.value)} placeholder={t.districtLabel} className="auth-input" />
+                    </div>
+                    <div>
+                      <div style={{ marginBottom: 6, fontWeight: 700, color: "var(--text-main)", fontSize: "0.9rem" }}>{t.provinceLabel}</div>
+                      <select value={province} onChange={(e) => setProvince(e.target.value)} required className="auth-input" style={{ cursor: "pointer" }}>
+                        <option value="">{lang === "th" ? "-- เลือกจังหวัด --" : "-- Select Province --"}</option>
+                        {THAI_PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ marginBottom: 6, fontWeight: 700, color: "var(--text-main)", fontSize: "0.9rem" }}>{t.postalLabel}</div>
+                      <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="XXXXX" maxLength={5} className="auth-input" />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Avatar picker */}

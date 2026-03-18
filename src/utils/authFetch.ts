@@ -21,5 +21,10 @@ export function authFetch(url: string, options: RequestInit = {}): Promise<Respo
     // localStorage parse error — ดำเนินการต่อโดยไม่มี token
   }
 
+  try {
+    const lang = localStorage.getItem("lang");
+    if (lang === "th" || lang === "en") headers["X-Lang"] = lang;
+  } catch { /* ignore */ }
+
   return fetch(url, { ...options, headers });
 }
