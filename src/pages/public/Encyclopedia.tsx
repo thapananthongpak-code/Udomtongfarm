@@ -447,42 +447,42 @@ function SpeciesCard({ sp, lang, t, idx, isFav, onToggleFav }: {
 
   return (
     <div style={{ position: "relative" }}>
-      {/* + button outside flip card so it's always clickable */}
-      {hasPrice && inStock && (
-        <button
-          onClick={e => { e.preventDefault(); e.stopPropagation(); setShowModal(true); }}
-          style={{ position: "absolute", top: 24, right: 24, zIndex: 10, width: 36, height: 36, borderRadius: "50%", background: "var(--primary)", color: "white", border: "none", fontSize: "1.4rem", fontWeight: 900, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.3)", lineHeight: 1 }}
-          title={lang === "th" ? "เพิ่มเข้าตะกร้า" : "Add to Cart"}
-        >+</button>
-      )}
       <Link
         to={`/species/${sp.type}/${sp.id}`}
-        className="species-flip-card fade-in-up"
-        style={{ textDecoration: "none", display: "block", height: 360, animationDelay: `${0.05 * (idx % 10)}s` }}
+        className="glass-card fade-in-up"
+        style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", animationDelay: `${0.05 * (idx % 10)}s` }}
       >
-        <div className="species-flip-inner" style={{ height: "100%" }}>
-          {/* Front */}
-          <div className="species-flip-front glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column" }}>
-            <div style={{ width: "100%", height: "200px", borderRadius: "12px", overflow: "hidden", marginBottom: "16px", flexShrink: 0, position: "relative" }}>
-              <img src={sp.image} alt="" className="hover-zoom-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              {hasPrice && !inStock && (
-                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "12px" }}>
-                  <span style={{ background: "#ef4444", color: "white", borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: "0.85rem" }}>{lang === "th" ? "สินค้าหมด" : "Out of Stock"}</span>
-                </div>
-              )}
-              {hasPrice && typeof sp.stock === "number" && sp.stock > 0 && (
-                <div style={{ position: "absolute", bottom: 6, left: 6, background: "rgba(0,0,0,0.55)", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: "0.72rem", fontWeight: 700 }}>
-                  {lang === "th" ? "เหลือ" : "Stock"} {sp.stock}
-                </div>
-              )}
+        {/* Image */}
+        <div style={{ width: "100%", height: "200px", overflow: "hidden", position: "relative", flexShrink: 0 }}>
+          <img src={sp.image} alt="" className="hover-zoom-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          {hasPrice && !inStock && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ background: "#ef4444", color: "white", borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: "0.85rem" }}>{lang === "th" ? "สินค้าหมด" : "Out of Stock"}</span>
             </div>
+          )}
+          {hasPrice && typeof sp.stock === "number" && sp.stock > 0 && (
+            <div style={{ position: "absolute", bottom: 6, left: 6, background: "rgba(0,0,0,0.55)", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: "0.72rem", fontWeight: 700 }}>
+              {lang === "th" ? "เหลือ" : "Stock"} {sp.stock}
+            </div>
+          )}
+        </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ background: sp.type === "animal" ? "var(--primary-light)" : "#fef3c7", color: sp.type === "animal" ? "var(--primary-hover)" : "#d97706", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 5 }}>
-                {sp.type === "animal"
-                  ? <><IconPaw size={12} />{t.animalLabel}</>
-                  : <><IconLeaf size={12} color="#d97706" />{t.plantLabel}</>}
-              </span>
+        {/* Body */}
+        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ background: sp.type === "animal" ? "var(--primary-light)" : "#fef3c7", color: sp.type === "animal" ? "var(--primary-hover)" : "#d97706", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 5 }}>
+              {sp.type === "animal"
+                ? <><IconPaw size={12} />{t.animalLabel}</>
+                : <><IconLeaf size={12} color="#d97706" />{t.plantLabel}</>}
+            </span>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {hasPrice && inStock && (
+                <button
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); setShowModal(true); }}
+                  style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--primary)", color: "white", border: "none", fontSize: "1.2rem", fontWeight: 900, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(0,0,0,0.2)", lineHeight: 1 }}
+                  title={lang === "th" ? "เพิ่มเข้าตะกร้า" : "Add to Cart"}
+                >+</button>
+              )}
               <button
                 className={`btn-fav${isFav ? " active" : ""}`}
                 onClick={(e) => onToggleFav(sp.id, e)}
@@ -491,43 +491,24 @@ function SpeciesCard({ sp, lang, t, idx, isFav, onToggleFav }: {
                 <IconHeart size={16} filled={isFav} />
               </button>
             </div>
-
-            <h3 style={{ margin: "0 0 4px 0", fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.3 }}>
-              {name}
-            </h3>
-            {sp.name_en && lang === "th" && (
-              <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "4px", fontWeight: 500, margin: "0 0 4px 0" }}>
-                {sp.name_en}
-              </p>
-            )}
-            {hasPrice ? (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 6 }}>
-                <span style={{ color: "var(--primary-hover)", fontWeight: 900, fontSize: "1rem" }}>{fmt(sp.price!)}</span>
-                <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>/ {sp.unit ?? (sp.type === "animal" ? "ตัว" : "ต้น")}</span>
-              </div>
-            ) : (
-              <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", fontStyle: "italic", margin: 0 }}>{sp.scientific_name}</p>
-            )}
           </div>
 
-          {/* Back */}
-          <div className="species-flip-back">
-            <div style={{ fontSize: "2.5rem", lineHeight: 1 }}>
-              {sp.type === "animal" ? "🐾" : "🌿"}
+          <h3 style={{ margin: "0 0 4px 0", fontSize: "1.1rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.3 }}>
+            {name}
+          </h3>
+          {sp.name_en && lang === "th" && (
+            <p style={{ color: "var(--text-muted)", fontSize: "0.83rem", fontWeight: 500, margin: "0 0 2px 0" }}>
+              {sp.name_en}
+            </p>
+          )}
+          <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic", margin: 0 }}>{sp.scientific_name}</p>
+
+          {hasPrice && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 8 }}>
+              <span style={{ color: "var(--primary-hover)", fontWeight: 900, fontSize: "1rem" }}>{fmt(sp.price!)}</span>
+              <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>/ {sp.unit ?? (sp.type === "animal" ? "ตัว" : "ต้น")}</span>
             </div>
-            <div>
-              <h3 style={{ margin: "0 0 10px 0", fontSize: "1.15rem", fontWeight: 800, color: "var(--text-main)" }}>{name}</h3>
-              {sp.scientific_name && (
-                <p style={{ margin: "0 0 12px 0", fontSize: "0.82rem", fontStyle: "italic", color: "var(--text-muted)" }}>{sp.scientific_name}</p>
-              )}
-              <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
-                {shortDesc || (lang === "th" ? "แตะเพื่อดูรายละเอียด" : "Tap to view details")}
-              </p>
-            </div>
-            <div style={{ marginTop: 8, padding: "10px 24px", borderRadius: 24, background: "var(--primary)", color: "#fff", fontWeight: 800, fontSize: "0.9rem" }}>
-              {t.viewDetails}
-            </div>
-          </div>
+          )}
         </div>
       </Link>
 
