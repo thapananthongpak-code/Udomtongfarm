@@ -194,26 +194,41 @@ export default function Checkout() {
         {lang === "th" ? "ชำระเงิน" : "Checkout"}
       </h1>
 
-      {/* Step indicator */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 28 }}>
-        {steps.map((s, idx) => (
-          <div key={s.id} style={{ display: "flex", alignItems: "center", flex: 1 }}>
-            <button
-              onClick={() => { if (s.id !== "review" || step === "review") setStep(s.id); }}
-              style={{
-                flex: 1, padding: isMobile ? "8px 4px" : "10px 8px", border: "none",
-                background: step === s.id ? "var(--primary)" : step === "review" || (idx === 0 && step !== "address") ? "var(--primary-light)" : "var(--bg-color)",
-                color: step === s.id ? "white" : "var(--text-muted)",
-                fontWeight: 700, cursor: "pointer",
-                borderRadius: idx === 0 ? "10px 0 0 10px" : idx === steps.length - 1 ? "0 10px 10px 0" : 0,
-                transition: "all 0.2s", fontSize: isMobile ? "0.75rem" : "0.9rem",
-                borderTop: "1px solid var(--border-color)", borderBottom: "1px solid var(--border-color)",
-                borderLeft: idx === 0 ? "1px solid var(--border-color)" : "none",
-                borderRight: idx === steps.length - 1 ? "1px solid var(--border-color)" : "none",
-              }}
-            >{s.label}</button>
-          </div>
-        ))}
+      {/* Step progress bar */}
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 32 }}>
+        {steps.map((s, idx) => {
+          const stepOrder = { address: 0, payment: 1, review: 2 };
+          const currentIdx = stepOrder[step];
+          const isDone    = stepOrder[s.id] < currentIdx;
+          const isActive  = s.id === step;
+          return (
+            <div key={s.id} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+              <div
+                onClick={() => { if (isDone) setStep(s.id); }}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: isDone ? "pointer" : "default", flex: idx < steps.length - 1 ? "none" : 1 }}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: isActive ? "var(--primary)" : isDone ? "var(--primary)" : "var(--bg-color)",
+                  border: isActive || isDone ? "none" : "2px solid var(--border-color)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: isActive || isDone ? "white" : "var(--text-muted)",
+                  fontWeight: 900, fontSize: "0.9rem",
+                  boxShadow: isActive ? "0 4px 16px rgba(43,87,64,0.35)" : "none",
+                  transition: "all 0.3s ease",
+                }}>
+                  {isDone ? "✓" : idx + 1}
+                </div>
+                <div style={{ marginTop: 6, fontSize: isMobile ? "0.7rem" : "0.82rem", fontWeight: isActive ? 800 : 600, color: isActive ? "var(--primary-hover)" : isDone ? "var(--primary-hover)" : "var(--text-muted)", textAlign: "center", whiteSpace: "nowrap" }}>
+                  {lang === "th" ? ["ที่อยู่","จัดส่ง/ชำระ","ยืนยัน"][idx] : ["Address","Ship/Pay","Review"][idx]}
+                </div>
+              </div>
+              {idx < steps.length - 1 && (
+                <div style={{ flex: 1, height: 3, margin: "0 8px", marginBottom: 22, borderRadius: 4, background: isDone || isActive ? "var(--primary)" : "var(--border-color)", transition: "background 0.3s ease" }} />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {error && (

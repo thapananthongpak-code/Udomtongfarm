@@ -46,18 +46,24 @@ export default function Cart() {
 
   if (items.length === 0) {
     return (
-      <div style={{ maxWidth: 600, margin: "80px auto", textAlign: "center", padding: "0 20px" }}>
-        <div style={{ fontSize: "5rem", marginBottom: 16 }}>🛒</div>
-        <h2 style={{ color: "var(--text-main)", marginBottom: 8 }}>{t.empty}</h2>
-        <p style={{ color: "var(--text-muted)", marginBottom: 28 }}>
-          {lang === "th" ? "ลองเลือกดูสินค้าที่เราจัดเตรียมไว้ให้คุณ" : "Explore our catalog and add items you like."}
-        </p>
-        <Link
-          to="/encyclopedia"
-          style={{ background: "var(--primary)", color: "white", padding: "12px 32px", borderRadius: 12, textDecoration: "none", fontWeight: 800, fontSize: "1rem" }}
-        >
-          {t.browse}
-        </Link>
+      <div style={{ maxWidth: 520, margin: "80px auto", textAlign: "center", padding: "0 20px" }}>
+        <div className="empty-state-cart">
+          <div className="empty-state-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+          </div>
+          <h2 style={{ color: "var(--text-main)", marginBottom: 8, fontSize: "1.4rem" }}>{t.empty}</h2>
+          <p style={{ color: "var(--text-muted)", marginBottom: 32, fontSize: "0.95rem", lineHeight: 1.7 }}>
+            {lang === "th"
+              ? "ยังไม่มีสินค้าในตะกร้า ลองเลือกสินค้าที่ต้องการจากสารานุกรมของเรา"
+              : "Your cart is empty. Browse our catalog and pick something you love."}
+          </p>
+          <Link to="/encyclopedia" className="btn-primary" style={{ borderRadius: 40, padding: "13px 36px", fontSize: "1rem" }}>
+            🌿 {lang === "th" ? "เลือกดูสินค้า" : "Browse Catalog"}
+          </Link>
+        </div>
       </div>
     );
   }

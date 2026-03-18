@@ -17,6 +17,8 @@ export default function Footer() {
     address: lang === "th" ? "ที่อยู่" : "Address",
     addressText: lang === "th" ? "ฟาร์มอุดมทอง จ.ชัยภูมิ" : "Udomtong Farm, Chaiyaphum",
     rights: lang === "th" ? "สงวนลิขสิทธิ์" : "All rights reserved",
+    followUs: lang === "th" ? "ติดตามเรา" : "Follow Us",
+    mapLink: lang === "th" ? "ดูแผนที่ฟาร์ม" : "View Farm Map",
   };
 
   return (
@@ -95,6 +97,46 @@ export default function Footer() {
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary-hover)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>
               📞 081-173-3620
+            </a>
+            <Link to="/map" style={{ color: "var(--text-muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary-hover)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>
+              🗺️ {t.mapLink}
+            </Link>
+          </div>
+        </div>
+
+        {/* Social */}
+        <div>
+          <h4 style={{ color: "var(--text-main)", fontWeight: 800, marginTop: 0, marginBottom: 16, fontSize: "1rem" }}>
+            {t.followUs}
+          </h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <a
+              href="https://www.facebook.com/udomtongfarm"
+              target="_blank" rel="noopener noreferrer"
+              className="footer-social-link"
+            >
+              <span className="footer-social-icon footer-social-fb">f</span>
+              Facebook
+            </a>
+            <a
+              href="https://line.me/ti/p/~udomtongfarm"
+              target="_blank" rel="noopener noreferrer"
+              className="footer-social-link"
+            >
+              <span className="footer-social-icon footer-social-line">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.952 9.026c0-4.59-4.601-8.326-10.252-8.326C4.05.7-.5 4.436-.5 9.026c0 4.115 3.65 7.56 8.581 8.21.334.072.79.22.904.505.103.26.068.666.033.928l-.146.876c-.044.26-.204 1.017.891.554s5.916-3.484 8.073-5.97c1.49-1.635 2.116-3.295 2.116-5.103z"/></svg>
+              </span>
+              LINE
+            </a>
+            <a
+              href="https://www.youtube.com/@udomtongfarm"
+              target="_blank" rel="noopener noreferrer"
+              className="footer-social-link"
+            >
+              <span className="footer-social-icon footer-social-yt">▶</span>
+              YouTube
             </a>
           </div>
         </div>

@@ -91,13 +91,15 @@ export default function Navbar() {
   return (
   <>
     <nav style={{
-      background: "var(--card-bg)",
-      borderBottom: "1px solid var(--border-color)",
+      background: scrolled ? "var(--card-bg)" : "rgba(var(--nav-bg-rgb, 255,255,255), 0.72)",
+      borderBottom: `1px solid ${scrolled ? "var(--border-color)" : "transparent"}`,
       padding: "12px 24px",
       display: "flex", alignItems: "center", justifyContent: "space-between",
       position: "sticky", top: 0, zIndex: 100,
-      boxShadow: scrolled ? "var(--shadow-sm)" : "none",
-      transition: "background 0.4s ease, border-color 0.4s ease, box-shadow 0.3s ease",
+      boxShadow: scrolled ? "0 4px 24px rgba(43,87,64,0.10)" : "none",
+      backdropFilter: scrolled ? "blur(18px) saturate(180%)" : "none",
+      WebkitBackdropFilter: scrolled ? "blur(18px) saturate(180%)" : "none",
+      transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
     }}>
       {/* Left: Logo + Desktop nav links */}
       <div style={{ display: "flex", alignItems: "center", gap: 24 }}>

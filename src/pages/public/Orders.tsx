@@ -14,6 +14,42 @@ const STATUS_CONFIG: Record<OrderStatus, { icon: string; labelTh: string; labelE
   cancelled:  { icon: "✕",  labelTh: "ยกเลิกแล้ว",           labelEn: "Cancelled",       color: "#991b1b", bg: "#fee2e2" },
 };
 
+const FLOW_STEPS: OrderStatus[] = ["pending", "confirmed", "processing", "shipped", "delivered"];
+
+function OrderTimeline({ status, lang }: { status: OrderStatus; lang: string }) {
+  if (status === "cancelled") return null;
+  const currentIdx = FLOW_STEPS.indexOf(status);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 0, marginTop: 10 }}>
+      {FLOW_STEPS.map((s, i) => {
+        const cfg = STATUS_CONFIG[s];
+        const done   = i < currentIdx;
+        const active = i === currentIdx;
+        return (
+          <div key={s} style={{ display: "flex", alignItems: "center", flex: i < FLOW_STEPS.length - 1 ? "none" : 1 }}>
+            <div title={lang === "th" ? cfg.labelTh : cfg.labelEn} style={{
+              width: active ? 26 : 18, height: active ? 26 : 18,
+              borderRadius: "50%",
+              background: done ? "var(--primary)" : active ? cfg.bg : "var(--bg-color)",
+              border: active ? `2px solid ${cfg.color}` : done ? "none" : "2px solid var(--border-color)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: active ? "0.8rem" : "0.65rem",
+              flexShrink: 0,
+              transition: "all 0.25s ease",
+              boxShadow: active ? `0 2px 8px ${cfg.bg}` : "none",
+            }}>
+              {active ? cfg.icon : done ? "✓" : ""}
+            </div>
+            {i < FLOW_STEPS.length - 1 && (
+              <div style={{ width: "100%", minWidth: 12, height: 2, background: done ? "var(--primary)" : "var(--border-color)", margin: "0 2px", borderRadius: 2, transition: "background 0.3s" }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   useEffect(() => {
@@ -145,7 +181,8 @@ export default function Orders() {
                     <div style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: 8 }}>
                       {fmtDate(order.created_at)}
                     </div>
-                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                    <OrderTimeline status={order.status} lang={lang} />
+                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 10 }}>
                       {(order.items ?? []).slice(0, 3).map(item => (
                         <img
                           key={item.id}

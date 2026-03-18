@@ -69,11 +69,11 @@ export default function SpeciesCard({ species }: Props) {
     <div style={{ position: "relative" }}>
       <Link
         to={`/species/${species.type}/${species.id}`}
-        className="glass-card"
+        className={`glass-card species-card-${species.type}`}
         style={{ textDecoration: "none", color: "inherit", display: "block", padding: 0, overflow: "hidden" }}
       >
         {/* Image */}
-        <div style={{ width: "100%", height: 200, overflow: "hidden", position: "relative" }}>
+        <div style={{ width: "100%", height: 210, overflow: "hidden", position: "relative", borderRadius: "24px 24px 0 0" }}>
           <img
             src={species.image}
             alt={species.name_en}

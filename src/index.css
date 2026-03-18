@@ -164,6 +164,14 @@ html[data-theme="dark"] .glass-card {
   box-shadow: var(--shadow-lg), var(--shadow-neon);
   border-color: var(--primary);
 }
+.species-card-animal:hover {
+  box-shadow: var(--shadow-lg), 0 0 28px rgba(43,87,64,0.22);
+  border-color: var(--primary);
+}
+.species-card-plant:hover {
+  box-shadow: var(--shadow-lg), 0 0 28px rgba(217,119,6,0.18);
+  border-color: #d97706;
+}
 .glass-card:hover::before {
   opacity: 1;
 }
@@ -2360,8 +2368,14 @@ html[data-theme="dark"] .compare-badge.diff {
   word-break: break-word;
 }
 @keyframes toastIn {
-  from { opacity: 0; transform: translateX(60px) scale(0.92); }
-  to   { opacity: 1; transform: translateX(0)     scale(1); }
+  0%   { opacity: 0; transform: translateX(80px) scale(0.85); }
+  55%  { opacity: 1; transform: translateX(-6px) scale(1.03); }
+  75%  { transform: translateX(3px) scale(0.99); }
+  100% { transform: translateX(0)   scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(80px) scale(0.85); }
 }
 .toast-success  { background: linear-gradient(135deg, #16a34a, #22c55e); }
 .toast-error    { background: linear-gradient(135deg, #dc2626, #ef4444); }
@@ -2386,6 +2400,63 @@ html[data-theme="dark"] .compare-badge.diff {
   .toast-container { left: 16px; right: 16px; max-width: none; bottom: 80px; }
   .toast           { max-width: none; }
 }
+
+/* ────────────────────────────────────────────────────────────
+   📭 Empty States
+──────────────────────────────────────────────────────────── */
+.empty-state-cart {
+  padding: 52px 32px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 28px;
+  backdrop-filter: blur(16px);
+  animation: fadeInUp 0.6s cubic-bezier(0.16,1,0.3,1) both;
+}
+.empty-state-icon {
+  width: 110px; height: 110px;
+  background: var(--primary-light);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px;
+  animation: floatOrbs 6s ease-in-out infinite;
+}
+html[data-theme="dark"] .empty-state-icon svg {
+  stroke: var(--primary);
+  filter: drop-shadow(0 0 12px var(--primary));
+}
+
+/* ────────────────────────────────────────────────────────────
+   🌐 Footer Social Links
+──────────────────────────────────────────────────────────── */
+.footer-social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.footer-social-link:hover {
+  color: var(--primary-hover);
+  transform: translateX(4px);
+}
+.footer-social-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 900;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.footer-social-link:hover .footer-social-icon {
+  transform: scale(1.12);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.footer-social-fb   { background: #1877f2; color: #fff; }
+.footer-social-line { background: #06c755; color: #fff; }
+.footer-social-yt   { background: #ff0000; color: #fff; }
 
 /* ────────────────────────────────────────────────────────────
    🛡️ Error Boundary
