@@ -28,11 +28,11 @@ export default function Footer() {
       padding: "60px 24px 30px 24px",
       marginTop: "40px",
     }}>
-      <div style={{
+      <div className="footer-grid" style={{
         maxWidth: 1100,
         margin: "0 auto",
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
         gap: 40,
         marginBottom: 40,
       }}>

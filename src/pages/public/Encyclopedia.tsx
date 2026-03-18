@@ -237,8 +237,8 @@ export default function Encyclopedia() {
           </div>
 
           {/* Filter pills + Sort */}
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <div className="encyclo-filter-row" style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               <FilterPill active={tab === "all"}    onClick={() => setTab("all")}    label={t.all}     count={counts.all}    />
               <FilterPill active={tab === "animal"} onClick={() => setTab("animal")} label={t.animals} count={counts.animal} icon={<IconPaw size={14} color={tab === "animal" ? "#fff" : undefined} />} />
               <FilterPill active={tab === "plant"}  onClick={() => setTab("plant")}  label={t.plants}  count={counts.plant}  icon={<IconLeaf size={14} color={tab === "plant" ? "#fff" : undefined} />} />
@@ -448,7 +448,7 @@ function SpeciesCard({ sp, lang, t, idx, isFav, onToggleFav }: {
     <div style={{ position: "relative" }}>
       <Link
         to={`/species/${sp.type}/${sp.id}`}
-        className="glass-card fade-in-up"
+        className={`glass-card fade-in-up species-card-${sp.type}`}
         style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", animationDelay: `${0.05 * (idx % 10)}s` }}
       >
         {/* Image */}

@@ -1221,19 +1221,67 @@ html[data-theme="dark"] .back-to-top { color: #040906 !important; }
   .auth-card     { padding: 28px 20px; max-width: 100%; border-radius: 20px; }
   .auth-card-wide { max-width: 100%; }
 
-  /* Navbar responsive */
+  /* Navbar */
   .nav-desktop-links { display: none !important; }
   .nav-hamburger     { display: flex !important; align-items: center; justify-content: center; width: 44px; height: 44px; background: var(--bg-color) !important; border-radius: 12px !important; }
+  /* Spotlight — icon only, no text/kbd */
+  .spotlight-trigger span,
+  .spotlight-trigger kbd { display: none !important; }
+  .spotlight-trigger { padding: 7px 10px; gap: 0; min-width: 36px; justify-content: center; }
 
-  h1 { font-size: clamp(2.4rem, 10vw, 3.5rem) !important; letter-spacing: -0.5px !important; }
-  .btn-primary { padding: 14px 24px; font-size: 0.95rem; width: 100%; }
+  h1 { font-size: clamp(2rem, 8vw, 3rem) !important; letter-spacing: -0.5px !important; }
+  /* btn-primary: auto width by default, use mobile-full to force full width */
+  .btn-primary { padding: 13px 22px; font-size: 0.95rem; width: auto; }
+  .btn-primary.w-full { width: 100% !important; }
   .hero-buttons { flex-direction: column; width: 100%; }
-  .hero-buttons a { width: 100%; text-align: center; justify-content: center; }
+  .hero-buttons a,
+  .hero-buttons .btn-primary { width: 100% !important; text-align: center; justify-content: center; }
   .stats-grid { grid-template-columns: 1fr !important; }
+
+  /* Footer: 2 columns on tablet */
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 28px 20px !important;
+  }
+
+  /* SpeciesPage */
+  .sp-hero      { min-height: 260px !important; height: 38vh !important; max-height: 360px !important; }
+  h1.sp-title   { font-size: clamp(1.7rem, 7vw, 2.6rem) !important; }
+  .sp-alt-name  { font-size: 1.05rem !important; }
+  .sp-header-card { padding: 20px !important; }
+  .sp-tabs-card   { padding: 18px !important; }
+  .sp-share-row   { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .sp-share-row::-webkit-scrollbar { display: none; }
+
+  /* Encyclopedia */
+  .encyclo-filter-row { gap: 6px !important; }
+  .encyclo-search-area { flex-direction: column !important; gap: 8px !important; }
+
+  /* Pagination */
+  .pagination { gap: 4px !important; }
+  .page-btn    { padding: 6px 10px !important; font-size: 0.78rem !important; }
 }
 
 @media (max-width: 480px) {
   .fade-in-up { animation-duration: 0.5s; }
+
+  /* Footer: 1 column on phone */
+  .footer-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+
+  /* SpeciesPage */
+  .sp-hero        { min-height: 220px !important; height: 35vh !important; }
+  .sp-header-card { padding: 16px !important; }
+  .sp-tabs-card   { padding: 14px !important; }
+  h1.sp-title     { font-size: clamp(1.5rem, 7vw, 2.2rem) !important; }
+
+  /* Cart empty state */
+  .empty-state-cart { padding: 36px 20px; }
+
+  /* Checkout progress dots */
+  .checkout-step-dot { width: 30px !important; height: 30px !important; font-size: 0.8rem !important; }
+
+  /* Orders timeline smaller on tiny screens */
+  .order-timeline-wrap { gap: 0 !important; }
 }
 
 /* ────────────────────────────────────────────────────────────

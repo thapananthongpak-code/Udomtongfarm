@@ -208,7 +208,7 @@ export default function SpeciesPage() {
     <div className="fade-in-up" style={{ paddingBottom: "100px" }}>
 
       {/* Hero Image */}
-      <div style={{ position: "relative", width: "100%", height: "50vh", minHeight: "400px", maxHeight: "600px", backgroundColor: "var(--card-bg)" }}>
+      <div className="sp-hero" style={{ position: "relative", width: "100%", height: "50vh", minHeight: "400px", maxHeight: "600px", backgroundColor: "var(--card-bg)" }}>
         <img
           src={item.image}
           alt={item.name_en}
@@ -230,10 +230,10 @@ export default function SpeciesPage() {
         </nav>
 
         {/* Header Card */}
-        <div className="glass-card" style={{ padding: "40px", marginBottom: "28px", position: "relative", overflow: "hidden" }}>
+        <div className="glass-card sp-header-card" style={{ padding: "40px", marginBottom: "28px", position: "relative", overflow: "hidden" }}>
 
           {/* Actions row */}
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 20, flexWrap: "wrap", minWidth: 0 }}>
             <span style={{
               background: item.type === "animal" ? "var(--primary-light)" : "#fef3c7",
               color: item.type === "animal" ? "var(--primary-hover)" : "#d97706",
@@ -243,7 +243,7 @@ export default function SpeciesPage() {
               {item.type === "animal" ? `🐾 ${t.typeAnimal}` : `🌿 ${t.typePlant}`}
             </span>
 
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="sp-share-row" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {/* Copy link */}
               <button onClick={handleShare} className="btn-share">
                 <IconShare size={16} />
@@ -287,11 +287,11 @@ export default function SpeciesPage() {
             </div>
           </div>
 
-          <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)", fontWeight: 900, margin: "0 0 8px 0", color: "var(--text-main)", lineHeight: 1.2 }}>
+          <h1 className="sp-title" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, margin: "0 0 8px 0", color: "var(--text-main)", lineHeight: 1.2 }}>
             {name}
           </h1>
 
-          <div style={{ fontSize: "1.5rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "20px" }}>
+          <div className="sp-alt-name" style={{ fontSize: "1.5rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "20px" }}>
             {altName}
           </div>
 
@@ -385,7 +385,7 @@ export default function SpeciesPage() {
         </div>
 
         {/* Tabs */}
-        <div className="glass-card" style={{ padding: "32px", marginBottom: "32px" }}>
+        <div className="glass-card sp-tabs-card" style={{ padding: "32px", marginBottom: "32px" }}>
           <div className="species-tab-bar">
             <button className={`species-tab-btn${activeTab === "info" ? " active" : ""}`} onClick={() => setActiveTab("info")}>{t.tabInfo}</button>
             {(item.tags && item.tags.length > 0) && (
