@@ -402,7 +402,6 @@ function SpeciesCard({ sp, lang, t, idx, isFav, onToggleFav }: {
 }) {
   const { addItem } = useCartStore();
   const name = lang === "th" ? sp.name_th : sp.name_en;
-  const shortDesc = lang === "th" ? sp.short_description : sp.short_description_en || sp.short_description;
   const hasPrice = typeof sp.price === "number" && sp.price > 0;
   const inStock  = (sp.stock ?? 0) > 0 || sp.available !== false;
   const [showModal, setShowModal] = useState(false);
