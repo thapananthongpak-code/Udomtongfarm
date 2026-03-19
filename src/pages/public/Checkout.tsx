@@ -40,7 +40,7 @@ function useIsMobile() {
   return isMobile;
 }
 
-function calcEstimatedDelivery(company: ShippingCompany): string {
+function calcEstimatedDelivery(company: ShippingCompany, lang: string): string {
   const cfg = SHIPPING_COMPANIES.find(c => c.id === company);
   if (!cfg) return "";
   const today = new Date();
@@ -48,7 +48,8 @@ function calcEstimatedDelivery(company: ShippingCompany): string {
   const maxDate = new Date(today);
   minDate.setDate(today.getDate() + cfg.daysMin);
   maxDate.setDate(today.getDate() + cfg.daysMax);
-  const fmt = (d: Date) => d.toLocaleDateString("th-TH", { month: "short", day: "numeric" });
+  const locale = lang === "th" ? "th-TH" : "en-US";
+  const fmt = (d: Date) => d.toLocaleDateString(locale, { month: "short", day: "numeric" });
   return `${fmt(minDate)} – ${fmt(maxDate)}`;
 }
 
@@ -372,7 +373,7 @@ export default function Checkout() {
 
               {/* Estimated delivery info */}
               <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 10, padding: "10px 14px", marginBottom: 20, fontSize: "0.88rem", color: "#15803d" }}>
-                📅 {lang === "th" ? "คาดว่าจะได้รับสินค้า:" : "Estimated delivery:"} <strong>{calcEstimatedDelivery(shippingCo)}</strong>
+                📅 {lang === "th" ? "คาดว่าจะได้รับสินค้า:" : "Estimated delivery:"} <strong>{calcEstimatedDelivery(shippingCo, lang)}</strong>
               </div>
 
               <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "0 0 18px 0" }} />
@@ -402,15 +403,15 @@ export default function Checkout() {
 
               {payMethod === "promptpay" && (
                 <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 10, padding: 14, marginBottom: 14, fontSize: "0.88rem" }}>
-                  <div style={{ fontWeight: 700, color: "#15803d", marginBottom: 4 }}>📱 พร้อมเพย์</div>
-                  <div style={{ color: "#166534" }}>หมายเลขพร้อมเพย์: <strong>0xx-xxx-xxxx</strong></div>
+                  <div style={{ fontWeight: 700, color: "#15803d", marginBottom: 4 }}>📱 {lang === "th" ? "พร้อมเพย์" : "PromptPay"}</div>
+                  <div style={{ color: "#166534" }}>{lang === "th" ? "หมายเลขพร้อมเพย์:" : "PromptPay number:"} <strong>0xx-xxx-xxxx</strong></div>
                   <div style={{ color: "#166534", marginTop: 4 }}>{lang === "th" ? "แอดมินจะส่งรายละเอียดหลังสั่งซื้อ" : "Admin will send details after order"}</div>
                 </div>
               )}
               {payMethod === "bank_transfer" && (
                 <div style={{ background: "#eff6ff", border: "1px solid #93c5fd", borderRadius: 10, padding: 14, marginBottom: 14, fontSize: "0.88rem" }}>
-                  <div style={{ fontWeight: 700, color: "#1d4ed8", marginBottom: 4 }}>🏦 โอนเงินธนาคาร</div>
-                  <div style={{ color: "#1e40af" }}>ธนาคาร: <strong>กสิกรไทย</strong> | เลขบัญชี: <strong>xxx-x-xxxxx-x</strong></div>
+                  <div style={{ fontWeight: 700, color: "#1d4ed8", marginBottom: 4 }}>🏦 {lang === "th" ? "โอนเงินธนาคาร" : "Bank Transfer"}</div>
+                  <div style={{ color: "#1e40af" }}>{lang === "th" ? "ธนาคาร:" : "Bank:"} <strong>{lang === "th" ? "กสิกรไทย" : "KBank"}</strong> | {lang === "th" ? "เลขบัญชี:" : "Account:"} <strong>xxx-x-xxxxx-x</strong></div>
                   <div style={{ color: "#1e40af", marginTop: 2 }}>{lang === "th" ? "ชื่อบัญชี: อุดมทอง ฟาร์ม" : "Account: Udomtong Farm"}</div>
                 </div>
               )}
@@ -457,7 +458,7 @@ export default function Checkout() {
                   <div style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
                     {shippingCfg.icon} {lang === "th" ? shippingCfg.nameTh : shippingCfg.nameEn}
                     <br />
-                    📅 {calcEstimatedDelivery(shippingCo)}
+                    📅 {calcEstimatedDelivery(shippingCo, lang)}
                   </div>
                 </div>
               </div>
@@ -536,7 +537,7 @@ export default function Checkout() {
           </div>
           {/* Delivery estimate in summary */}
           <div style={{ marginTop: 10, background: "var(--bg-color)", borderRadius: 8, padding: "8px 10px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-            📅 {lang === "th" ? "คาดส่ง:" : "Est. delivery:"} <strong style={{ color: "var(--text-main)" }}>{calcEstimatedDelivery(shippingCo)}</strong>
+            📅 {lang === "th" ? "คาดส่ง:" : "Est. delivery:"} <strong style={{ color: "var(--text-main)" }}>{calcEstimatedDelivery(shippingCo, lang)}</strong>
           </div>
         </div>
       </div>
