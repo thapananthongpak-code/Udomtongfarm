@@ -309,7 +309,7 @@ export default function OrderDetail() {
                   to={`/species/${item.species_type}/${item.species_id}`}
                   style={{ fontWeight: 700, color: "var(--text-main)", textDecoration: "none", fontSize: "0.92rem" }}
                 >
-                  {item.species_name}
+                  {lang === "th" ? item.species_name : (item.species_name_en || item.species_name)}
                 </Link>
                 <div style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginTop: 2 }}>
                   {fmt(item.unit_price)} × {item.quantity}

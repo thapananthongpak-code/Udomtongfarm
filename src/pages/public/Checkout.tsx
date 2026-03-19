@@ -162,13 +162,14 @@ export default function Checkout() {
     const result = await createOrder({
       user_email:       user!.email!,
       items: items.map(i => ({
-        species_id:    i.species_id,
-        species_name:  i.species_name,
-        species_image: i.species_image,
-        species_type:  i.species_type,
-        quantity:      i.quantity,
-        unit_price:    i.unit_price,
-        subtotal:      i.unit_price * i.quantity,
+        species_id:     i.species_id,
+        species_name:   i.species_name,
+        species_name_en: i.species_name_en,
+        species_image:  i.species_image,
+        species_type:   i.species_type,
+        quantity:       i.quantity,
+        unit_price:     i.unit_price,
+        subtotal:       i.unit_price * i.quantity,
       })),
       total_amount:     grandTotal,
       payment_method:   payMethod,
@@ -293,11 +294,11 @@ export default function Checkout() {
                 <div style={{ border: "1px solid var(--border-color)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
                   <h4 style={{ margin: 0, color: "var(--text-main)" }}>{lang === "th" ? "ที่อยู่ใหม่" : "New Address"}</h4>
                   {[
-                    { key: "name",         label: lang === "th" ? "ชื่อ-นามสกุล *" : "Full Name *",  placeholder: "ชื่อ-นามสกุล" },
+                    { key: "name",         label: lang === "th" ? "ชื่อ-นามสกุล *" : "Full Name *",  placeholder: lang === "th" ? "ชื่อ-นามสกุล" : "Your full name" },
                     { key: "phone",        label: lang === "th" ? "เบอร์โทรศัพท์"  : "Phone",         placeholder: "0xx-xxx-xxxx" },
-                    { key: "address_line", label: lang === "th" ? "ที่อยู่ *"       : "Address *",     placeholder: "บ้านเลขที่ ถนน ซอย" },
-                    { key: "district",     label: lang === "th" ? "ตำบล/แขวง"      : "Sub-district",  placeholder: "" },
-                    { key: "postal_code",  label: lang === "th" ? "รหัสไปรษณีย์"   : "Postal Code",   placeholder: "" },
+                    { key: "address_line", label: lang === "th" ? "ที่อยู่ *"       : "Address *",     placeholder: lang === "th" ? "บ้านเลขที่ ถนน ซอย" : "Street address, lane, road" },
+                    { key: "district",     label: lang === "th" ? "ตำบล/แขวง"      : "Sub-district",  placeholder: lang === "th" ? "ตำบล/แขวง" : "Sub-district" },
+                    { key: "postal_code",  label: lang === "th" ? "รหัสไปรษณีย์"   : "Postal Code",   placeholder: lang === "th" ? "รหัสไปรษณีย์" : "Postal code" },
                   ].map(f => (
                     <div key={f.key}>
                       <label style={{ display: "block", fontWeight: 600, marginBottom: 4, fontSize: "0.88rem", color: "var(--text-muted)" }}>{f.label}</label>

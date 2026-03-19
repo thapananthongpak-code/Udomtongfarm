@@ -22,6 +22,7 @@ type OrderState = {
     items: Array<{
       species_id: string;
       species_name: string;
+      species_name_en?: string;
       species_image: string;
       species_type: string;
       quantity: number;
