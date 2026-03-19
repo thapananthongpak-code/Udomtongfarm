@@ -7,9 +7,9 @@ export default function MapPage() {
   const t = {
     tag:      lang === "th" ? "แผนที่และเส้นทาง" : "Map & Directions",
     title:    lang === "th" ? "วิธีเดินทางมาฟาร์ม" : "How to Get Here",
-    subtitle: lang === "th" ? "ฟาร์มอุดมทอง ตั้งอยู่ในจังหวัดชัยภูมิ" : "Udomtong Farm is located in Chaiyaphum province",
+    subtitle: lang === "th" ? "ฟาร์มอุดมทอง ตำบลห้วยบง อำเภอเมืองชัยภูมิ" : "Udomtong Farm, Huay Bong, Mueang Chaiyaphum",
     address:  lang === "th" ? "ที่อยู่" : "Address",
-    addressVal: lang === "th" ? "จังหวัดชัยภูมิ ประเทศไทย" : "Chaiyaphum, Thailand",
+    addressVal: lang === "th" ? "ตำบลห้วยบง อำเภอเมืองชัยภูมิ ชัยภูมิ 36000" : "Huay Bong, Mueang Chaiyaphum, Chaiyaphum 36000",
     phone:    lang === "th" ? "โทรศัพท์" : "Phone",
     phoneVal: "086-xxx-xxxx",
     hours:    lang === "th" ? "เวลาเปิด-ปิด" : "Opening Hours",
@@ -72,7 +72,7 @@ export default function MapPage() {
           <div className="glass-card" style={{ padding: 0, overflow: "hidden", borderRadius: 24, minHeight: 400 }}>
             <iframe
               title="Udomtong Farm Map"
-              src="https://maps.google.com/maps?q=จังหวัดชัยภูมิ+ประเทศไทย&t=&z=10&ie=UTF8&iwloc=&output=embed"
+              src="https://maps.google.com/maps?q=R537%2BR9M+%E0%B8%AB%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B8%9A%E0%B8%87+%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%8A%E0%B8%B1%E0%B8%A2%E0%B8%A0%E0%B8%B9%E0%B8%A1%E0%B8%B4+%E0%B8%8A%E0%B8%B1%E0%B8%A2%E0%B8%A0%E0%B8%B9%E0%B8%A1%E0%B8%B4&t=&z=17&ie=UTF8&iwloc=B&output=embed"
               width="100%"
               height="100%"
               style={{ border: 0, minHeight: 400, display: "block" }}
