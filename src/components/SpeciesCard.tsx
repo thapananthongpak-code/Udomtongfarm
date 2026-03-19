@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { Species } from "../types/species";
 import { useSettingsStore } from "../store/settingsStore";
 import { useCartStore } from "../store/cartStore";
+import { PawPrint, Leaf, Clock, Package, ShoppingCart, X } from "lucide-react";
 
 type Props = { species: Species };
 
@@ -116,7 +117,7 @@ export default function SpeciesCard({ species }: Props) {
         {/* Body */}
         <div style={{ padding: "1rem" }}>
           <span style={{ background: species.type === "animal" ? "var(--primary-light)" : "#fef3c7", color: species.type === "animal" ? "var(--primary-hover)" : "#d97706", padding: "3px 10px", borderRadius: 8, fontSize: "0.75rem", fontWeight: 800, display: "inline-block", marginBottom: 8 }}>
-            {species.type === "animal" ? "🐾 สัตว์" : "🌿 พืช"}
+            {species.type === "animal" ? <><PawPrint size={12} color="var(--primary-hover)" /> สัตว์</> : <><Leaf size={12} color="#d97706" /> พืช</>}
           </span>
 
           <h3 style={{ margin: "0 0 4px 0", color: "var(--text-main)", fontSize: "1.05rem" }}>
@@ -138,7 +139,7 @@ export default function SpeciesCard({ species }: Props) {
                   <div style={{ color: "var(--text-muted)", fontSize: "0.76rem" }}>/ {species.unit ?? (species.type === "animal" ? "ตัว" : "ต้น")}</div>
                 </div>
                 <div style={{ textAlign: "right", fontSize: "0.76rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
-                  {species.age  && <div>🕐 {species.age}</div>}
+                  {species.age  && <div style={{ display: "flex", alignItems: "center", gap: 3 }}><Clock size={12} color="var(--text-muted)" /> {species.age}</div>}
                   {species.gender && <div>⚥ {species.gender}</div>}
                 </div>
               </div>
@@ -162,7 +163,7 @@ export default function SpeciesCard({ species }: Props) {
                 <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "1rem" }}>{lang === "th" ? species.name_th : species.name_en}</div>
                 <div style={{ color: "var(--primary-hover)", fontWeight: 900, fontSize: "1.1rem" }}>{fmt(species.price!)}</div>
               </div>
-              <button onClick={() => setShowModal(false)} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+              <button onClick={() => setShowModal(false)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center" }}><X size={20} /></button>
             </div>
 
             {/* Gender selector (animals only) */}
@@ -187,8 +188,8 @@ export default function SpeciesCard({ species }: Props) {
 
             {/* Quantity */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: 8, fontSize: "0.9rem" }}>
-                📦 {lang === "th" ? "จำนวน" : "Quantity"}
+              <div style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: 8, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 5 }}>
+                <Package size={14} color="#f59e0b" /> {lang === "th" ? "จำนวน" : "Quantity"}
                 {typeof species.stock === "number" && species.stock > 0 && (
                   <span style={{ marginLeft: 8, color: "var(--text-muted)", fontWeight: 400, fontSize: "0.8rem" }}>
                     ({lang === "th" ? "เหลือ" : "Stock"} {species.stock})
@@ -221,7 +222,7 @@ export default function SpeciesCard({ species }: Props) {
               onClick={handleConfirmAdd}
               style={{ width: "100%", padding: "13px", borderRadius: 12, background: "var(--primary)", color: "white", border: "none", fontWeight: 800, fontSize: "1rem", cursor: "pointer" }}
             >
-              🛒 {lang === "th" ? "เพิ่มเข้าตะกร้า" : "Add to Cart"}
+              <ShoppingCart size={16} style={{ marginRight: 6 }} /> {lang === "th" ? "เพิ่มเข้าตะกร้า" : "Add to Cart"}
             </button>
           </div>
         </div>

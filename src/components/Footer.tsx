@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useSettingsStore } from "../store/settingsStore";
+import { Leaf, MapPin, Phone, Map } from "lucide-react";
 
 export default function Footer() {
   const { lang } = useSettingsStore();
@@ -48,7 +49,7 @@ export default function Footer() {
             display: "inline-block",
             marginBottom: 16,
           }}>
-            🌿 Udomtong
+            <Leaf size={18} color="var(--primary-hover)" /> Udomtong
           </div>
           <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.7, margin: 0 }}>
             {t.desc}
@@ -92,16 +93,16 @@ export default function Footer() {
             {t.contact}
           </h4>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, color: "var(--text-muted)", fontSize: "0.9rem" }}>
-            <div>📍 {t.addressText}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin size={14} color="#ef4444" /> {t.addressText}</div>
             <a href="tel:0811733620" style={{ color: "var(--text-muted)", textDecoration: "none" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary-hover)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>
-              📞 081-173-3620
+              <Phone size={14} color="#16a34a" style={{ display: "inline", verticalAlign: "middle", marginRight: 6 }} /> 081-173-3620
             </a>
             <Link to="/map" style={{ color: "var(--text-muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary-hover)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>
-              🗺️ {t.mapLink}
+              <Map size={14} color="#0369a1" /> {t.mapLink}
             </Link>
           </div>
         </div>

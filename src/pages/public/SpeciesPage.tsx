@@ -6,6 +6,7 @@ import { useCartStore } from "../../store/cartStore";
 import { useAuth } from "../../store/AuthContext";
 import { API_BASE } from "../../config/api";
 import { authFetch } from "../../utils/authFetch";
+import { Smartphone, BookOpen, Tag, Link2 } from "lucide-react";
 
 // ─── QR Code Modal ───────────────────────────────────────────
 function QRModal({ url, onClose, lang }: { url: string; onClose: () => void; lang: string }) {
@@ -20,7 +21,7 @@ function QRModal({ url, onClose, lang }: { url: string; onClose: () => void; lan
       <div className="qr-modal" onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
           <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 800, color: "var(--text-main)" }}>
-            {lang === "th" ? "📱 สแกน QR เปิดหน้านี้" : "📱 Scan QR to open this page"}
+            <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Smartphone size={18} color="var(--primary-hover)" />{lang === "th" ? "สแกน QR เปิดหน้านี้" : "Scan QR to open this page"}</span>
           </h3>
           <button onClick={onClose} style={{ background: "var(--bg-color)", border: "1px solid var(--border-color)", borderRadius: 8, width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", color: "var(--text-muted)" }}>✕</button>
         </div>
@@ -140,9 +141,9 @@ export default function SpeciesPage() {
     typeAnimal: lang === "th" ? "สัตว์" : "Animal",
     typePlant: lang === "th" ? "พืช" : "Plant",
     sciName: lang === "th" ? "ชื่อวิทยาศาสตร์:" : "Scientific Name:",
-    tabInfo: lang === "th" ? "📖 รายละเอียด" : "📖 Info",
-    tabTags: lang === "th" ? "🏷️ ป้ายกำกับ" : "🏷️ Tags",
-    tabRefs: lang === "th" ? "🔗 อ้างอิง" : "🔗 References",
+    tabInfo: lang === "th" ? "รายละเอียด" : "Info",
+    tabTags: lang === "th" ? "ป้ายกำกับ" : "Tags",
+    tabRefs: lang === "th" ? "อ้างอิง" : "References",
     noDesc: lang === "th" ? "ไม่มีข้อมูลคำอธิบาย" : "No description available.",
     noTags: lang === "th" ? "ไม่มีป้ายกำกับ" : "No tags.",
     noRefs: lang === "th" ? "ไม่มีแหล่งข้อมูลอ้างอิง" : "No references.",
@@ -390,12 +391,12 @@ export default function SpeciesPage() {
         {/* Tabs */}
         <div className="glass-card sp-tabs-card" style={{ padding: "32px", marginBottom: "32px" }}>
           <div className="species-tab-bar">
-            <button className={`species-tab-btn${activeTab === "info" ? " active" : ""}`} onClick={() => setActiveTab("info")}>{t.tabInfo}</button>
+            <button className={`species-tab-btn${activeTab === "info" ? " active" : ""}`} onClick={() => setActiveTab("info")}><BookOpen size={14} /> {t.tabInfo}</button>
             {(item.tags && item.tags.length > 0) && (
-              <button className={`species-tab-btn${activeTab === "tags" ? " active" : ""}`} onClick={() => setActiveTab("tags")}>{t.tabTags}</button>
+              <button className={`species-tab-btn${activeTab === "tags" ? " active" : ""}`} onClick={() => setActiveTab("tags")}><Tag size={14} /> {t.tabTags}</button>
             )}
             {(item.references && item.references.length > 0) && (
-              <button className={`species-tab-btn${activeTab === "refs" ? " active" : ""}`} onClick={() => setActiveTab("refs")}>{t.tabRefs}</button>
+              <button className={`species-tab-btn${activeTab === "refs" ? " active" : ""}`} onClick={() => setActiveTab("refs")}><Link2 size={14} /> {t.tabRefs}</button>
             )}
           </div>
 
@@ -544,7 +545,7 @@ function ReviewSection({ speciesId, lang }: { speciesId: string; lang: string })
 
   useEffect(() => { fetchReviews(); }, [speciesId]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!user || myRating === 0) return;
     setSubmitting(true); setMsg("");

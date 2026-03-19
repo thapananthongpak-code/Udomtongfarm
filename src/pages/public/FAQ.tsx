@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useSettingsStore } from "../../store/settingsStore";
+import { HelpCircle, MessageCircle, ChevronDown } from "lucide-react";
 
 export default function FAQ() {
   const { lang } = useSettingsStore();
@@ -73,7 +74,7 @@ export default function FAQ() {
           <span className="breadcrumb-sep">›</span>
           <span className="breadcrumb-current">{t.tag}</span>
         </nav>
-        <div className="fade-in-up" style={{ fontSize: "3.5rem", marginBottom: 16 }}>🙋</div>
+        <div className="fade-in-up" style={{ marginBottom: 16 }}><HelpCircle size={56} color="var(--primary-hover)" /></div>
         <h1 className="fade-in-up" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 900, color: "var(--primary-hover)", margin: "0 0 12px" }}>
           {t.title}
         </h1>
@@ -108,14 +109,11 @@ export default function FAQ() {
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.25s",
                 }}>
-                  <svg
-                    width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke={open === i ? "#fff" : "var(--primary-hover)"}
-                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  <ChevronDown
+                    size={14}
+                    color={open === i ? "#fff" : "var(--primary-hover)"}
                     style={{ transform: open === i ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s" }}
-                  >
-                    <path d="m6 9 6 6 6-6"/>
-                  </svg>
+                  />
                 </span>
               </button>
 
@@ -135,7 +133,7 @@ export default function FAQ() {
       {/* CTA */}
       <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 24px" }}>
         <div style={{ background: "var(--gradient-primary)", borderRadius: 28, padding: "48px 40px", textAlign: "center", color: "#fff" }}>
-          <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>💬</div>
+          <div style={{ marginBottom: 12 }}><MessageCircle size={40} color="#fff" /></div>
           <h2 style={{ fontSize: "1.6rem", fontWeight: 900, margin: "0 0 10px" }}>{t.ctaTitle}</h2>
           <p style={{ opacity: 0.85, margin: "0 0 24px", fontSize: "1rem" }}>{t.ctaDesc}</p>
           <Link to="/contact" style={{ display: "inline-block", padding: "13px 32px", borderRadius: 40, background: "#fff", color: "var(--primary-hover)", fontWeight: 800, textDecoration: "none", fontSize: "0.97rem" }}>

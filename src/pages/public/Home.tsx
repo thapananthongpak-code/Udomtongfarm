@@ -4,6 +4,7 @@ import { useSpeciesStore } from "../../store/speciesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import type { Species } from "../../types/species";
 import { RECENTLY_VIEWED_KEY } from "./SpeciesPage";
+import { Search, Phone, PawPrint, Leaf, ChevronUp, ShoppingCart, Sparkles, Clock } from "lucide-react";
 
 // ─── Typewriter ─────────────────────────────────────────────
 function Typewriter({ text, delay = 800, speed = 22 }: { text: string; delay?: number; speed?: number }) {
@@ -152,7 +153,7 @@ export default function Home() {
         <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto" }}>
           {/* Badge + Title */}
           <div className="fade-in-up home-hero-badge" style={{ margin: "0 auto 16px", width: "fit-content" }}>
-            <IconLeaf size={13} /><span>{t.badgeLoc}</span>
+            <Leaf size={13} color="var(--primary-hover)" /><span>{t.badgeLoc}</span>
           </div>
           <h1 className="fade-in-up home-hero-title" style={{ animationDelay: "0.1s", marginBottom: 6 }}>{t.title}</h1>
           <p className="fade-in-up home-hero-sub-label" style={{ animationDelay: "0.15s" }}>{t.welcome}</p>
@@ -164,13 +165,13 @@ export default function Home() {
           {items.length > 0 && (
             <div className="fade-in-up" style={{ animationDelay: "0.28s", display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
               {[
-                { icon: "🌿", val: items.length, label: t.statTotal },
-                { icon: "🐾", val: animalCount,  label: t.statAnimal },
-                { icon: "🌱", val: plantCount,   label: t.statPlant },
-                { icon: "🛒", val: availCount,   label: t.statAvail },
+                { icon: <Leaf size={22} color="var(--primary-hover)" />,        val: items.length, label: t.statTotal },
+                { icon: <PawPrint size={22} color="var(--primary-hover)" />,    val: animalCount,  label: t.statAnimal },
+                { icon: <Leaf size={22} color="#16a34a" />,                      val: plantCount,   label: t.statPlant },
+                { icon: <ShoppingCart size={22} color="var(--primary-hover)" />, val: availCount,   label: t.statAvail },
               ].map(s => (
                 <div key={s.label} style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(8px)", borderRadius: 14, padding: "10px 18px", minWidth: 80, border: "1px solid rgba(255,255,255,0.2)" }}>
-                  <div style={{ fontSize: "1.4rem" }}>{s.icon}</div>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 2 }}>{s.icon}</div>
                   <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "var(--text-main)" }}>{s.val}</div>
                   <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{s.label}</div>
                 </div>
@@ -181,21 +182,21 @@ export default function Home() {
           {/* Search */}
           <form onSubmit={handleQuickSearch} className="fade-in-up" style={{ animationDelay: "0.33s", marginBottom: 20, display: "flex", justifyContent: "center" }}>
             <div className="home-search-bar" style={{ maxWidth: 500, width: "100%" }}>
-              <IconSearch size={17} />
+              <Search size={17} color="var(--text-muted)" />
               <input value={quickSearch} onChange={e => setQuickSearch(e.target.value)} placeholder={t.searchPlaceholder} className="home-search-input" />
-              <button type="submit" className="btn-primary home-search-btn"><IconSearch size={15} /></button>
+              <button type="submit" className="btn-primary home-search-btn"><Search size={15} /></button>
             </div>
           </form>
 
           {/* CTA buttons */}
           <div className="fade-in-up home-hero-btns" style={{ animationDelay: "0.4s", justifyContent: "center", marginBottom: 24 }}>
             <Link to="/encyclopedia" className="btn-primary" style={{ padding: "13px 28px", fontSize: "0.95rem", borderRadius: 40, display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <IconSearch size={17} /> {t.btnExplore}
+              <Search size={17} /> {t.btnExplore}
             </Link>
             <Link to="/encyclopedia?shop=1" className="btn-primary" style={{ padding: "13px 28px", fontSize: "0.95rem", borderRadius: 40, display: "inline-flex", alignItems: "center", gap: 8, background: "var(--gradient-secondary, var(--primary-hover))" }}>
-              🛒 {t.btnShop}
+              <ShoppingCart size={17} /> {t.btnShop}
             </Link>
-            <Link to="/contact" className="home-btn-outline"><IconPhone size={16} /> {t.btnContact}</Link>
+            <Link to="/contact" className="home-btn-outline"><Phone size={16} color="var(--primary-hover)" /> {t.btnContact}</Link>
           </div>
 
         </div>
@@ -214,7 +215,7 @@ export default function Home() {
       <section className="home-section home-container">
         <div className="home-section-head">
           <div>
-            <div className="home-section-label">✨ {lang === "th" ? "คัดสรรพิเศษ" : "Hand-picked"}</div>
+            <div className="home-section-label" style={{ display: "flex", alignItems: "center", gap: 5 }}><Sparkles size={14} color="#f59e0b" /> {lang === "th" ? "คัดสรรพิเศษ" : "Hand-picked"}</div>
             <h2 className="home-section-title">{t.spotlightTitle}</h2>
           </div>
           <Link to="/encyclopedia" className="home-see-all">{t.viewAll}</Link>
@@ -260,7 +261,7 @@ export default function Home() {
         }}
         aria-label="Back to top"
       >
-        <IconChevronUp size={22} />
+        <ChevronUp size={22} />
       </button>
     </div>
   );
@@ -281,8 +282,8 @@ function SpotlightCard({ sp, lang, t, idx }: { sp: Species; lang: string; t: Rec
         <img src={sp.image} alt={name} className="home-spotlight-img" />
         <span className="home-spotlight-badge">
           {sp.type === "animal"
-            ? <><IconPaw size={11} color="#fff" />{t.animalLabel}</>
-            : <><IconLeaf size={11} color="#fff" />{t.plantLabel}</>}
+            ? <><PawPrint size={11} color="#fff" />{t.animalLabel}</>
+            : <><Leaf size={11} color="#fff" />{t.plantLabel}</>}
         </span>
       </div>
       <div className="home-spotlight-body">
@@ -314,7 +315,7 @@ function RecentlyViewed({ items, lang, t }: { items: Species[]; lang: string; t:
     <section className="home-section home-container">
       <div className="home-section-head">
         <div>
-          <div className="home-section-label">🕐 {lang === "th" ? "ประวัติการดู" : "History"}</div>
+          <div className="home-section-label" style={{ display: "flex", alignItems: "center", gap: 5 }}><Clock size={14} color="#f59e0b" /> {lang === "th" ? "ประวัติการดู" : "History"}</div>
           <h2 className="home-section-title">{t.recentTitle}</h2>
         </div>
         <button
@@ -331,8 +332,8 @@ function RecentlyViewed({ items, lang, t }: { items: Species[]; lang: string; t:
             <img src={sp.image} alt={lang === "th" ? sp.name_th : sp.name_en} className="home-recent-img" />
             <div className="home-recent-body">
               <div className="home-recent-name">{lang === "th" ? sp.name_th : sp.name_en}</div>
-              <div className="home-recent-type">
-                {sp.type === "animal" ? "🐾" : "🌿"} {sp.type === "animal" ? (lang === "th" ? "สัตว์" : "Animal") : (lang === "th" ? "พืช" : "Plant")}
+              <div className="home-recent-type" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                {sp.type === "animal" ? <PawPrint size={12} color="var(--primary-hover)" /> : <Leaf size={12} color="#16a34a" />} {sp.type === "animal" ? (lang === "th" ? "สัตว์" : "Animal") : (lang === "th" ? "พืช" : "Plant")}
               </div>
             </div>
           </Link>
@@ -342,19 +343,3 @@ function RecentlyViewed({ items, lang, t }: { items: Species[]; lang: string; t:
   );
 }
 
-// ─── SVG Icons ───────────────────────────────────────────────
-function IconSearch({ size = 20 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>;
-}
-function IconPhone({ size = 16 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>;
-}
-function IconPaw({ size = 20, color }: { size?: number; color?: string }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill={color || "var(--primary-hover)"} stroke="none"><circle cx="4.5" cy="9.5" r="2"/><circle cx="9" cy="5" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="19.5" cy="9.5" r="2"/><path d="M12 12.5c-2.5 0-6 2.5-6 5.5a2.5 2.5 0 0 0 2.5 2.5c1 0 2-.5 3.5-.5s2.5.5 3.5.5A2.5 2.5 0 0 0 18 18c0-3-3.5-5.5-6-5.5z"/></svg>;
-}
-function IconLeaf({ size = 20, color }: { size?: number; color?: string }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color || "var(--primary-hover)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>;
-}
-function IconChevronUp({ size = 20 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>;
-}

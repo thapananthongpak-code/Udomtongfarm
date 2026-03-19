@@ -4,14 +4,16 @@ import { useOrderStore } from "../../store/orderStore";
 import { useAuth } from "../../store/AuthContext";
 import { useSettingsStore } from "../../store/settingsStore";
 import type { OrderStatus } from "../../types/shop";
+import type { ReactNode } from "react";
+import { Clock, CheckCircle, Settings, Truck, Check, XCircle, Package, ListFilter, Loader2, Inbox, RefreshCw } from "lucide-react";
 
-const STATUS_CONFIG: Record<OrderStatus, { icon: string; labelTh: string; labelEn: string; color: string; bg: string }> = {
-  pending:    { icon: "⏳", labelTh: "รอชำระเงิน",          labelEn: "Pending Payment", color: "#92400e", bg: "#fef3c7" },
-  confirmed:  { icon: "✅", labelTh: "ชำระเงินแล้ว",         labelEn: "Paid",            color: "#1e40af", bg: "#dbeafe" },
-  processing: { icon: "⚙️", labelTh: "กำลังเตรียมสินค้า",   labelEn: "Processing",      color: "#5b21b6", bg: "#ede9fe" },
-  shipped:    { icon: "🚚", labelTh: "กำลังจัดส่ง",          labelEn: "Shipped",         color: "#0369a1", bg: "#e0f2fe" },
-  delivered:  { icon: "✓",  labelTh: "จัดส่งสำเร็จแล้ว",    labelEn: "Delivered",       color: "#15803d", bg: "#dcfce7" },
-  cancelled:  { icon: "✕",  labelTh: "ยกเลิกแล้ว",           labelEn: "Cancelled",       color: "#991b1b", bg: "#fee2e2" },
+const STATUS_CONFIG: Record<OrderStatus, { icon: ReactNode; labelTh: string; labelEn: string; color: string; bg: string }> = {
+  pending:    { icon: <Clock size={14} color="#92400e" />,        labelTh: "รอชำระเงิน",        labelEn: "Pending Payment", color: "#92400e", bg: "#fef3c7" },
+  confirmed:  { icon: <CheckCircle size={14} color="#1e40af" />,  labelTh: "ชำระเงินแล้ว",      labelEn: "Paid",            color: "#1e40af", bg: "#dbeafe" },
+  processing: { icon: <Settings size={14} color="#5b21b6" />,     labelTh: "กำลังเตรียมสินค้า", labelEn: "Processing",      color: "#5b21b6", bg: "#ede9fe" },
+  shipped:    { icon: <Truck size={14} color="#0369a1" />,         labelTh: "กำลังจัดส่ง",       labelEn: "Shipped",         color: "#0369a1", bg: "#e0f2fe" },
+  delivered:  { icon: <Check size={14} color="#15803d" />,         labelTh: "จัดส่งสำเร็จแล้ว", labelEn: "Delivered",       color: "#15803d", bg: "#dcfce7" },
+  cancelled:  { icon: <XCircle size={14} color="#991b1b" />,       labelTh: "ยกเลิกแล้ว",        labelEn: "Cancelled",       color: "#991b1b", bg: "#fee2e2" },
 };
 
 const FLOW_STEPS: OrderStatus[] = ["pending", "confirmed", "processing", "shipped", "delivered"];
@@ -101,11 +103,11 @@ export default function Orders() {
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "16px 12px" : "32px 20px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
-        <h1 style={{ margin: 0, fontWeight: 900, color: "var(--text-main)", fontSize: isMobile ? "1.3rem" : "1.8rem" }}>
-          📦 {lang === "th" ? "คำสั่งซื้อของฉัน" : "My Orders"}
+        <h1 style={{ margin: 0, fontWeight: 900, color: "var(--text-main)", fontSize: isMobile ? "1.3rem" : "1.8rem", display: "flex", alignItems: "center", gap: 8 }}>
+          <Package size={24} color="var(--primary-hover)" /> {lang === "th" ? "คำสั่งซื้อของฉัน" : "My Orders"}
         </h1>
-        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-          🔄 {lang === "th" ? "อัปเดตอัตโนมัติทุก 30 วิ" : "Auto-updates every 30s"}
+        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 4 }}>
+          <RefreshCw size={12} color="var(--text-muted)" /> {lang === "th" ? "อัปเดตอัตโนมัติทุก 30 วิ" : "Auto-updates every 30s"}
         </div>
       </div>
 
@@ -114,9 +116,9 @@ export default function Orders() {
         <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
           <button
             onClick={() => setFilterStatus("all")}
-            style={{ padding: "6px 12px", borderRadius: 20, border: "1px solid", borderColor: filterStatus === "all" ? "var(--primary)" : "var(--border-color)", background: filterStatus === "all" ? "var(--primary)" : "var(--bg-color)", color: filterStatus === "all" ? "white" : "var(--text-muted)", fontWeight: 700, cursor: "pointer", fontSize: "0.78rem" }}
+            style={{ padding: "6px 12px", borderRadius: 20, border: "1px solid", borderColor: filterStatus === "all" ? "var(--primary)" : "var(--border-color)", background: filterStatus === "all" ? "var(--primary)" : "var(--bg-color)", color: filterStatus === "all" ? "white" : "var(--text-muted)", fontWeight: 700, cursor: "pointer", fontSize: "0.78rem", display: "inline-flex", alignItems: "center", gap: 4 }}
           >
-            📋 {lang === "th" ? "ทั้งหมด" : "All"} ({orders.length})
+            <ListFilter size={12} /> {lang === "th" ? "ทั้งหมด" : "All"} ({orders.length})
           </button>
           {statusKeys.map(s => {
             const count = orders.filter(o => o.status === s).length;
@@ -137,12 +139,12 @@ export default function Orders() {
 
       {loading ? (
         <div style={{ textAlign: "center", padding: 60, color: "var(--text-muted)" }}>
-          <div style={{ fontSize: "2rem", marginBottom: 12 }}>⏳</div>
+          <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}><Loader2 size={32} color="var(--primary)" /></div>
           {lang === "th" ? "กำลังโหลด..." : "Loading..."}
         </div>
       ) : orders.length === 0 ? (
         <div style={{ textAlign: "center", padding: 80 }}>
-          <div style={{ fontSize: "4rem", marginBottom: 16 }}>📭</div>
+          <div style={{ marginBottom: 16, display: "flex", justifyContent: "center", color: "var(--text-muted)" }}><Inbox size={64} /></div>
           <h3 style={{ color: "var(--text-muted)", marginBottom: 20 }}>
             {lang === "th" ? "ยังไม่มีคำสั่งซื้อ" : "No orders yet"}
           </h3>
@@ -206,8 +208,8 @@ export default function Orders() {
                       {(order.items?.length ?? 0)} {lang === "th" ? "รายการ" : "items"}
                     </div>
                     {order.tracking_number && (
-                      <div style={{ fontSize: "0.75rem", color: "#0369a1", marginTop: 4, fontFamily: "monospace" }}>
-                        📦 {order.tracking_number}
+                      <div style={{ fontSize: "0.75rem", color: "#0369a1", marginTop: 4, fontFamily: "monospace", display: "flex", alignItems: "center", gap: 4 }}>
+                        <Package size={12} /> {order.tracking_number}
                       </div>
                     )}
                     <div style={{ color: "var(--primary-hover)", fontSize: "0.8rem", marginTop: 4, fontWeight: 700 }}>

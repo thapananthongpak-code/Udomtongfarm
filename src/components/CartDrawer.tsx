@@ -1,6 +1,7 @@
 import { useCartStore } from "../store/cartStore";
 import { useSettingsStore } from "../store/settingsStore";
 import { Link } from "react-router-dom";
+import { ShoppingCart, Trash2, X } from "lucide-react";
 
 export default function CartDrawer() {
   const { items, drawerOpen, closeDrawer, removeItem, updateQty, totalPrice } = useCartStore();
@@ -50,7 +51,7 @@ export default function CartDrawer() {
           padding: "18px 20px", borderBottom: "1px solid var(--border-color)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <IconCartFilled />
+            <ShoppingCart size={20} color="var(--primary-hover)" />
             <span style={{ fontWeight: 800, fontSize: "1.15rem", color: "var(--text-main)" }}>{t.title}</span>
             {items.length > 0 && (
               <span style={{
@@ -69,14 +70,14 @@ export default function CartDrawer() {
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "var(--text-muted)", fontSize: "1.1rem", transition: "all 0.15s",
             }}
-          >✕</button>
+          ><X size={16} /></button>
         </div>
 
         {/* Items */}
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
           {items.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-muted)" }}>
-              <div style={{ fontSize: "3rem", marginBottom: 12 }}>🛒</div>
+              <div style={{ marginBottom: 12, color: "var(--text-muted)" }}><ShoppingCart size={48} /></div>
               <div style={{ fontWeight: 600, fontSize: "1rem" }}>{t.empty}</div>
               <Link
                 to="/encyclopedia"
@@ -136,7 +137,7 @@ export default function CartDrawer() {
                       onClick={() => removeItem(item.cart_key)}
                       title={t.remove}
                       style={{ background: "#fee2e2", border: "none", borderRadius: 6, width: 28, height: 28, cursor: "pointer", color: "#991b1b", fontSize: "0.85rem", display: "flex", alignItems: "center", justifyContent: "center" }}
-                    >🗑</button>
+                    ><Trash2 size={14} /></button>
                   </div>
                 </div>
               </div>
@@ -183,11 +184,3 @@ export default function CartDrawer() {
   );
 }
 
-function IconCartFilled() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-    </svg>
-  );
-}

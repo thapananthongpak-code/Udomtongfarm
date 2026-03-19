@@ -6,6 +6,7 @@ import { useCartStore } from "../store/cartStore";
 import { useOrderStore } from "../store/orderStore";
 import { useState, useEffect, useMemo } from "react";
 import SpotlightSearch from "./SpotlightSearch";
+import { Moon, Sun, Package, LogOut, ShoppingCart, Leaf, Search, Menu, X as XIcon } from "lucide-react";
 
 const LAST_COUNT_KEY = "uf_last_species_count";
 const SEEN_KEY = "uf_encyclo_seen_count";
@@ -113,7 +114,7 @@ export default function Navbar() {
             padding: "6px 14px", borderRadius: 8, fontWeight: 800, fontSize: 18,
             display: "flex", alignItems: "center", gap: 6, transition: "all 0.3s ease",
           }}>
-            <IconLeafLogo />
+            <Leaf size={18} stroke="var(--primary-hover)" />
             Udomtong
           </div>
         </Link>
@@ -124,7 +125,7 @@ export default function Navbar() {
           className="spotlight-trigger"
           title="Search (Ctrl+K)"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <Search size={14} color="var(--text-muted)" />
           <span>{lang === "th" ? "ค้นหา..." : "Search..."}</span>
           <kbd>Ctrl+K</kbd>
         </button>
@@ -154,7 +155,7 @@ export default function Navbar() {
           <div style={{ width: "1px", background: "var(--border-color)", margin: "3px 1px" }} />
           <button onClick={toggleLang} title="Toggle language" style={{ background: "transparent", color: "var(--text-main)", border: "none", padding: "3px 7px", fontWeight: 800, fontSize: "0.75rem", cursor: "pointer", letterSpacing: "0.05em" }}>{lang.toUpperCase()}</button>
           <button onClick={toggleTheme} title={theme === "light" ? "Dark mode" : "Light mode"} style={{ background: "transparent", color: "var(--text-main)", border: "none", padding: "3px 7px", fontSize: "1rem", cursor: "pointer" }}>
-            {theme === "light" ? "🌙" : "☀️"}
+            {theme === "light" ? <Moon size={16} color="#6366f1" /> : <Sun size={16} color="#f59e0b" />}
           </button>
         </div>
 
@@ -170,7 +171,7 @@ export default function Navbar() {
             cursor: "pointer", fontSize: "0.82rem", fontWeight: 700, transition: "all 0.2s ease",
           }}
         >
-          <IconCart />
+          <ShoppingCart size={16} />
           {lang === "th" ? "ตะกร้า" : "Cart"}
           {cartCount > 0 && (
             <span style={{
@@ -203,7 +204,7 @@ export default function Navbar() {
               <AvatarBubble avatar={user.avatar} name={user.name} role={role} />
             </Link>
             <button onClick={onLogout} title={t.logoutBtn} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 8, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600, transition: "all 0.2s ease" }}>
-              <IconLogout />
+              <LogOut size={15} color="#ef4444" />
             </button>
           </>
         ) : (
@@ -223,10 +224,7 @@ export default function Navbar() {
         style={{ display: "none", background: "transparent", border: "none", cursor: "pointer", fontSize: "1.5rem", color: "var(--text-main)", padding: "4px 8px" }}
         aria-label="Toggle menu"
       >
-        {menuOpen
-          ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        }
+        {menuOpen ? <XIcon size={20} /> : <Menu size={22} />}
       </button>
 
       {/* Mobile dropdown */}
@@ -249,7 +247,7 @@ export default function Navbar() {
             onClick={() => { setMenuOpen(false); openDrawer(); }}
             style={{ display: "flex", alignItems: "center", gap: 8, background: cartCount > 0 ? "var(--primary-light)" : "var(--bg-color)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "10px 14px", fontWeight: 700, cursor: "pointer", color: cartCount > 0 ? "var(--primary-hover)" : "var(--text-main)", fontSize: "1rem" }}
           >
-            <IconCart /> {t.cart} {cartCount > 0 && <span style={{ background: "var(--primary)", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: "0.8rem" }}>{cartCount}</span>}
+            <ShoppingCart size={16} /> {t.cart} {cartCount > 0 && <span style={{ background: "var(--primary)", color: "white", borderRadius: 20, padding: "1px 8px", fontSize: "0.8rem" }}>{cartCount}</span>}
           </button>
 
           <div style={{ width: "100%", height: 1, background: "var(--border-color)", margin: "4px 0" }} />
@@ -258,13 +256,13 @@ export default function Navbar() {
             <button onClick={() => setFontSize("small")} style={{ background: fontSize === "small" ? "var(--primary-light)" : "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "8px", fontWeight: 700, cursor: "pointer" }}>A-</button>
             <button onClick={() => setFontSize("large")} style={{ background: fontSize === "large" ? "var(--primary-light)" : "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "8px", fontWeight: 700, cursor: "pointer" }}>A+</button>
             <button onClick={toggleLang} style={{ background: "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "8px", fontWeight: 800, cursor: "pointer" }}>{lang.toUpperCase()}</button>
-            <button onClick={toggleTheme} style={{ background: "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "8px", fontSize: "1.1rem", cursor: "pointer" }}>{theme === "light" ? "🌙" : "☀️"}</button>
+            <button onClick={toggleTheme} style={{ background: "var(--bg-color)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: 10, padding: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{theme === "light" ? <Moon size={16} color="#6366f1" /> : <Sun size={16} color="#f59e0b" />}</button>
           </div>
 
           {user ? (
             <>
-              <Link to="/orders" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700, color: "var(--text-main)", textDecoration: "none", fontSize: "1.05rem" }}>
-                📦 {lang === "th" ? "คำสั่งซื้อของฉัน" : "My Orders"}
+              <Link to="/orders" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700, color: "var(--text-main)", textDecoration: "none", fontSize: "1.05rem", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Package size={16} color="#f59e0b" /> {lang === "th" ? "คำสั่งซื้อของฉัน" : "My Orders"}
               </Link>
               <Link to="/profile" onClick={() => setMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
                 <AvatarBubble avatar={user.avatar} name={user.name} role={role} />
@@ -329,30 +327,3 @@ function AvatarBubble({ avatar, name, role }: { avatar?: string; name: string; r
   );
 }
 
-function IconLogout() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-      <polyline points="16 17 21 12 16 7"/>
-      <line x1="21" y1="12" x2="9" y2="12"/>
-    </svg>
-  );
-}
-
-function IconCart() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-    </svg>
-  );
-}
-
-function IconLeafLogo() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
-      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
-    </svg>
-  );
-}
