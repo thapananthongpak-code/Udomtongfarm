@@ -154,11 +154,11 @@ export default function OrderManager() {
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontWeight: 700, color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: 2 }}>ORDER ID</div>
+        <div style={{ fontWeight: 700, color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: 2 }}>{lang === "th" ? "หมายเลขคำสั่งซื้อ" : "ORDER ID"}</div>
         <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "0.88rem" }}>{selected.id}</div>
       </div>
       <div style={{ marginBottom: 14 }}>
-        <div style={{ fontWeight: 700, color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: 2 }}>CUSTOMER</div>
+        <div style={{ fontWeight: 700, color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: 2 }}>{lang === "th" ? "ผู้ซื้อ" : "CUSTOMER"}</div>
         <div style={{ color: "var(--text-main)", fontSize: "0.88rem" }}>{selected.user_email}</div>
         <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>{fmtDate(selected.created_at)}</div>
       </div>
@@ -266,7 +266,7 @@ export default function OrderManager() {
       {/* Items */}
       {selected.items && selected.items.length > 0 && (
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontWeight: 700, color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: 8 }}>ITEMS</div>
+          <div style={{ fontWeight: 700, color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: 8 }}>{lang === "th" ? "รายการสินค้า" : "ITEMS"}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {selected.items.map(item => (
               <div key={item.id} style={{ display: "flex", gap: 9, alignItems: "center" }}>

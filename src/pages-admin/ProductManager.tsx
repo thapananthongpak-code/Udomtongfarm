@@ -68,14 +68,14 @@ export default function ProductManager() {
       });
       if (!res.ok) {
         const d = await res.json();
-        setError(d.error ?? "บันทึกล้มเหลว");
+        setError(d.error ?? (lang === "th" ? "บันทึกล้มเหลว" : "Save failed"));
       } else {
-        setSuccess(`บันทึก "${row.name_th}" สำเร็จ`);
+        setSuccess(lang === "th" ? `บันทึก "${row.name_th}" สำเร็จ` : `Saved "${row.name_en || row.name_th}" successfully`);
         setRow(row.id, { editing: false });
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch {
-      setError("เกิดข้อผิดพลาด");
+      setError(lang === "th" ? "เกิดข้อผิดพลาด" : "An error occurred");
     } finally {
       setSaving(null);
     }
@@ -83,7 +83,7 @@ export default function ProductManager() {
 
   async function saveAll() {
     const changed = rows.filter(r => r.editing);
-    if (changed.length === 0) { setError("ไม่มีรายการที่แก้ไข"); return; }
+    if (changed.length === 0) { setError(lang === "th" ? "ไม่มีรายการที่แก้ไข" : "No items to save"); return; }
     setSaving("all"); setError(""); setSuccess("");
     try {
       const res = await authFetch(`${API_BASE}/api/products`, {
@@ -92,13 +92,13 @@ export default function ProductManager() {
       });
       if (!res.ok) {
         const d = await res.json();
-        setError(d.error ?? "บันทึกล้มเหลว");
+        setError(d.error ?? (lang === "th" ? "บันทึกล้มเหลว" : "Save failed"));
       } else {
-        setSuccess(`บันทึก ${changed.length} รายการสำเร็จ`);
+        setSuccess(lang === "th" ? `บันทึก ${changed.length} รายการสำเร็จ` : `Saved ${changed.length} items successfully`);
         setRows(prev => prev.map(r => ({ ...r, editing: false })));
         setTimeout(() => setSuccess(""), 3000);
       }
-    } catch { setError("เกิดข้อผิดพลาด"); }
+    } catch { setError(lang === "th" ? "เกิดข้อผิดพลาด" : "An error occurred"); }
     finally { setSaving(null); }
   }
 
@@ -264,7 +264,7 @@ export default function ProductManager() {
                         onClick={() => setRow(row.id, { available: !row.available, editing: true })}
                         style={{ padding: "5px 12px", borderRadius: 20, border: "none", background: row.available !== false ? "#dcfce7" : "#fee2e2", color: row.available !== false ? "#15803d" : "#991b1b", fontWeight: 700, cursor: "pointer", fontSize: "0.82rem" }}
                       >
-                        {row.available !== false ? "✓ วางขาย" : "✕ ปิดขาย"}
+                        {row.available !== false ? (lang === "th" ? "✓ วางขาย" : "✓ Listed") : (lang === "th" ? "✕ ปิดขาย" : "✕ Unlisted")}
                       </button>
                     </td>
                     {/* Save */}
