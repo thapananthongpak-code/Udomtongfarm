@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCartStore } from "../../store/cartStore";
 import { useOrderStore } from "../../store/orderStore";
+import { useSpeciesStore } from "../../store/speciesStore";
 import { useAuth } from "../../store/AuthContext";
 import { useSettingsStore } from "../../store/settingsStore";
 import type { Address, PaymentMethod, ShippingCompany } from "../../types/shop";
@@ -56,6 +57,7 @@ export default function Checkout() {
   const { lang } = useSettingsStore();
   const { items, totalPrice, clearCart } = useCartStore();
   const { createOrder, fetchAddresses, addAddress, addresses } = useOrderStore();
+  const { markAsSold } = useSpeciesStore();
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
@@ -175,6 +177,7 @@ export default function Checkout() {
     });
     setSubmitting(false);
     if (result.ok && result.orderId) {
+      markAsSold(items.map(i => i.species_id));
       clearCart();
       navigate(`/orders/${result.orderId}`, { state: { justOrdered: true } });
     } else {

@@ -10,7 +10,7 @@ export function authFetch(url: string, options: RequestInit = {}): Promise<Respo
   };
 
   try {
-    const raw = localStorage.getItem("user");
+    const raw = sessionStorage.getItem("user");
     if (raw) {
       const user = JSON.parse(raw) as { token?: string };
       if (user?.token) {

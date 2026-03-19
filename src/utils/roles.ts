@@ -14,7 +14,7 @@ export function getRoleByEmail(email?: string | null): Role {
 // 🚀 ฟังก์ชันสำหรับดึงข้อมูลคนที่กำลัง Login อยู่ปัจจุบัน
 export function getCurrentUser() {
   try {
-    const userStr = localStorage.getItem("user");
+    const userStr = sessionStorage.getItem("user");
     if (!userStr) return null;
     
     const user = JSON.parse(userStr);

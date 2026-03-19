@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSpeciesStore } from "../store/speciesStore";
 import { useSettingsStore } from "../store/settingsStore";
+import { useOrderStore } from "../store/orderStore";
 import { API_BASE } from "../config/api";
 
 const VIEWS_KEY = "uf_views";
@@ -12,6 +13,7 @@ function getViewData(): Record<string, number> {
 export default function Dashboard() {
   const { lang } = useSettingsStore();
   const { items, fetchAll } = useSpeciesStore();
+  const { adminOrders, fetchAdminOrders } = useOrderStore();
   const [apiOk, setApiOk] = useState(true);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
@@ -21,6 +23,26 @@ export default function Dashboard() {
       .then((r) => setApiOk(r.ok))
       .catch(() => setApiOk(false));
   }, []);
+
+  useEffect(() => {
+    fetchAdminOrders();
+    const timer = setInterval(() => fetchAdminOrders(), 30_000);
+    return () => clearInterval(timer);
+  }, [fetchAdminOrders]);
+
+  const orderStats = useMemo(() => {
+    const total = adminOrders.length;
+    const pending = adminOrders.filter(o => o.status === "pending").length;
+    const processing = adminOrders.filter(o => o.status === "processing" || o.status === "confirmed").length;
+    const revenue = adminOrders
+      .filter(o => o.status !== "cancelled")
+      .reduce((sum, o) => sum + (o.total_amount ?? 0), 0);
+    return { total, pending, processing, revenue };
+  }, [adminOrders]);
+
+  const recentOrders = useMemo(() =>
+    [...adminOrders].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 8),
+  [adminOrders]);
 
   const topViewed = useMemo(() => {
     const views = getViewData();
@@ -83,6 +105,19 @@ export default function Dashboard() {
     totalViewsLabel: lang === "th" ? "ยอดเข้าชมรวม" : "Total Views",
     topViewedLabel: lang === "th" ? "สายพันธุ์ยอดนิยม" : "Most Viewed Species",
     noViews:       lang === "th" ? "ยังไม่มีข้อมูลการเข้าชม" : "No view data yet",
+    orderTitle:    lang === "th" ? "คำสั่งซื้อล่าสุด" : "Recent Orders",
+    orderDesc:     lang === "th" ? "อัปเดตอัตโนมัติทุก 30 วินาที" : "Auto-refreshes every 30 seconds",
+    orderTotal:    lang === "th" ? "คำสั่งซื้อทั้งหมด" : "Total Orders",
+    orderPending:  lang === "th" ? "รอดำเนินการ" : "Pending",
+    orderProcess:  lang === "th" ? "กำลังดำเนินการ" : "In Progress",
+    orderRevenue:  lang === "th" ? "รายได้รวม" : "Total Revenue",
+    noOrders:      lang === "th" ? "ยังไม่มีคำสั่งซื้อ" : "No orders yet",
+    colId:         lang === "th" ? "หมายเลข" : "Order ID",
+    colEmail:      lang === "th" ? "ผู้ซื้อ" : "Customer",
+    colAmount:     lang === "th" ? "ยอดรวม" : "Amount",
+    colStatus:     lang === "th" ? "สถานะ" : "Status",
+    colDate:       lang === "th" ? "วันที่" : "Date",
+    viewAll:       lang === "th" ? "ดูทั้งหมด →" : "View all →",
   };
 
   return (
@@ -98,13 +133,20 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 28 }}>
+      {/* Species stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 16 }}>
         <StatCard title={t.statTotal}   value={stats.total}       accent="var(--primary)" icon={<IconChart />} />
         <StatCard title={t.statAnimals} value={stats.animals}     icon={<IconPaw />}  />
         <StatCard title={t.statPlants}  value={stats.plants}      icon={<IconLeaf />} />
         <StatCard title={t.statTags}    value={stats.uniqueTags}  icon={<IconTag />}  />
         <StatCard title={t.statHealth}  value={`${stats.completeness}%`} icon={<IconCheck />} />
+      </div>
+      {/* Order stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 28 }}>
+        <StatCard title={t.orderTotal}   value={orderStats.total}    accent="#6366f1" icon={<IconBag />} />
+        <StatCard title={t.orderPending} value={orderStats.pending}  accent="#f59e0b" icon={<IconClock />} />
+        <StatCard title={t.orderProcess} value={orderStats.processing} accent="#3b82f6" icon={<IconServer />} />
+        <StatCard title={t.orderRevenue} value={`฿${orderStats.revenue.toLocaleString("th-TH")}`} accent="#10b981" icon={<IconCoin />} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 0.6fr", gap: 24 }}>
@@ -149,6 +191,55 @@ export default function Dashboard() {
           </div>
         </section>
       </div>
+
+      {/* ── Recent Orders table ── */}
+      <section className="glass-card" style={{ padding: 24, marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <h3 style={{ margin: 0, fontWeight: 800, color: "var(--text-main)" }}>{t.orderTitle}</h3>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-muted)" }}>{t.orderDesc}</p>
+          </div>
+          <Link to="/admin/orders" style={{ padding: "6px 14px", borderRadius: 20, background: "var(--primary-light)", color: "var(--primary-hover)", fontWeight: 800, fontSize: 13, textDecoration: "none" }}>
+            {t.viewAll}
+          </Link>
+        </div>
+        {recentOrders.length === 0 ? (
+          <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0 }}>{t.noOrders}</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid var(--border-color)" }}>
+                  {[t.colId, t.colEmail, t.colAmount, t.colStatus, t.colDate].map(h => (
+                    <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontWeight: 800, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map(order => (
+                  <tr key={order.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                    <td style={{ padding: "10px 10px", fontWeight: 700, color: "var(--primary-hover)", whiteSpace: "nowrap" }}>
+                      #{String(order.id).slice(0, 8)}
+                    </td>
+                    <td style={{ padding: "10px 10px", color: "var(--text-muted)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {order.user_email}
+                    </td>
+                    <td style={{ padding: "10px 10px", fontWeight: 700, color: "var(--text-main)", whiteSpace: "nowrap" }}>
+                      ฿{(order.total_amount ?? 0).toLocaleString("th-TH")}
+                    </td>
+                    <td style={{ padding: "10px 10px" }}>
+                      <OrderStatusBadge status={order.status} lang={lang} />
+                    </td>
+                    <td style={{ padding: "10px 10px", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+                      {new Date(order.created_at).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {/* ── Analytics section ── */}
       <section className="glass-card" style={{ padding: 24, marginTop: 24 }}>
@@ -239,3 +330,23 @@ function IconServer(){ return <svg width="14" height="14" viewBox="0 0 24 24" fi
 function IconSpecies(){ return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>; }
 function IconSettings(){ return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>; }
 function IconExternal(){ return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-hover)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>; }
+const STATUS_COLORS: Record<string, { bg: string; color: string; label: { th: string; en: string } }> = {
+  pending:    { bg: "#fef3c7", color: "#92400e", label: { th: "รอดำเนินการ", en: "Pending" } },
+  confirmed:  { bg: "#dbeafe", color: "#1e40af", label: { th: "ยืนยันแล้ว",  en: "Confirmed" } },
+  processing: { bg: "#ede9fe", color: "#5b21b6", label: { th: "กำลังเตรียม", en: "Processing" } },
+  shipped:    { bg: "#d1fae5", color: "#065f46", label: { th: "จัดส่งแล้ว",  en: "Shipped" } },
+  delivered:  { bg: "#dcfce7", color: "#14532d", label: { th: "ถึงแล้ว",     en: "Delivered" } },
+  cancelled:  { bg: "#fee2e2", color: "#991b1b", label: { th: "ยกเลิก",      en: "Cancelled" } },
+};
+function OrderStatusBadge({ status, lang }: { status: string; lang: string }) {
+  const cfg = STATUS_COLORS[status] ?? { bg: "var(--bg-color)", color: "var(--text-muted)", label: { th: status, en: status } };
+  return (
+    <span style={{ padding: "3px 10px", borderRadius: 20, background: cfg.bg, color: cfg.color, fontWeight: 700, fontSize: 12, whiteSpace: "nowrap" }}>
+      {lang === "th" ? cfg.label.th : cfg.label.en}
+    </span>
+  );
+}
+
+function IconBag()  { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>; }
+function IconClock(){ return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>; }
+function IconCoin() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a2.5 2.5 0 0 1 0 5H9"/></svg>; }

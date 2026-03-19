@@ -159,7 +159,7 @@ export default function AdminSettings() {
 
   async function fetchSessions() {
     try {
-      const token = JSON.parse(localStorage.getItem("user") || "{}");
+      const token = JSON.parse(sessionStorage.getItem("user") || "{}");
       const res = await fetch(`${API_BASE}/api/login-sessions?limit=100`, {
         headers: { Authorization: `Bearer ${btoa(JSON.stringify({ role: token.role }))}` },
       });
@@ -176,7 +176,7 @@ export default function AdminSettings() {
 
   async function fetchDeletedUsers() {
     try {
-      const token = JSON.parse(localStorage.getItem("user") || "{}");
+      const token = JSON.parse(sessionStorage.getItem("user") || "{}");
       const res = await fetch(`${API_BASE}/api/deleted-users`, {
         headers: { Authorization: `Bearer ${btoa(JSON.stringify({ role: token.role }))}` },
       });
@@ -187,7 +187,7 @@ export default function AdminSettings() {
   async function deleteUser(email: string) {
     if (!confirm(lang === "th" ? `แน่ใจหรือไม่ว่าจะลบผู้ใช้งาน ${email} ?\nข้อมูลนี้จะไม่สามารถกู้กลับได้` : `Are you sure you want to delete user ${email}?\nThis action cannot be undone.`)) return;
     try {
-      const token = JSON.parse(localStorage.getItem("user") || "{}");
+      const token = JSON.parse(sessionStorage.getItem("user") || "{}");
       const res = await fetch(`${API_BASE}/api/users/${encodeURIComponent(email)}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${btoa(JSON.stringify({ role: token.role }))}` },
@@ -256,7 +256,7 @@ export default function AdminSettings() {
   }
 
   async function savePromoBanner() {
-    const token = JSON.parse(localStorage.getItem("user") || "{}");
+    const token = JSON.parse(sessionStorage.getItem("user") || "{}");
     const success = await appSettings.updateSettings(
       {
         bannerTitleTh: appSettings.bannerTitleTh,

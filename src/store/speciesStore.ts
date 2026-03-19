@@ -7,13 +7,28 @@ import { authFetch } from "../utils/authFetch";
 
 const API_URL = `${API_BASE}/api/species`;
 const SEED_ITEMS: Species[] = [...animals, ...plants];
+const SOLD_KEY = "uf_sold_ids";
+
+function loadSoldIds(): string[] {
+  try { return JSON.parse(localStorage.getItem(SOLD_KEY) || "[]"); } catch { return []; }
+}
+function saveSoldIds(ids: string[]) {
+  localStorage.setItem(SOLD_KEY, JSON.stringify(ids));
+}
+function applySold(items: Species[], soldIds: string[]): Species[] {
+  if (soldIds.length === 0) return items;
+  const soldSet = new Set(soldIds);
+  return items.map(s => soldSet.has(s.id) ? { ...s, available: false, stock: 0 } : s);
+}
 
 type SpeciesState = {
   items: Species[];
+  soldIds: string[];
   updatedAt: number;
   loading: boolean;
   fetchAll: () => Promise<void>;
   setItems: (items: Species[]) => void;
+  markAsSold: (ids: string[]) => void;
   add: (item: Species) => Promise<void>;
   update: (type: SpeciesType, id: string, next: Species) => Promise<void>;
   upsert: (item: Species) => Promise<void>;
@@ -26,6 +41,7 @@ type SpeciesState = {
 
 export const useSpeciesStore = create<SpeciesState>((set, get) => ({
   items: [],
+  soldIds: loadSoldIds(),
   updatedAt: Date.now(),
   loading: false,
 
@@ -35,12 +51,13 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error("API Offline");
       const data = await response.json();
-      set({ items: data, updatedAt: Date.now(), loading: false });
+      const sold = get().soldIds;
+      set({ items: applySold(data, sold), updatedAt: Date.now(), loading: false });
     } catch {
       if (import.meta.env.DEV) console.warn("API Offline — using seed data fallback");
-      // fallback to seed data only when store is empty
       if (get().items.length === 0) {
-        set({ items: SEED_ITEMS, updatedAt: Date.now(), loading: false });
+        const sold = get().soldIds;
+        set({ items: applySold(SEED_ITEMS, sold), updatedAt: Date.now(), loading: false });
       } else {
         set({ loading: false });
       }
@@ -48,6 +65,16 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
   },
 
   setItems: (items) => set({ items, updatedAt: Date.now() }),
+
+  markAsSold: (ids) => {
+    const prev = get().soldIds;
+    const next = Array.from(new Set([...prev, ...ids]));
+    saveSoldIds(next);
+    set(state => ({
+      soldIds: next,
+      items: applySold(state.items, next),
+    }));
+  },
 
   upsert: async (item) => {
     try {

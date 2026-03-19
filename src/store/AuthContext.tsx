@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 2. ฟังก์ชัน Logout ของระบบเรา
   function logout() {
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
     setUser(null);
     auth.signOut().catch(() => {});
     window.dispatchEvent(new Event("auth-change"));
