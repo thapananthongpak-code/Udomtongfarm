@@ -131,6 +131,19 @@ export default function OrderManager() {
   for (const s of STATUS_LIST) stats[s] = adminOrders.filter(o => o.status === s).length;
   const totalRevenue = adminOrders.filter(o => o.status !== "cancelled").reduce((s, o) => s + o.total_amount, 0);
 
+  async function handleExportCSV() {
+    try {
+      const res = await authFetch(`${API_BASE}/api/admin/orders/export`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `orders-${new Date().toISOString().split("T")[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { alert(lang === "th" ? "Export ล้มเหลว" : "Export failed"); }
+  }
+
   const DetailPanel = selected ? (
     <div style={{ background: "var(--card-bg)", border: "1px solid var(--border-color)", borderRadius: 16, padding: isMobile ? 16 : 20, height: "fit-content", position: isMobile ? "static" : "sticky", top: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -298,13 +311,21 @@ export default function OrderManager() {
       <div style={{ display: "grid", gridTemplateColumns: (!isMobile && selected) ? "1fr 380px" : "1fr", gap: 20, minHeight: "calc(100vh - 80px)" }}>
         {/* Left: orders list */}
         <div>
-          <div style={{ marginBottom: 20 }}>
-            <h1 style={{ margin: "0 0 4px 0", fontWeight: 900, color: "var(--text-main)", fontSize: isMobile ? "1.3rem" : "1.6rem" }}>
-              📦 {lang === "th" ? "จัดการคำสั่งซื้อ" : "Order Manager"}
-            </h1>
-            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.88rem" }}>
-              {lang === "th" ? "ดูและอัปเดตสถานะคำสั่งซื้อทั้งหมด" : "View and update all customer orders."}
-            </p>
+          <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <h1 style={{ margin: "0 0 4px 0", fontWeight: 900, color: "var(--text-main)", fontSize: isMobile ? "1.3rem" : "1.6rem" }}>
+                📦 {lang === "th" ? "จัดการคำสั่งซื้อ" : "Order Manager"}
+              </h1>
+              <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.88rem" }}>
+                {lang === "th" ? "ดูและอัปเดตสถานะคำสั่งซื้อทั้งหมด" : "View and update all customer orders."}
+              </p>
+            </div>
+            <button
+              onClick={handleExportCSV}
+              style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+            >
+              📥 {lang === "th" ? "Export CSV" : "Export CSV"}
+            </button>
           </div>
 
           {/* Stats */}

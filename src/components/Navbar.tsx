@@ -3,6 +3,7 @@ import { useAuth } from "../store/AuthContext";
 import { useSettingsStore } from "../store/settingsStore";
 import { useSpeciesStore } from "../store/speciesStore";
 import { useCartStore } from "../store/cartStore";
+import { useOrderStore } from "../store/orderStore";
 import { useState, useEffect, useMemo } from "react";
 import SpotlightSearch from "./SpotlightSearch";
 
@@ -16,6 +17,8 @@ export default function Navbar() {
   const { lang, theme, fontSize, toggleLang, toggleTheme, setFontSize } = useSettingsStore();
   const { items } = useSpeciesStore();
   const { totalItems, openDrawer } = useCartStore();
+  const { adminOrders } = useOrderStore();
+  const pendingOrderCount = role === "admin" ? adminOrders.filter(o => o.status === "pending").length : 0;
 
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -71,6 +74,7 @@ export default function Navbar() {
     encyclo:    lang === "th" ? "สารานุกรม"  : "Encyclopedia",
     about:      lang === "th" ? "เกี่ยวกับ"  : "About",
     gallery:    lang === "th" ? "แกลเลอรี"   : "Gallery",
+    faq:        lang === "th" ? "FAQ"         : "FAQ",
     contact:    lang === "th" ? "ติดต่อเรา"  : "Contact",
     adminBadge: lang === "th" ? "แอดมิน"     : "Admin",
     memberBadge:lang === "th" ? "สมาชิก"     : "Member",
@@ -136,6 +140,7 @@ export default function Navbar() {
             )}
           </Link>
           <Link to="/gallery"     className={navLinkClass("/gallery")}     >{t.gallery}</Link>
+          <Link to="/faq"         className={navLinkClass("/faq")}         >{t.faq}</Link>
           <Link to="/contact"     className={navLinkClass("/contact")}     >{t.contact}</Link>
         </div>
       </div>
@@ -184,7 +189,14 @@ export default function Navbar() {
         {user ? (
           <>
             {role === "admin" && (
-              <Link to="/admin" style={{ color: "var(--text-muted)", fontWeight: 600, textDecoration: "none", fontSize: "0.82rem", whiteSpace: "nowrap" }}>{t.sysSettings}</Link>
+              <Link to="/admin" style={{ color: "var(--text-muted)", fontWeight: 600, textDecoration: "none", fontSize: "0.82rem", whiteSpace: "nowrap", position: "relative" }}>
+                {t.sysSettings}
+                {pendingOrderCount > 0 && (
+                  <span style={{ position: "absolute", top: -6, right: -10, background: "#ef4444", color: "white", borderRadius: "50%", width: 16, height: 16, fontSize: "0.65rem", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+                    {pendingOrderCount > 9 ? "9+" : pendingOrderCount}
+                  </span>
+                )}
+              </Link>
             )}
             {/* Avatar only — tooltip shows name + role */}
             <Link to="/profile" title={`${user.nickname || user.name} · ${role === "admin" ? t.adminBadge : t.memberBadge}`} style={{ textDecoration: "none", flexShrink: 0, position: "relative" }}>
@@ -231,6 +243,7 @@ export default function Navbar() {
             {newSpeciesCount > 0 && <span className="nav-badge">{newSpeciesCount}</span>}
           </Link>
           <Link to="/gallery"     onClick={() => setMenuOpen(false)} className={navLinkClass("/gallery")}     style={{ fontSize: "1.05rem" }}>{t.gallery}</Link>
+          <Link to="/faq"         onClick={() => setMenuOpen(false)} className={navLinkClass("/faq")}         style={{ fontSize: "1.05rem" }}>{t.faq}</Link>
           <Link to="/contact"     onClick={() => setMenuOpen(false)} className={navLinkClass("/contact")}     style={{ fontSize: "1.05rem" }}>{t.contact}</Link>
           <button
             onClick={() => { setMenuOpen(false); openDrawer(); }}
@@ -261,7 +274,14 @@ export default function Navbar() {
                 </div>
               </Link>
               {role === "admin" && (
-                <Link to="/admin" onClick={() => setMenuOpen(false)} style={{ color: "var(--primary-hover)", fontWeight: 600, textDecoration: "none" }}>{t.sysSettings}</Link>
+                <Link to="/admin" onClick={() => setMenuOpen(false)} style={{ color: "var(--primary-hover)", fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  {t.sysSettings}
+                  {pendingOrderCount > 0 && (
+                    <span style={{ background: "#ef4444", color: "white", borderRadius: 20, padding: "1px 7px", fontSize: "0.75rem", fontWeight: 900 }}>
+                      {pendingOrderCount}
+                    </span>
+                  )}
+                </Link>
               )}
               <button onClick={onLogout} style={{ padding: "10px", borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)", cursor: "pointer", fontWeight: 600 }}>
                 {t.logoutBtn}

@@ -4,6 +4,7 @@ import { useSpeciesStore } from "../store/speciesStore";
 import { useSettingsStore } from "../store/settingsStore";
 import { useOrderStore } from "../store/orderStore";
 import { API_BASE } from "../config/api";
+import { authFetch } from "../utils/authFetch";
 
 const VIEWS_KEY = "uf_views";
 function getViewData(): Record<string, number> {
@@ -15,6 +16,7 @@ export default function Dashboard() {
   const { items, fetchAll } = useSpeciesStore();
   const { adminOrders, fetchAdminOrders } = useOrderStore();
   const [apiOk, setApiOk] = useState(true);
+  const [monthlyStats, setMonthlyStats] = useState<{ month: string; order_count: number; revenue: number }[]>([]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -29,6 +31,13 @@ export default function Dashboard() {
     const timer = setInterval(() => fetchAdminOrders(), 30_000);
     return () => clearInterval(timer);
   }, [fetchAdminOrders]);
+
+  useEffect(() => {
+    authFetch(`${API_BASE}/api/admin/stats/monthly`)
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setMonthlyStats(data); })
+      .catch(() => {});
+  }, []);
 
   const orderStats = useMemo(() => {
     const total = adminOrders.length;
@@ -241,6 +250,16 @@ export default function Dashboard() {
         )}
       </section>
 
+      {/* ── Monthly Revenue Chart ── */}
+      {monthlyStats.length > 0 && (
+        <section className="glass-card" style={{ padding: 24, marginTop: 24 }}>
+          <h3 style={{ margin: "0 0 20px", fontWeight: 800, color: "var(--text-main)" }}>
+            📊 {lang === "th" ? "รายได้รายเดือน" : "Monthly Revenue"}
+          </h3>
+          <RevenueChart data={monthlyStats} lang={lang} />
+        </section>
+      )}
+
       {/* ── Analytics section ── */}
       <section className="glass-card" style={{ padding: 24, marginTop: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
@@ -278,6 +297,47 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function RevenueChart({ data, lang }: { data: { month: string; order_count: number; revenue: number }[]; lang: string }) {
+  const maxRevenue = Math.max(...data.map(d => d.revenue), 1);
+  const fmt = (n: number) => n >= 1000 ? `฿${(n / 1000).toFixed(1)}k` : `฿${n}`;
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, minWidth: data.length * 56, height: 180, paddingBottom: 28, position: "relative" }}>
+        {/* Y-axis gridlines */}
+        {[0.25, 0.5, 0.75, 1].map(pct => (
+          <div key={pct} style={{ position: "absolute", left: 0, right: 0, bottom: `${28 + pct * 152}px`, borderTop: "1px dashed var(--border-color)", pointerEvents: "none" }}>
+            <span style={{ position: "absolute", right: "100%", fontSize: 10, color: "var(--text-muted)", paddingRight: 4, whiteSpace: "nowrap", transform: "translateY(-50%)" }}>
+              {fmt(maxRevenue * pct)}
+            </span>
+          </div>
+        ))}
+        {data.map((d, i) => {
+          const pct = d.revenue / maxRevenue;
+          const barH = Math.max(4, Math.round(pct * 152));
+          const [, mm] = d.month.split("-");
+          const monthLabel = lang === "th"
+            ? ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."][parseInt(mm)] ?? mm
+            : ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][parseInt(mm)] ?? mm;
+          return (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }} title={`${d.month}\n${lang === "th" ? "รายได้" : "Revenue"}: ฿${d.revenue.toLocaleString()}\n${lang === "th" ? "ออร์เดอร์" : "Orders"}: ${d.order_count}`}>
+              <div style={{ fontSize: 9, color: "var(--primary-hover)", fontWeight: 800, marginBottom: 2, whiteSpace: "nowrap" }}>
+                {d.order_count > 0 ? d.order_count : ""}
+              </div>
+              <div style={{ width: "70%", height: barH, background: "var(--gradient-primary)", borderRadius: "4px 4px 0 0", transition: "height 0.4s ease" }} />
+              <div style={{ position: "absolute", bottom: 0, fontSize: 10, color: "var(--text-muted)", fontWeight: 700, whiteSpace: "nowrap" }}>
+                {monthLabel}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
+        {lang === "th" ? "* ตัวเลขบนแท่งคือจำนวนออร์เดอร์" : "* Number above bar = order count"}
+      </div>
     </div>
   );
 }

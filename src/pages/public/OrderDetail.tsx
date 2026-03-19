@@ -3,8 +3,21 @@ import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../store/AuthContext";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
+import { authFetch } from "../../utils/authFetch";
 import type { Order, OrderStatus } from "../../types/shop";
 import { SHIPPING_COMPANIES } from "../../types/shop";
+
+function getTrackingUrl(company: string, trackingNo: string): string {
+  const urls: Record<string, string> = {
+    flash:         `https://www.flashexpress.co.th/tracking/?se=${trackingNo}`,
+    kerry:         `https://th.kerryexpress.com/th/track/?track=${trackingNo}`,
+    dhl:           `https://www.dhl.com/th-th/home/tracking.html?tracking-id=${trackingNo}`,
+    thailand_post: `https://track.thailandpost.co.th/?trackNumber=${trackingNo}`,
+    jnt:           `https://www.jtexpress.co.th/trajectoryQuery?billCodes=${trackingNo}`,
+    scg:           `https://www.scgexpress.co.th/tracking?trackno=${trackingNo}`,
+  };
+  return urls[company] || `https://www.google.com/search?q=${encodeURIComponent(trackingNo)}`;
+}
 
 const STATUS_CONFIG: Record<OrderStatus, { icon: string; labelTh: string; labelEn: string; color: string; bg: string; step: number }> = {
   pending:    { icon: "⏳", labelTh: "รอชำระเงิน",        labelEn: "Pending Payment", color: "#92400e", bg: "#fef3c7", step: 1 },
@@ -45,6 +58,8 @@ export default function OrderDetail() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelMsg, setCancelMsg] = useState("");
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const justOrdered = (location.state as any)?.justOrdered;
@@ -65,6 +80,18 @@ export default function OrderDetail() {
       const data = await res.json();
       if (!data.error) setOrder(data);
     } catch {}
+  }
+
+  async function handleCancel() {
+    if (!order || !window.confirm(lang === "th" ? "ยืนยันการยกเลิกคำสั่งซื้อนี้?" : "Confirm cancellation of this order?")) return;
+    setCancelling(true); setCancelMsg("");
+    try {
+      const res = await authFetch(`${API_BASE}/api/orders/${order.id}/cancel`, { method: "PUT" });
+      const data = await res.json();
+      if (res.ok) { setCancelMsg(data.message || "ยกเลิกสำเร็จ"); fetchOrder(); }
+      else setCancelMsg(data.error || "เกิดข้อผิดพลาด");
+    } catch { setCancelMsg("เกิดข้อผิดพลาด"); }
+    finally { setCancelling(false); }
   }
 
   useEffect(() => {
@@ -137,9 +164,21 @@ export default function OrderDetail() {
           </h1>
           <div style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>{fmtDate(order.created_at)}</div>
         </div>
-        <span style={{ background: st.bg, color: st.color, borderRadius: 10, padding: "8px 14px", fontSize: "0.9rem", fontWeight: 800 }}>
-          {st.icon} {lang === "th" ? st.labelTh : st.labelEn}
-        </span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+          <span style={{ background: st.bg, color: st.color, borderRadius: 10, padding: "8px 14px", fontSize: "0.9rem", fontWeight: 800 }}>
+            {st.icon} {lang === "th" ? st.labelTh : st.labelEn}
+          </span>
+          {order.status === "pending" && (
+            <button
+              onClick={handleCancel}
+              disabled={cancelling}
+              style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid #fca5a5", background: "#fee2e2", color: "#991b1b", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer" }}
+            >
+              {cancelling ? "..." : (lang === "th" ? "✕ ยกเลิกคำสั่งซื้อ" : "✕ Cancel Order")}
+            </button>
+          )}
+          {cancelMsg && <div style={{ fontSize: "0.8rem", color: cancelMsg.includes("สำเร็จ") ? "#15803d" : "#991b1b" }}>{cancelMsg}</div>}
+        </div>
       </div>
 
       {/* Progress tracker */}
@@ -197,7 +236,18 @@ export default function OrderDetail() {
             {order.tracking_number && (
               <div>
                 <div style={{ fontSize: "0.75rem", color: "#1e40af", fontWeight: 600, marginBottom: 3 }}>{lang === "th" ? "เลขพัสดุ" : "Tracking No."}</div>
-                <div style={{ fontWeight: 800, color: "#1d4ed8", fontFamily: "monospace", fontSize: "0.95rem" }}>{order.tracking_number}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: 800, color: "#1d4ed8", fontFamily: "monospace", fontSize: "0.95rem" }}>{order.tracking_number}</span>
+                  {shippingCo && (
+                    <a
+                      href={getTrackingUrl(order.shipping_company!, order.tracking_number)}
+                      target="_blank" rel="noreferrer"
+                      style={{ fontSize: "0.75rem", color: "#1d4ed8", fontWeight: 700, textDecoration: "underline" }}
+                    >
+                      {lang === "th" ? "ติดตามพัสดุ →" : "Track →"}
+                    </a>
+                  )}
+                </div>
               </div>
             )}
             {order.estimated_delivery && (

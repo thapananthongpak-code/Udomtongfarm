@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useSpeciesStore } from "../../store/speciesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useCartStore } from "../../store/cartStore";
+import { useAuth } from "../../store/AuthContext";
+import { API_BASE } from "../../config/api";
+import { authFetch } from "../../utils/authFetch";
 
 // ─── QR Code Modal ───────────────────────────────────────────
 function QRModal({ url, onClose, lang }: { url: string; onClose: () => void; lang: string }) {
@@ -440,6 +443,9 @@ export default function SpeciesPage() {
           )}
         </div>
 
+        {/* Reviews */}
+        {item && <ReviewSection speciesId={item.id} lang={lang} />}
+
         {/* Related Species */}
         {related.length > 0 && (
           <div style={{ marginTop: "8px" }}>
@@ -488,6 +494,156 @@ export default function SpeciesPage() {
           onClose={() => setShowQR(false)}
           lang={lang}
         />
+      )}
+    </div>
+  );
+}
+
+// ─── Review Section ───────────────────────────────────────────────────────────
+type Review = { id: number; species_id: string; user_email: string; user_name: string; rating: number; comment: string; created_at: string };
+
+function StarRow({ value, onChange, readOnly = false }: { value: number; onChange?: (v: number) => void; readOnly?: boolean }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div style={{ display: "flex", gap: 2 }}>
+      {[1, 2, 3, 4, 5].map(s => (
+        <span
+          key={s}
+          onClick={() => !readOnly && onChange?.(s)}
+          onMouseEnter={() => !readOnly && setHover(s)}
+          onMouseLeave={() => !readOnly && setHover(0)}
+          style={{ fontSize: readOnly ? "0.95rem" : "1.4rem", cursor: readOnly ? "default" : "pointer", color: s <= (hover || value) ? "#f59e0b" : "var(--border-color)", transition: "color 0.1s" }}
+        >★</span>
+      ))}
+    </div>
+  );
+}
+
+function ReviewSection({ speciesId, lang }: { speciesId: string; lang: string }) {
+  const { user } = useAuth();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [myRating, setMyRating] = useState(0);
+  const [myComment, setMyComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [loadingReviews, setLoadingReviews] = useState(true);
+
+  async function fetchReviews() {
+    try {
+      const res = await fetch(`${API_BASE}/api/reviews/${speciesId}`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setReviews(data);
+        if (user) {
+          const mine = data.find((r: Review) => r.user_email === user.email);
+          if (mine) { setMyRating(mine.rating); setMyComment(mine.comment || ""); }
+        }
+      }
+    } catch {} finally { setLoadingReviews(false); }
+  }
+
+  useEffect(() => { fetchReviews(); }, [speciesId]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user || myRating === 0) return;
+    setSubmitting(true); setMsg("");
+    try {
+      const res = await authFetch(`${API_BASE}/api/reviews`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ species_id: speciesId, rating: myRating, comment: myComment }) });
+      const data = await res.json();
+      if (res.ok) { setMsg(data.message || "สำเร็จ"); fetchReviews(); }
+      else setMsg(data.error || "เกิดข้อผิดพลาด");
+    } catch { setMsg("เกิดข้อผิดพลาด"); } finally { setSubmitting(false); }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm(lang === "th" ? "ลบรีวิวนี้?" : "Delete this review?")) return;
+    try {
+      await authFetch(`${API_BASE}/api/reviews/${id}`, { method: "DELETE" });
+      fetchReviews();
+    } catch {}
+  }
+
+  const avg = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) : 0;
+
+  return (
+    <div style={{ marginTop: 32, marginBottom: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+        <h2 style={{ margin: 0, fontWeight: 900, color: "var(--text-main)", fontSize: "1.3rem" }}>
+          ⭐ {lang === "th" ? "รีวิวจากผู้ซื้อ" : "Reviews"}
+        </h2>
+        {reviews.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <StarRow value={Math.round(avg)} readOnly />
+            <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{avg.toFixed(1)}</span>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>({reviews.length})</span>
+          </div>
+        )}
+      </div>
+
+      {/* Form for logged-in users */}
+      {user ? (
+        <form onSubmit={handleSubmit} style={{ background: "var(--card-bg)", border: "1px solid var(--border-color)", borderRadius: 14, padding: "20px", marginBottom: 20 }}>
+          <div style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: 10, fontSize: "0.95rem" }}>
+            {lang === "th" ? "เขียนรีวิวของคุณ" : "Write Your Review"}
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: 6, fontSize: "0.85rem", color: "var(--text-muted)" }}>{lang === "th" ? "คะแนน" : "Rating"}</div>
+            <StarRow value={myRating} onChange={setMyRating} />
+          </div>
+          <textarea
+            value={myComment}
+            onChange={e => setMyComment(e.target.value)}
+            placeholder={lang === "th" ? "ความคิดเห็นของคุณ (ไม่บังคับ)" : "Your comment (optional)"}
+            rows={3}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)", resize: "vertical", fontSize: "0.9rem", boxSizing: "border-box" }}
+          />
+          {msg && <div style={{ margin: "8px 0", color: msg.includes("สำเร็จ") || msg.includes("อัปเดต") ? "#15803d" : "#991b1b", fontSize: "0.85rem" }}>{msg}</div>}
+          <button
+            type="submit"
+            disabled={submitting || myRating === 0}
+            style={{ marginTop: 10, padding: "9px 22px", borderRadius: 10, background: myRating > 0 ? "var(--primary)" : "var(--border-color)", color: myRating > 0 ? "white" : "var(--text-muted)", border: "none", fontWeight: 700, cursor: myRating > 0 ? "pointer" : "not-allowed", fontSize: "0.9rem" }}
+          >
+            {submitting ? "..." : (lang === "th" ? "ส่งรีวิว" : "Submit Review")}
+          </button>
+        </form>
+      ) : (
+        <div style={{ background: "var(--card-bg)", border: "1px solid var(--border-color)", borderRadius: 12, padding: "16px 20px", marginBottom: 20, color: "var(--text-muted)", fontSize: "0.9rem" }}>
+          <Link to="/login" style={{ color: "var(--primary-hover)", fontWeight: 700 }}>{lang === "th" ? "เข้าสู่ระบบ" : "Login"}</Link>
+          {" "}{lang === "th" ? "เพื่อเขียนรีวิว" : "to write a review"}
+        </div>
+      )}
+
+      {/* Review list */}
+      {loadingReviews ? (
+        <div style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>Loading...</div>
+      ) : reviews.length === 0 ? (
+        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{lang === "th" ? "ยังไม่มีรีวิว เป็นคนแรก!" : "No reviews yet. Be the first!"}</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {reviews.map(r => (
+            <div key={r.id} style={{ background: "var(--card-bg)", border: "1px solid var(--border-color)", borderRadius: 12, padding: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "var(--primary-hover)", fontSize: "0.85rem" }}>
+                    {r.user_name?.[0]?.toUpperCase() ?? "U"}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--text-main)" }}>{r.user_name}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{new Date(r.created_at).toLocaleDateString(lang === "th" ? "th-TH" : "en-US")}</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <StarRow value={r.rating} readOnly />
+                  {user && (user.email === r.user_email || (user as any).role === "admin") && (
+                    <button onClick={() => handleDelete(r.id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.85rem", padding: "2px 6px" }} title="Delete">✕</button>
+                  )}
+                </div>
+              </div>
+              {r.comment && <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>{r.comment}</p>}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
