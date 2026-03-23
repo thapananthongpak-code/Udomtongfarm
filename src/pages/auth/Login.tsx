@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithRedirect, getRedirectResult } from "firebase/auth";
-import { auth, googleProvider } from "../../config/firebase";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useCartStore } from "../../store/cartStore";
 import { API_BASE } from "../../config/api";
@@ -39,35 +37,36 @@ export default function Login() {
     if (saved) { setEmail(saved); setRememberMe(true); }
   }, []);
 
-  // Handle Google redirect result (fires after returning from Google OAuth)
+  // Handle return from backend Google OAuth (fires when ?gat= or ?google_error= is in URL)
   useEffect(() => {
-    setGoogleLoading(true);
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (!result) return;
-        const { email, displayName: name, uid, photoURL } = result.user;
-        const res = await fetch(`${API_BASE}/api/google-login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, name, uid, photoURL }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          sessionStorage.setItem("user", JSON.stringify(data.user));
-          sessionStorage.setItem("uf_show_greeting", "1");
-          window.dispatchEvent(new Event("auth-change"));
-          handleLoginSuccess(data.user);
-        } else {
-          setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
-        }
-      })
-      .catch((err: unknown) => {
-        const code = (err as { code?: string })?.code;
-        if (code && code !== "auth/no-auth-event") {
+    const params = new URLSearchParams(window.location.search);
+    const gat = params.get("gat");
+    const googleError = params.get("google_error");
+
+    if (gat) {
+      // Clean URL immediately so the code isn't visible in history
+      window.history.replaceState({}, "", window.location.pathname);
+      setGoogleLoading(true);
+      fetch(`${API_BASE}/api/auth/google/exchange?code=${gat}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            sessionStorage.setItem("user", JSON.stringify(data.user));
+            sessionStorage.setItem("uf_show_greeting", "1");
+            window.dispatchEvent(new Event("auth-change"));
+            handleLoginSuccess(data.user);
+          } else {
+            setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
+          }
+        })
+        .catch(() => {
           setError(lang === "th" ? "Google Sign-In ล้มเหลว กรุณาลองใหม่" : "Google Sign-In failed. Please try again.");
-        }
-      })
-      .finally(() => setGoogleLoading(false));
+        })
+        .finally(() => setGoogleLoading(false));
+    } else if (googleError) {
+      window.history.replaceState({}, "", window.location.pathname);
+      setError(lang === "th" ? "Google Sign-In ล้มเหลว กรุณาลองใหม่" : "Google Sign-In failed. Please try again.");
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -79,10 +78,10 @@ export default function Login() {
     navigate(dest, { replace: true });
   }
 
-  // ─── Google Sign-In (Firebase redirect) ───
-  async function onGoogleLogin() {
+  // ─── Google Sign-In (backend-proxied OAuth) ───
+  function onGoogleLogin() {
     setError("");
-    await signInWithRedirect(auth, googleProvider);
+    window.location.href = `${API_BASE}/auth/google`;
   }
 
   // ─── Email/Password login ───
