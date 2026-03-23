@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -17,7 +17,6 @@ function getTimeGreeting(lang: string) {
 
 export default function Login() {
   const navigate  = useNavigate();
-  const location  = useLocation();
   const { lang }  = useSettingsStore();
 
   const [email,         setEmail]         = useState("");
@@ -32,17 +31,6 @@ export default function Login() {
   const [admin2faEmail, setAdmin2faEmail] = useState("");
   const [otpCode,       setOtpCode]       = useState("");
 
-  // Show error from Google OAuth redirect (?error=...)
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const err = params.get("error");
-    if (err === "google_cancelled") {
-      setError(lang === "th" ? "ยกเลิกการเข้าสู่ระบบด้วย Google" : "Google sign-in was cancelled.");
-    } else if (err) {
-      setError(lang === "th" ? "Google Sign-In ล้มเหลว กรุณาลองใหม่" : "Google Sign-In failed. Please try again.");
-    }
-  }, [location.search, lang]);
-
   // Pre-fill remembered email
   useEffect(() => {
     localStorage.removeItem("saved_password");
@@ -54,10 +42,7 @@ export default function Login() {
   function handleLoginSuccess(user: { email: string; role: string }) {
     useCartStore.getState().switchUserCart(user.email);
     const savedPath = localStorage.getItem(`uf_last_path_${user.email}`);
-    const from = (location.state as { from?: string } | null)?.from;
-    const dest = user.role === "admin"
-      ? "/admin"
-      : (savedPath || from || "/encyclopedia");
+    const dest = user.role === "admin" ? "/admin" : (savedPath || "/encyclopedia");
     navigate(dest, { replace: true });
   }
 

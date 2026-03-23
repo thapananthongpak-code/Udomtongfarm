@@ -27,7 +27,6 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import Profile from "../pages/auth/Profile";
-import GoogleCallback from "../pages/auth/GoogleCallback";
 
 // Admin pages
 import Dashboard from "../pages-admin/Dashboard";
@@ -48,7 +47,6 @@ export const router = createBrowserRouter([
       { path: "/login",         element: <Login />          },
       { path: "/register",      element: <Register />       },
       { path: "/forgot",        element: <ForgotPassword /> },
-      { path: "/auth/callback", element: <GoogleCallback /> },
     ],
   },
 
