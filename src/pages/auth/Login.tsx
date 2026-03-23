@@ -1,17 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useCartStore } from "../../store/cartStore";
 import { API_BASE } from "../../config/api";
-import { auth, googleProvider } from "../../config/firebase";
 import { LockKeyhole, Leaf as LeafIcon, Mail, Eye, EyeOff } from "lucide-react";
-
-/** Restore cart and return the saved last path for this account */
-function restoreAccountState(email: string): string | null {
-  useCartStore.getState().switchUserCart(email);
-  return localStorage.getItem(`uf_last_path_${email}`);
-}
 
 function getTimeGreeting(lang: string) {
   const h = new Date().getHours();
@@ -22,102 +14,56 @@ function getTimeGreeting(lang: string) {
 }
 
 export default function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { lang } = useSettingsStore();
-  const googleLoginPending = useRef(false);
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const { lang }  = useSettingsStore();
 
-  /** After a successful login, restore state and decide where to go */
+  const [email,         setEmail]         = useState("");
+  const [password,      setPassword]      = useState("");
+  const [showPass,      setShowPass]      = useState(false);
+  const [rememberMe,    setRememberMe]    = useState(false);
+  const [loading,       setLoading]       = useState(false);
+  const [error,         setError]         = useState("");
+  const [errorField,    setErrorField]    = useState<"email" | "password" | "both" | "">("");
+  const [verifyMsg,     setVerifyMsg]     = useState("");
+  const [needs2fa,      setNeeds2fa]      = useState(false);
+  const [admin2faEmail, setAdmin2faEmail] = useState("");
+  const [otpCode,       setOtpCode]       = useState("");
+
+  // Show error from Google OAuth redirect (?error=...)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const err = params.get("error");
+    if (err === "google_cancelled") {
+      setError(lang === "th" ? "ยกเลิกการเข้าสู่ระบบด้วย Google" : "Google sign-in was cancelled.");
+    } else if (err) {
+      setError(lang === "th" ? "Google Sign-In ล้มเหลว กรุณาลองใหม่" : "Google Sign-In failed. Please try again.");
+    }
+  }, [location.search, lang]);
+
+  // Pre-fill remembered email
+  useEffect(() => {
+    localStorage.removeItem("saved_password");
+    const saved = localStorage.getItem("saved_email");
+    if (saved) { setEmail(saved); setRememberMe(true); }
+  }, []);
+
+  /** Restore this account's cart + last path, then navigate */
   function handleLoginSuccess(user: { email: string; role: string }) {
-    const savedPath = restoreAccountState(user.email);
+    useCartStore.getState().switchUserCart(user.email);
+    const savedPath = localStorage.getItem(`uf_last_path_${user.email}`);
     const from = (location.state as { from?: string } | null)?.from;
-    // Admin always goes to /admin; users go to last path, or referring page, or encyclopedia
     const dest = user.role === "admin"
       ? "/admin"
       : (savedPath || from || "/encyclopedia");
     navigate(dest, { replace: true });
   }
 
-  const [email,      setEmail]      = useState("");
-  const [password,   setPassword]   = useState("");
-  const [showPass,   setShowPass]   = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [loading,    setLoading]    = useState(false);
-  const [googleLoad, setGoogleLoad] = useState(false);
-  const [error,      setError]      = useState<string>("");
-  const [errorField, setErrorField] = useState<"email" | "password" | "both" | "">("");
-  const [verifyMsg,  setVerifyMsg]  = useState<string>("");
-  const [needs2fa,   setNeeds2fa]   = useState(false);
-  const [admin2faEmail, setAdmin2faEmail] = useState("");
-  const [otpCode,    setOtpCode]    = useState("");
-
-  // Remove any previously stored plaintext password (security cleanup)
-  useEffect(() => {
-    localStorage.removeItem("saved_password");
-    const savedEmail = localStorage.getItem("saved_email");
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberMe(true);
-    }
-  }, []);
-
-  // Handle Google Sign-In result via onAuthStateChanged
-  // Only runs when googleLoginPending ref is true (user explicitly clicked Google button)
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!googleLoginPending.current) return;
-      if (!firebaseUser?.email) return;
-      // Ensure the user signed in with Google, not email/password
-      const isGoogleUser = firebaseUser.providerData.some(p => p.providerId === "google.com");
-      if (!isGoogleUser) return;
-      googleLoginPending.current = false;
-
-      const { email: gEmail, displayName, uid, photoURL } = firebaseUser;
-      setGoogleLoad(true);
-      try {
-        const res  = await fetch(`${API_BASE}/api/google-login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: gEmail, name: displayName ?? gEmail, uid, photoURL }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          const cache  = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");
-          const merged = { ...data.user, avatar: data.user.avatar || photoURL || cache.avatar, nickname: data.user.nickname ?? cache.nickname, phone: data.user.phone ?? cache.phone, birthDate: data.user.birthDate ?? cache.birthDate };
-          sessionStorage.setItem("user", JSON.stringify(merged));
-          sessionStorage.setItem("uf_show_greeting", "1");
-          window.dispatchEvent(new Event("auth-change"));
-          handleLoginSuccess(merged);
-        } else {
-          setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
-          setGoogleLoad(false);
-        }
-      } catch {
-        setError(lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" : "Cannot connect to server");
-        setGoogleLoad(false);
-      }
-    });
-    return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const t = {
-    title:       lang === "th" ? "เข้าสู่ระบบ" : "Login",
-    desc:        lang === "th" ? "ยินดีต้อนรับกลับสู่ Udomtong Farm" : "Welcome back to Udomtong Farm",
-    emailLabel:  lang === "th" ? "อีเมล" : "Email Address",
-    passLabel:   lang === "th" ? "รหัสผ่าน" : "Password",
-    forgotPass:  lang === "th" ? "ลืมรหัสผ่าน?" : "Forgot Password?",
-    rememberMe:  lang === "th" ? "จดจำอีเมล" : "Remember my email",
-    btnLogin:    lang === "th" ? "เข้าสู่ระบบ" : "Login",
-    btnLoading:  lang === "th" ? "กำลังเข้าสู่ระบบ..." : "Logging in...",
-    orDivider:   lang === "th" ? "หรือ" : "or",
-    googleBtn:   lang === "th" ? "เข้าสู่ระบบด้วย Google" : "Sign in with Google",
-    noAccount:   lang === "th" ? "ยังไม่มีบัญชีใช่ไหม?" : "Don't have an account?",
-    registerLink: lang === "th" ? "สมัครสมาชิก" : "Register here",
-    verifyNote:  lang === "th"
-      ? "กรุณายืนยันอีเมลก่อน — ตรวจสอบกล่องจดหมาย (รวมถึงโฟลเดอร์ Spam)"
-      : "Please verify your email first — check your inbox (including Spam folder).",
-  };
+  // ─── Google Sign-In (redirect flow — no Firebase) ───
+  function onGoogleLogin() {
+    setError("");
+    window.location.href = `${API_BASE}/auth/google`;
+  }
 
   // ─── Email/Password login ───
   async function onSubmitEmail(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -137,13 +83,9 @@ export default function Login() {
         return;
       }
       if (res.ok) {
-        if (rememberMe) {
-          localStorage.setItem("saved_email", email.trim());
-        } else {
-          localStorage.removeItem("saved_email");
-        }
-        // merge กับ profile cache ที่บันทึกแยกไว้ (ไม่โดน logout ลบ)
-        const cache = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");
+        if (rememberMe) { localStorage.setItem("saved_email", email.trim()); }
+        else            { localStorage.removeItem("saved_email"); }
+        const cache  = JSON.parse(localStorage.getItem(`uf_profile_${data.user.email}`) || "{}");
         const merged = {
           ...data.user,
           avatar:    data.user.avatar    || cache.avatar,
@@ -155,7 +97,9 @@ export default function Login() {
         window.dispatchEvent(new Event("auth-change"));
         handleLoginSuccess(merged);
       } else if (res.status === 403) {
-        setVerifyMsg(t.verifyNote);
+        setVerifyMsg(lang === "th"
+          ? "กรุณายืนยันอีเมลก่อน — ตรวจสอบกล่องจดหมาย (รวมถึงโฟลเดอร์ Spam)"
+          : "Please verify your email first — check your inbox (including Spam folder).");
         setErrorField("email");
       } else {
         setError(data.error || (lang === "th" ? "เข้าสู่ระบบไม่สำเร็จ" : "Login failed"));
@@ -165,28 +109,7 @@ export default function Login() {
       setError(lang === "th"
         ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (กรุณาเช็คว่า API รันอยู่)"
         : "Cannot connect to server (Is the API running?)");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // ─── Google Sign-In (popup) ───
-  async function onGoogleLogin() {
-    setError(""); setVerifyMsg("");
-    setGoogleLoad(true);
-    googleLoginPending.current = true;
-    try {
-      await signInWithPopup(auth, googleProvider);
-      // result handled by onAuthStateChanged
-    } catch (err: unknown) {
-      googleLoginPending.current = false;
-      if ((err as {code?: string})?.code !== "auth/popup-closed-by-user") {
-        setError(lang === "th"
-          ? "Google Sign-In ล้มเหลว กรุณาลองใหม่อีกครั้ง"
-          : "Google Sign-In failed. Please try again.");
-      }
-      setGoogleLoad(false);
-    }
+    } finally { setLoading(false); }
   }
 
   // ─── Admin 2FA verify ───
@@ -195,7 +118,7 @@ export default function Login() {
     if (!otpCode.trim()) return;
     setLoading(true); setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/verify-2fa`, {
+      const res  = await fetch(`${API_BASE}/api/admin/verify-2fa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: admin2faEmail, otpCode: otpCode.trim() }),
@@ -206,12 +129,27 @@ export default function Login() {
         window.dispatchEvent(new Event("auth-change"));
         handleLoginSuccess(data.user);
       } else {
-        setError(data.error || "OTP ไม่ถูกต้อง");
+        setError(data.error || (lang === "th" ? "OTP ไม่ถูกต้อง" : "Invalid OTP"));
       }
     } catch {
       setError(lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" : "Cannot connect to server");
     } finally { setLoading(false); }
   }
+
+  const t = {
+    title:        lang === "th" ? "เข้าสู่ระบบ"                  : "Login",
+    desc:         lang === "th" ? "ยินดีต้อนรับกลับสู่ Udomtong Farm" : "Welcome back to Udomtong Farm",
+    emailLabel:   lang === "th" ? "อีเมล"                         : "Email Address",
+    passLabel:    lang === "th" ? "รหัสผ่าน"                      : "Password",
+    forgotPass:   lang === "th" ? "ลืมรหัสผ่าน?"                  : "Forgot Password?",
+    rememberMe:   lang === "th" ? "จดจำอีเมล"                     : "Remember my email",
+    btnLogin:     lang === "th" ? "เข้าสู่ระบบ"                  : "Login",
+    btnLoading:   lang === "th" ? "กำลังเข้าสู่ระบบ..."           : "Logging in...",
+    orDivider:    lang === "th" ? "หรือ"                           : "or",
+    googleBtn:    lang === "th" ? "เข้าสู่ระบบด้วย Google"        : "Sign in with Google",
+    noAccount:    lang === "th" ? "ยังไม่มีบัญชีใช่ไหม?"          : "Don't have an account?",
+    registerLink: lang === "th" ? "สมัครสมาชิก"                   : "Register here",
+  };
 
   // ─── 2FA step UI ───
   if (needs2fa) {
@@ -287,25 +225,24 @@ export default function Login() {
           <p style={{ color: "var(--text-muted)", marginTop: 6, fontSize: "0.95rem" }}>{t.desc}</p>
         </div>
 
-        {/* Google Sign-In Button */}
+        {/* Google Sign-In Button (redirect — no Firebase) */}
         <button
           type="button"
           onClick={onGoogleLogin}
-          disabled={googleLoad}
           style={{
             width: "100%", padding: "14px", borderRadius: 12, marginBottom: 4,
             border: "1.5px solid var(--border-color)", background: "var(--card-bg)",
-            cursor: googleLoad ? "not-allowed" : "pointer",
+            cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
             fontWeight: 700, fontSize: "1rem", color: "var(--text-main)",
-            transition: "all 0.25s ease", opacity: googleLoad ? 0.6 : 1,
+            transition: "border-color 0.25s ease",
             fontFamily: "inherit",
           }}
-          onMouseEnter={e => { if (!googleLoad) (e.currentTarget as HTMLElement).style.borderColor = "var(--primary)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-color)"; }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--primary)")}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border-color)")}
         >
-          {googleLoad ? <span className="spinner" /> : <GoogleIcon />}
-          {googleLoad ? (lang === "th" ? "กำลังเชื่อมต่อ..." : "Connecting...") : t.googleBtn}
+          <GoogleIcon />
+          {t.googleBtn}
         </button>
 
         {/* Divider */}
@@ -351,7 +288,6 @@ export default function Login() {
             <span style={{ fontSize: "0.93rem", fontWeight: 600, color: "var(--text-muted)" }}>{t.rememberMe}</span>
           </label>
 
-          {/* Email verify notice */}
           {verifyMsg && (
             <div style={{
               padding: "12px 16px", borderRadius: 12,
@@ -364,9 +300,7 @@ export default function Login() {
             </div>
           )}
 
-          {error && (
-            <div className="alert-error">{error}</div>
-          )}
+          {error && <div className="alert-error">{error}</div>}
 
           <button disabled={loading} className="btn-primary" style={{ padding: "15px", fontSize: "1.05rem", borderRadius: 14, marginTop: 4 }}>
             {loading ? <><span className="spinner" style={{ width: 18, height: 18, marginRight: 8 }} />{t.btnLoading}</> : t.btnLogin}
@@ -393,4 +327,3 @@ function GoogleIcon() {
     </svg>
   );
 }
-

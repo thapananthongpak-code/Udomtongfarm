@@ -1,7 +1,6 @@
 // src/store/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser, type Role } from "../utils/roles";
-import { auth } from "../config/firebase";
 import { useCartStore } from "./cartStore";
 
 // 1. สร้าง Type สำหรับ User ของระบบเราเอง (แทน User ของ Firebase)
@@ -59,7 +58,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useCartStore.getState().switchUserCart(null, currentEmail);
     sessionStorage.removeItem("user");
     setUser(null);
-    auth.signOut().catch(() => {});
     window.dispatchEvent(new Event("auth-change"));
   }
 
