@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser, type Role } from "../utils/roles";
 import { auth } from "../config/firebase";
+import { useCartStore } from "./cartStore";
 
 // 1. สร้าง Type สำหรับ User ของระบบเราเอง (แทน User ของ Firebase)
 export type CustomUser = {
@@ -53,6 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 2. ฟังก์ชัน Logout ของระบบเรา
   function logout() {
+    // Save this account's cart before clearing session, then clear shared cart
+    const currentEmail = user?.email ?? null;
+    useCartStore.getState().switchUserCart(null, currentEmail);
     sessionStorage.removeItem("user");
     setUser(null);
     auth.signOut().catch(() => {});

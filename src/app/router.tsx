@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 // Layouts
 import PublicLayout from "../layouts/PublicLayout";
 import AdminLayout from "../layouts/AdminLayout";
+import AuthLayout from "../layouts/AuthLayout";
 
 // Public pages
 import Home from "../pages/public/Home";
@@ -39,9 +40,9 @@ import AdminGuard from "../routes/AdminGuard";
 import UserGuard from "../routes/UserGuard";
 
 export const router = createBrowserRouter([
-  // ── Unauthenticated routes (always accessible) ──────────────────────────
+  // ── Unauthenticated routes (fullscreen, no navbar) ───────────────────────
   {
-    element: <PublicLayout />,
+    element: <AuthLayout />,
     children: [
       { path: "/login",    element: <Login />          },
       { path: "/register", element: <Register />       },

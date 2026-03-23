@@ -29,6 +29,8 @@ type CartState = {
   toggleDrawer: () => void;
   totalItems: () => number;
   totalPrice: () => number;
+  /** Save current cart under this email, then load that email's cart */
+  switchUserCart: (email: string | null, saveCurrentEmail?: string | null) => void;
 };
 
 export const useCartStore = create<CartState>((set, get) => ({
@@ -79,4 +81,21 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   totalItems: () => get().items.reduce((s, i) => s + i.quantity, 0),
   totalPrice: () => get().items.reduce((s, i) => s + i.unit_price * i.quantity, 0),
+
+  switchUserCart: (email, saveCurrentEmail) => {
+    // Save current cart under the outgoing user's key
+    if (saveCurrentEmail) {
+      localStorage.setItem(`uf_cart_${saveCurrentEmail}`, JSON.stringify(get().items));
+    }
+    // Load incoming user's cart (or empty if none)
+    let newItems: CartItem[] = [];
+    if (email) {
+      try {
+        const raw = localStorage.getItem(`uf_cart_${email}`);
+        newItems = raw ? (JSON.parse(raw) as CartItem[]) : [];
+      } catch { newItems = []; }
+    }
+    saveCart(newItems);
+    set({ items: newItems, drawerOpen: false });
+  },
 }));

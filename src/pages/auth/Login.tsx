@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
 import { useSettingsStore } from "../../store/settingsStore";
+import { useCartStore } from "../../store/cartStore";
 import { API_BASE } from "../../config/api";
 import { auth, googleProvider } from "../../config/firebase";
 import { LockKeyhole, Leaf as LeafIcon, Mail, Eye, EyeOff } from "lucide-react";
+
+/** Restore cart and return the saved last path for this account */
+function restoreAccountState(email: string): string | null {
+  useCartStore.getState().switchUserCart(email);
+  return localStorage.getItem(`uf_last_path_${email}`);
+}
 
 function getTimeGreeting(lang: string) {
   const h = new Date().getHours();
@@ -16,8 +23,20 @@ function getTimeGreeting(lang: string) {
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { lang } = useSettingsStore();
   const googleLoginPending = useRef(false);
+
+  /** After a successful login, restore state and decide where to go */
+  function handleLoginSuccess(user: { email: string; role: string }) {
+    const savedPath = restoreAccountState(user.email);
+    const from = (location.state as { from?: string } | null)?.from;
+    // Admin always goes to /admin; users go to last path, or referring page, or encyclopedia
+    const dest = user.role === "admin"
+      ? "/admin"
+      : (savedPath || from || "/encyclopedia");
+    navigate(dest, { replace: true });
+  }
 
   const [email,      setEmail]      = useState("");
   const [password,   setPassword]   = useState("");
@@ -68,7 +87,7 @@ export default function Login() {
           sessionStorage.setItem("user", JSON.stringify(merged));
           sessionStorage.setItem("uf_show_greeting", "1");
           window.dispatchEvent(new Event("auth-change"));
-          navigate(merged.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
+          handleLoginSuccess(merged);
         } else {
           setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
           setGoogleLoad(false);
@@ -134,7 +153,7 @@ export default function Login() {
         };
         sessionStorage.setItem("user", JSON.stringify(merged));
         window.dispatchEvent(new Event("auth-change"));
-        navigate(merged.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
+        handleLoginSuccess(merged);
       } else if (res.status === 403) {
         setVerifyMsg(t.verifyNote);
         setErrorField("email");
@@ -185,7 +204,7 @@ export default function Login() {
       if (res.ok) {
         sessionStorage.setItem("user", JSON.stringify(data.user));
         window.dispatchEvent(new Event("auth-change"));
-        navigate("/admin", { replace: true });
+        handleLoginSuccess(data.user);
       } else {
         setError(data.error || "OTP ไม่ถูกต้อง");
       }
