@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../../config/firebase";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useCartStore } from "../../store/cartStore";
 import { API_BASE } from "../../config/api";
@@ -59,10 +61,35 @@ export default function Login() {
     navigate(dest, { replace: true });
   }
 
-  // ─── Google Sign-In (redirect flow — no Firebase) ───
-  function onGoogleLogin() {
+  // ─── Google Sign-In (Firebase popup) ───
+  async function onGoogleLogin() {
     setError("");
-    window.location.href = `${API_BASE}/auth/google`;
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const { email, displayName: name, uid, photoURL } = result.user;
+      const res = await fetch(`${API_BASE}/api/google-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name, uid, photoURL }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        sessionStorage.setItem("user", JSON.stringify(data.user));
+        sessionStorage.setItem("uf_show_greeting", "1");
+        window.dispatchEvent(new Event("auth-change"));
+        handleLoginSuccess(data.user);
+      } else {
+        setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
+      }
+    } catch (err: unknown) {
+      const code = (err as any)?.code;
+      if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
+        setError(lang === "th" ? "Google Sign-In ล้มเหลว กรุณาลองใหม่" : "Google Sign-In failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   // ─── Email/Password login ───
