@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useCartStore } from "../../store/cartStore";
@@ -30,12 +30,45 @@ export default function Login() {
   const [needs2fa,      setNeeds2fa]      = useState(false);
   const [admin2faEmail, setAdmin2faEmail] = useState("");
   const [otpCode,       setOtpCode]       = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // Pre-fill remembered email
   useEffect(() => {
     localStorage.removeItem("saved_password");
     const saved = localStorage.getItem("saved_email");
     if (saved) { setEmail(saved); setRememberMe(true); }
+  }, []);
+
+  // Handle Google redirect result (fires after returning from Google OAuth)
+  useEffect(() => {
+    setGoogleLoading(true);
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (!result) return;
+        const { email, displayName: name, uid, photoURL } = result.user;
+        const res = await fetch(`${API_BASE}/api/google-login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, name, uid, photoURL }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          sessionStorage.setItem("user", JSON.stringify(data.user));
+          sessionStorage.setItem("uf_show_greeting", "1");
+          window.dispatchEvent(new Event("auth-change"));
+          handleLoginSuccess(data.user);
+        } else {
+          setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
+        }
+      })
+      .catch((err: unknown) => {
+        const code = (err as { code?: string })?.code;
+        if (code && code !== "auth/no-auth-event") {
+          setError(lang === "th" ? "Google Sign-In ล้มเหลว กรุณาลองใหม่" : "Google Sign-In failed. Please try again.");
+        }
+      })
+      .finally(() => setGoogleLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /** Restore this account's cart + last path, then navigate */
@@ -46,35 +79,10 @@ export default function Login() {
     navigate(dest, { replace: true });
   }
 
-  // ─── Google Sign-In (Firebase popup) ───
+  // ─── Google Sign-In (Firebase redirect) ───
   async function onGoogleLogin() {
     setError("");
-    setLoading(true);
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const { email, displayName: name, uid, photoURL } = result.user;
-      const res = await fetch(`${API_BASE}/api/google-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, uid, photoURL }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        sessionStorage.setItem("user", JSON.stringify(data.user));
-        sessionStorage.setItem("uf_show_greeting", "1");
-        window.dispatchEvent(new Event("auth-change"));
-        handleLoginSuccess(data.user);
-      } else {
-        setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
-      }
-    } catch (err: unknown) {
-      const code = (err as any)?.code;
-      if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
-        setError(lang === "th" ? "Google Sign-In ล้มเหลว กรุณาลองใหม่" : "Google Sign-In failed. Please try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
+    await signInWithRedirect(auth, googleProvider);
   }
 
   // ─── Email/Password login ───
@@ -257,6 +265,7 @@ export default function Login() {
         <button
           type="button"
           onClick={onGoogleLogin}
+          disabled={googleLoading}
           style={{
             width: "100%", padding: "14px", borderRadius: 12, marginBottom: 4,
             border: "1.5px solid var(--border-color)", background: "var(--card-bg)",
