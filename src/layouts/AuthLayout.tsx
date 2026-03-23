@@ -25,7 +25,7 @@ export default function AuthLayout() {
             transition: "border-color 0.2s",
           }}
         >
-          {lang === "th" ? "EN" : "ไทย"}
+          {lang === "th" ? "EN" : "TH"}
         </button>
 
         <button
