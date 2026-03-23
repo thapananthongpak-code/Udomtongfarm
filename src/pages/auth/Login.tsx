@@ -70,12 +70,16 @@ export default function Login() {
     e.preventDefault();
     setError(""); setErrorField(""); setVerifyMsg("");
     setLoading(true);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
     try {
       const res  = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const data = await res.json();
       if (res.ok && data.needs_2fa) {
         setNeeds2fa(true);
@@ -105,10 +109,13 @@ export default function Login() {
         setError(data.error || (lang === "th" ? "เข้าสู่ระบบไม่สำเร็จ" : "Login failed"));
         setErrorField(data.field || "");
       }
-    } catch {
-      setError(lang === "th"
-        ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (กรุณาเช็คว่า API รันอยู่)"
-        : "Cannot connect to server (Is the API running?)");
+    } catch (err: unknown) {
+      clearTimeout(timeout);
+      const isTimeout = err instanceof Error && err.name === "AbortError";
+      setError(isTimeout
+        ? (lang === "th" ? "เซิร์ฟเวอร์ตอบสนองช้าเกินไป กรุณาลองใหม่อีกครั้ง" : "Server is taking too long. Please try again.")
+        : (lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่" : "Cannot connect to server. Please try again.")
+      );
     } finally { setLoading(false); }
   }
 
@@ -117,12 +124,16 @@ export default function Login() {
     e.preventDefault();
     if (!otpCode.trim()) return;
     setLoading(true); setError("");
+    const ctrl2 = new AbortController();
+    const t2 = setTimeout(() => ctrl2.abort(), 20000);
     try {
       const res  = await fetch(`${API_BASE}/api/admin/verify-2fa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: admin2faEmail, otpCode: otpCode.trim() }),
+        signal: ctrl2.signal,
       });
+      clearTimeout(t2);
       const data = await res.json();
       if (res.ok) {
         sessionStorage.setItem("user", JSON.stringify(data.user));
@@ -131,8 +142,13 @@ export default function Login() {
       } else {
         setError(data.error || (lang === "th" ? "OTP ไม่ถูกต้อง" : "Invalid OTP"));
       }
-    } catch {
-      setError(lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" : "Cannot connect to server");
+    } catch (err: unknown) {
+      clearTimeout(t2);
+      const isTimeout = err instanceof Error && err.name === "AbortError";
+      setError(isTimeout
+        ? (lang === "th" ? "เซิร์ฟเวอร์ตอบสนองช้าเกินไป กรุณาลองใหม่" : "Server is taking too long. Please try again.")
+        : (lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" : "Cannot connect to server")
+      );
     } finally { setLoading(false); }
   }
 
