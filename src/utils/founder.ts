@@ -36,3 +36,28 @@ export function getFounderData(): FounderData {
     return FOUNDER_DEFAULTS;
   }
 }
+
+const UNIT_MAP_EN: Record<string, string> = {
+  "ตัว": "animal", "ต้น": "plant", "ชุด": "set", "แพ็ค": "pack",
+  "กิ่ง": "cutting", "เมล็ด": "seed", "กก.": "kg", "กก": "kg",
+};
+
+const GENDER_MAP_EN: Record<string, string> = {
+  "เพศผู้": "Male", "เพศเมีย": "Female", "ผสม": "Mixed",
+  "คู่ผสมพันธุ์": "Breeding Pair", "ไม่ระบุ": "Any",
+};
+
+export function translateUnit(unit: string, lang: string): string {
+  if (lang === "en") return UNIT_MAP_EN[unit] ?? unit;
+  return unit;
+}
+
+export function translateGender(gender: string, lang: string): string {
+  if (lang === "en") return GENDER_MAP_EN[gender] ?? gender;
+  return gender;
+}
+
+export function translateSpeciesType(type: "animal" | "plant", lang: string): string {
+  if (lang === "en") return type === "animal" ? "Animal" : "Plant";
+  return type === "animal" ? "สัตว์" : "พืช";
+}

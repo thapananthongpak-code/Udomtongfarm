@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
@@ -46,6 +46,14 @@ export default function Register() {
   const [step, setStep] = useState<"REGISTER" | "OTP">("REGISTER");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
   // 🟢 พจนานุกรมแปลภาษา
   const t = {
@@ -101,9 +109,29 @@ export default function Register() {
         body: JSON.stringify({ name: name.trim(), nickname: nickname.trim(), phone: phone.trim(), birthDate, email: email.trim(), password, pdpa, avatar })
       });
       const data = await response.json();
-      if (response.ok) { setStep("OTP"); } else { setError(data.error || (lang === "th" ? "เกิดข้อผิดพลาดในการสมัครสมาชิก" : "Registration failed")); }
+      if (response.ok) { setStep("OTP"); setResendCooldown(60); } else { setError(data.error || (lang === "th" ? "เกิดข้อผิดพลาดในการสมัครสมาชิก" : "Registration failed")); }
     } catch {
       setError(lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (โปรดตรวจสอบว่าเปิด API ทิ้งไว้หรือยัง)" : "Cannot connect to server (Is the API running?)");
+    } finally { setLoading(false); }
+  }
+
+  async function onResendOTP() {
+    if (resendCooldown > 0 || loading) return;
+    setError(""); setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/resend-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResendCooldown(60);
+      } else {
+        setError(data.error || (lang === "th" ? "ส่ง OTP ไม่สำเร็จ" : "Failed to resend OTP"));
+      }
+    } catch {
+      setError(lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" : "Cannot connect to server");
     } finally { setLoading(false); }
   }
 
@@ -262,11 +290,11 @@ export default function Register() {
             <div style={{ fontSize: "4rem", marginBottom: "20px" }}>📧</div>
             <h2 style={{ color: "var(--text-main)", marginBottom: "10px" }}>{t.otpTitle}</h2>
             <p style={{ color: "var(--text-muted)", marginBottom: "30px", lineHeight: 1.6 }}>{t.otpDesc1} <br/><b style={{color: "var(--primary-hover)"}}>{email}</b></p>
-            
+
             <form onSubmit={onSubmitVerifyOTP} style={{ display: "grid", gap: "20px" }}>
               <input
-                value={otpCode} onChange={(e) => setOtpCode(e.target.value)}
-                placeholder="123456" type="text" required maxLength={6}
+                value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="123456" type="text" inputMode="numeric" required maxLength={6}
                 className="auth-input" style={{ textAlign: "center", fontSize: "1.5rem", letterSpacing: "8px", fontWeight: 900 }}
               />
               {error && <div style={{ color: "#991b1b", fontWeight: 700, fontSize: "0.9rem" }}>{error}</div>}
@@ -274,6 +302,25 @@ export default function Register() {
                 {loading ? t.btnVerifying : t.btnVerify}
               </button>
             </form>
+
+            {/* Resend OTP */}
+            <div style={{ marginTop: 20, fontSize: "0.88rem", color: "var(--text-muted)" }}>
+              {lang === "th" ? "ไม่ได้รับ OTP?" : "Didn't receive OTP?"}{" "}
+              <button
+                type="button"
+                onClick={onResendOTP}
+                disabled={resendCooldown > 0 || loading}
+                style={{
+                  background: "none", border: "none", cursor: resendCooldown > 0 ? "not-allowed" : "pointer",
+                  color: resendCooldown > 0 ? "var(--text-muted)" : "var(--primary-hover)",
+                  fontWeight: 700, fontSize: "0.88rem", padding: 0,
+                }}
+              >
+                {resendCooldown > 0
+                  ? `${lang === "th" ? "ส่งอีกครั้งใน" : "Resend in"} ${resendCooldown}s`
+                  : (lang === "th" ? "ส่งอีกครั้ง" : "Resend OTP")}
+              </button>
+            </div>
           </div>
         )}
 

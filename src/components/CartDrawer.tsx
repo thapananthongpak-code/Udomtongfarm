@@ -2,6 +2,7 @@ import { useCartStore } from "../store/cartStore";
 import { useSettingsStore } from "../store/settingsStore";
 import { Link } from "react-router-dom";
 import { ShoppingCart, Trash2, X } from "lucide-react";
+import { translateUnit, translateGender } from "../utils/founder";
 
 export default function CartDrawer() {
   const { items, drawerOpen, closeDrawer, removeItem, updateQty, totalPrice } = useCartStore();
@@ -111,11 +112,11 @@ export default function CartDrawer() {
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                     <span style={{ color: "var(--primary-hover)", fontWeight: 800, fontSize: "0.9rem" }}>
-                      {fmt(item.unit_price)} / {item.unit}
+                      {fmt(item.unit_price)} / {translateUnit(item.unit, lang)}
                     </span>
                     {item.gender && (
                       <span style={{ background: "var(--primary-light)", color: "var(--primary-hover)", borderRadius: 6, padding: "1px 8px", fontSize: "0.75rem", fontWeight: 700 }}>
-                        {item.gender}
+                        {translateGender(item.gender, lang)}
                       </span>
                     )}
                   </div>

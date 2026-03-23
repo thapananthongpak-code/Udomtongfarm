@@ -7,6 +7,7 @@ import { useAuth } from "../../store/AuthContext";
 import { useSettingsStore } from "../../store/settingsStore";
 import type { Address, PaymentMethod, ShippingCompany } from "../../types/shop";
 import { SHIPPING_COMPANIES } from "../../types/shop";
+import { translateUnit } from "../../utils/founder";
 
 const PAYMENT_METHODS: { id: PaymentMethod; icon: string; labelTh: string; labelEn: string }[] = [
   { id: "promptpay",    icon: "📱", labelTh: "พร้อมเพย์ (PromptPay)",   labelEn: "PromptPay" },

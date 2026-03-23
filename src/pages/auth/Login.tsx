@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -6,9 +6,18 @@ import { API_BASE } from "../../config/api";
 import { auth, googleProvider } from "../../config/firebase";
 import { LockKeyhole, Leaf as LeafIcon, Mail, Eye, EyeOff } from "lucide-react";
 
+function getTimeGreeting(lang: string) {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return { emoji: "☀️", text: lang === "th" ? "สวัสดีตอนเช้า" : "Good Morning" };
+  if (h >= 12 && h < 17) return { emoji: "🌤️", text: lang === "th" ? "สวัสดีตอนบ่าย" : "Good Afternoon" };
+  if (h >= 17 && h < 21) return { emoji: "🌅", text: lang === "th" ? "สวัสดีตอนเย็น" : "Good Evening" };
+  return { emoji: "🌙", text: lang === "th" ? "สวัสดีตอนดึก" : "Good Night" };
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const { lang } = useSettingsStore();
+  const googleLoginPending = useRef(false);
 
   const [email,      setEmail]      = useState("");
   const [password,   setPassword]   = useState("");
@@ -34,9 +43,16 @@ export default function Login() {
   }, []);
 
   // Handle Google Sign-In result via onAuthStateChanged
+  // Only runs when googleLoginPending ref is true (user explicitly clicked Google button)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!googleLoginPending.current) return;
       if (!firebaseUser?.email) return;
+      // Ensure the user signed in with Google, not email/password
+      const isGoogleUser = firebaseUser.providerData.some(p => p.providerId === "google.com");
+      if (!isGoogleUser) return;
+      googleLoginPending.current = false;
+
       const { email: gEmail, displayName, uid, photoURL } = firebaseUser;
       setGoogleLoad(true);
       try {
@@ -54,10 +70,13 @@ export default function Login() {
           window.dispatchEvent(new Event("auth-change"));
           navigate(merged.role === "admin" ? "/admin" : "/encyclopedia", { replace: true });
         } else {
-          setError(data.error || "Google Sign-In failed");
+          setError(data.error || (lang === "th" ? "Google Sign-In ล้มเหลว" : "Google Sign-In failed"));
+          setGoogleLoad(false);
         }
-      } catch { setError("Cannot connect to server"); }
-      finally { setGoogleLoad(false); }
+      } catch {
+        setError(lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" : "Cannot connect to server");
+        setGoogleLoad(false);
+      }
     });
     return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -136,14 +155,16 @@ export default function Login() {
   async function onGoogleLogin() {
     setError(""); setVerifyMsg("");
     setGoogleLoad(true);
+    googleLoginPending.current = true;
     try {
       await signInWithPopup(auth, googleProvider);
       // result handled by onAuthStateChanged
     } catch (err: unknown) {
+      googleLoginPending.current = false;
       if ((err as {code?: string})?.code !== "auth/popup-closed-by-user") {
         setError(lang === "th"
-          ? "Google Sign-In ล้มเหลว"
-          : "Google Sign-In failed");
+          ? "Google Sign-In ล้มเหลว กรุณาลองใหม่อีกครั้ง"
+          : "Google Sign-In failed. Please try again.");
       }
       setGoogleLoad(false);
     }
@@ -216,12 +237,25 @@ export default function Login() {
     );
   }
 
+  const greeting = getTimeGreeting(lang);
+
   return (
     <div className="auth-container">
       <div className="auth-blob blob-1" />
       <div className="auth-blob blob-2" />
 
       <div className="auth-card auth-card-hover fade-in-up">
+        {/* Time-based greeting banner */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          marginBottom: 20, padding: "8px 16px", borderRadius: 24,
+          background: "var(--primary-light)", border: "1px solid var(--border-color)",
+          fontSize: "0.88rem", fontWeight: 700, color: "var(--primary-hover)",
+        }}>
+          <span style={{ fontSize: "1.1rem" }}>{greeting.emoji}</span>
+          <span>{greeting.text}</span>
+        </div>
+
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{

@@ -36,34 +36,51 @@ import OrderManager from "../pages-admin/OrderManager";
 
 // Guards
 import AdminGuard from "../routes/AdminGuard";
+import UserGuard from "../routes/UserGuard";
 
 export const router = createBrowserRouter([
+  // ── Unauthenticated routes (always accessible) ──────────────────────────
   {
     element: <PublicLayout />,
     children: [
-      { index: true,                   element: <Home />        },
-      { path: "/encyclopedia",         element: <Encyclopedia /> },
-      { path: "/species/:type/:id",    element: <SpeciesPage />  },
-      { path: "/about",                element: <About />        },
-      { path: "/gallery",              element: <Gallery />      },
-      { path: "/wishlist",             element: <Wishlist />     },
-      { path: "/map",                  element: <MapPage />      },
-      { path: "/compare",              element: <Compare />      },
-      { path: "/contact",              element: <Contact />      },
-      { path: "/faq",                  element: <FAQ />          },
-      // Shop
-      { path: "/cart",                 element: <Cart />         },
-      { path: "/checkout",             element: <Checkout />     },
-      { path: "/orders",               element: <Orders />       },
-      { path: "/orders/:id",           element: <OrderDetail />  },
-      // Auth
-      { path: "/login",                element: <Login />        },
-      { path: "/register",             element: <Register />     },
-      { path: "/forgot",               element: <ForgotPassword /> },
-      { path: "/profile",              element: <Profile />      },
-      { path: "*",                     element: <Navigate to="/" replace /> },
+      { path: "/login",    element: <Login />          },
+      { path: "/register", element: <Register />       },
+      { path: "/forgot",   element: <ForgotPassword /> },
     ],
   },
+
+  // ── Authenticated user routes (require login) ────────────────────────────
+  {
+    element: <UserGuard />,
+    children: [
+      {
+        element: <PublicLayout />,
+        children: [
+          { index: true,                   element: <Home />        },
+          { path: "/encyclopedia",         element: <Encyclopedia /> },
+          { path: "/species/:type/:id",    element: <SpeciesPage />  },
+          { path: "/about",                element: <About />        },
+          { path: "/gallery",              element: <Gallery />      },
+          { path: "/wishlist",             element: <Wishlist />     },
+          { path: "/map",                  element: <MapPage />      },
+          { path: "/compare",              element: <Compare />      },
+          { path: "/contact",              element: <Contact />      },
+          { path: "/faq",                  element: <FAQ />          },
+          // Shop
+          { path: "/cart",                 element: <Cart />         },
+          { path: "/checkout",             element: <Checkout />     },
+          { path: "/orders",               element: <Orders />       },
+          { path: "/orders/:id",           element: <OrderDetail />  },
+          // Profile
+          { path: "/profile",              element: <Profile />      },
+          // Fallback
+          { path: "*",                     element: <Navigate to="/" replace /> },
+        ],
+      },
+    ],
+  },
+
+  // ── Admin routes (require login + admin role) ─────────────────────────────
   {
     element: <AdminGuard />,
     children: [
@@ -71,11 +88,11 @@ export const router = createBrowserRouter([
         path: "/admin",
         element: <AdminLayout />,
         children: [
-          { index: true,           element: <Dashboard />      },
-          { path: "species",       element: <SpeciesManager />  },
-          { path: "products",      element: <ProductManager />  },
-          { path: "orders",        element: <OrderManager />    },
-          { path: "settings",      element: <AdminSettings />   },
+          { index: true,       element: <Dashboard />      },
+          { path: "species",   element: <SpeciesManager />  },
+          { path: "products",  element: <ProductManager />  },
+          { path: "orders",    element: <OrderManager />    },
+          { path: "settings",  element: <AdminSettings />   },
         ],
       },
     ],

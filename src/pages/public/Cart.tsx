@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useCartStore } from "../../store/cartStore";
 import { useSettingsStore } from "../../store/settingsStore";
+import { translateUnit, translateGender, translateSpeciesType } from "../../utils/founder";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
@@ -102,15 +103,15 @@ export default function Cart() {
                   {lang === "th" ? item.species_name : item.species_name_en}
                 </div>
                 <div style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
-                  {item.species_type === "animal" ? "🐾 สัตว์" : "🌿 พืช"} · {item.unit}
+                  {item.species_type === "animal" ? `🐾 ${translateSpeciesType("animal", lang)}` : `🌿 ${translateSpeciesType("plant", lang)}`} · {translateUnit(item.unit, lang)}
                   {item.gender && (
                     <span style={{ background: "var(--primary-light)", color: "var(--primary-hover)", borderRadius: 6, padding: "1px 7px", fontSize: "0.75rem", fontWeight: 700 }}>
-                      {item.gender}
+                      {translateGender(item.gender, lang)}
                     </span>
                   )}
                 </div>
                 <div style={{ color: "var(--primary-hover)", fontWeight: 700, marginTop: 4, fontSize: "0.9rem" }}>
-                  {fmt(item.unit_price)} / {item.unit}
+                  {fmt(item.unit_price)} / {translateUnit(item.unit, lang)}
                 </div>
                 {isMobile && (
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>

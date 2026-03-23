@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSettingsStore } from "../../store/settingsStore";
 import { API_BASE } from "../../config/api";
@@ -15,6 +15,13 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [done, setDone] = useState<string>("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
   const t = {
     title:              lang === "th" ? "ลืมรหัสผ่าน" : "Forgot Password",
@@ -46,6 +53,7 @@ export default function ForgotPassword() {
       const data = await res.json();
       if (res.ok) {
         setStep("RESET_PASS");
+        setResendCooldown(60);
         setDone(lang === "th" ? "ส่งรหัส OTP ไปที่อีเมลแล้วครับ!" : "OTP sent to your email!");
       } else {
         setError(data.error || (lang === "th" ? "เกิดข้อผิดพลาดในการขอ OTP" : "Failed to request OTP"));
@@ -153,9 +161,10 @@ export default function ForgotPassword() {
               <div style={{ marginBottom: 8, fontWeight: 700, color: "var(--text-main)", fontSize: "0.93rem" }}>{t.otpLabel}</div>
               <input
                 value={otpCode}
-                onChange={(e) => { setOtpCode(e.target.value); setError(""); }}
+                onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "")); setError(""); }}
                 placeholder="123456"
                 required
+                inputMode="numeric"
                 maxLength={6}
                 className="auth-input"
                 style={{ textAlign: "center", letterSpacing: "8px", fontWeight: 900, fontSize: "1.3rem" }}
@@ -188,13 +197,24 @@ export default function ForgotPassword() {
                 : t.btnReset}
             </button>
 
-            <button
-              type="button"
-              onClick={() => { setStep("REQUEST_OTP"); setError(""); setDone(""); }}
-              style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem", textAlign: "center" }}
-            >
-              {lang === "th" ? "← ส่ง OTP ใหม่" : "← Resend OTP"}
-            </button>
+            <div style={{ textAlign: "center", fontSize: "0.88rem", color: "var(--text-muted)" }}>
+              {lang === "th" ? "ไม่ได้รับ OTP?" : "Didn't receive OTP?"}{" "}
+              <button
+                type="button"
+                onClick={() => { setStep("REQUEST_OTP"); setError(""); setDone(""); }}
+                disabled={resendCooldown > 0}
+                style={{
+                  background: "none", border: "none",
+                  cursor: resendCooldown > 0 ? "not-allowed" : "pointer",
+                  color: resendCooldown > 0 ? "var(--text-muted)" : "var(--primary-hover)",
+                  fontWeight: 700, fontSize: "0.88rem", padding: 0,
+                }}
+              >
+                {resendCooldown > 0
+                  ? `${lang === "th" ? "ส่งอีกครั้งใน" : "Resend in"} ${resendCooldown}s`
+                  : (lang === "th" ? "← ส่ง OTP ใหม่" : "← Resend OTP")}
+              </button>
+            </div>
           </form>
         )}
 
