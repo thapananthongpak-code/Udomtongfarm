@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useCartStore } from "../../store/cartStore";
 import { API_BASE } from "../../config/api";
-import { LockKeyhole, Leaf as LeafIcon, Mail, Eye, EyeOff } from "lucide-react";
+import { Leaf as LeafIcon, Mail, Eye, EyeOff } from "lucide-react";
 
 function getTimeGreeting(lang: string) {
   const h = new Date().getHours();
@@ -25,9 +25,6 @@ export default function Login() {
   const [error,         setError]         = useState("");
   const [errorField,    setErrorField]    = useState<"email" | "password" | "both" | "">("");
   const [verifyMsg,     setVerifyMsg]     = useState("");
-  const [needs2fa,      setNeeds2fa]      = useState(false);
-  const [admin2faEmail, setAdmin2faEmail] = useState("");
-  const [otpCode,       setOtpCode]       = useState("");
   // Pre-fill remembered email
   useEffect(() => {
     localStorage.removeItem("saved_password");
@@ -59,11 +56,6 @@ export default function Login() {
       });
       clearTimeout(timeout);
       const data = await res.json();
-      if (res.ok && data.needs_2fa) {
-        setNeeds2fa(true);
-        setAdmin2faEmail(data.email || email.trim());
-        return;
-      }
       if (res.ok) {
         if (rememberMe) { localStorage.setItem("saved_email", email.trim()); }
         else            { localStorage.removeItem("saved_email"); }
@@ -97,39 +89,6 @@ export default function Login() {
     } finally { setLoading(false); }
   }
 
-  // ─── Admin 2FA verify ───
-  async function onVerify2fa(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!otpCode.trim()) return;
-    setLoading(true); setError("");
-    const ctrl2 = new AbortController();
-    const t2 = setTimeout(() => ctrl2.abort(), 20000);
-    try {
-      const res  = await fetch(`${API_BASE}/api/admin/verify-2fa`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: admin2faEmail, otpCode: otpCode.trim() }),
-        signal: ctrl2.signal,
-      });
-      clearTimeout(t2);
-      const data = await res.json();
-      if (res.ok) {
-        sessionStorage.setItem("user", JSON.stringify(data.user));
-        window.dispatchEvent(new Event("auth-change"));
-        handleLoginSuccess(data.user);
-      } else {
-        setError(data.error || (lang === "th" ? "OTP ไม่ถูกต้อง" : "Invalid OTP"));
-      }
-    } catch (err: unknown) {
-      clearTimeout(t2);
-      const isTimeout = err instanceof Error && err.name === "AbortError";
-      setError(isTimeout
-        ? (lang === "th" ? "เซิร์ฟเวอร์ตอบสนองช้าเกินไป กรุณาลองใหม่" : "Server is taking too long. Please try again.")
-        : (lang === "th" ? "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" : "Cannot connect to server")
-      );
-    } finally { setLoading(false); }
-  }
-
   const t = {
     title:        lang === "th" ? "เข้าสู่ระบบ"                  : "Login",
     desc:         lang === "th" ? "ยินดีต้อนรับกลับสู่ Udomtong Farm" : "Welcome back to Udomtong Farm",
@@ -142,49 +101,6 @@ export default function Login() {
     noAccount:    lang === "th" ? "ยังไม่มีบัญชีใช่ไหม?"          : "Don't have an account?",
     registerLink: lang === "th" ? "สมัครสมาชิก"                   : "Register here",
   };
-
-  // ─── 2FA step UI ───
-  if (needs2fa) {
-    return (
-      <div className="auth-container">
-        <div className="auth-blob blob-1" />
-        <div className="auth-blob blob-2" />
-        <div className="auth-card auth-card-hover fade-in-up">
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <div style={{ marginBottom: 8, color: "var(--primary-hover)" }}><LockKeyhole size={48} /></div>
-            <h2 style={{ margin: "0 0 6px", fontWeight: 900, color: "var(--text-main)" }}>
-              {lang === "th" ? "ยืนยันตัวตน Admin" : "Admin 2FA Verification"}
-            </h2>
-            <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.9rem" }}>
-              {lang === "th" ? `ส่งรหัส OTP ไปยัง ${admin2faEmail} แล้ว` : `OTP sent to ${admin2faEmail}`}
-            </p>
-          </div>
-          <form onSubmit={onVerify2fa}>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--text-muted)", display: "block", marginBottom: 6 }}>
-                {lang === "th" ? "รหัส OTP (6 หลัก)" : "OTP Code (6 digits)"}
-              </label>
-              <input
-                type="text" inputMode="numeric" maxLength={6} autoFocus
-                value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                placeholder="000000"
-                style={{ width: "100%", padding: "14px", borderRadius: 12, border: "1.5px solid var(--border-color)", background: "var(--card-bg)", color: "var(--text-main)", fontSize: "1.5rem", textAlign: "center", letterSpacing: "0.3em", fontWeight: 900, boxSizing: "border-box" }}
-              />
-            </div>
-            {error && <div style={{ color: "#991b1b", background: "#fee2e2", borderRadius: 8, padding: "10px 14px", marginBottom: 14, fontSize: "0.88rem" }}>{error}</div>}
-            <button type="submit" disabled={loading || otpCode.length < 6}
-              style={{ width: "100%", padding: "14px", borderRadius: 12, background: otpCode.length === 6 ? "var(--primary)" : "var(--border-color)", color: otpCode.length === 6 ? "white" : "var(--text-muted)", border: "none", fontWeight: 800, fontSize: "1rem", cursor: otpCode.length === 6 ? "pointer" : "not-allowed" }}>
-              {loading ? "..." : (lang === "th" ? "ยืนยัน OTP" : "Verify OTP")}
-            </button>
-            <button type="button" onClick={() => { setNeeds2fa(false); setOtpCode(""); setError(""); }}
-              style={{ width: "100%", padding: "10px", marginTop: 10, borderRadius: 12, border: "1px solid var(--border-color)", background: "none", color: "var(--text-muted)", cursor: "pointer", fontWeight: 600, fontSize: "0.9rem" }}>
-              {lang === "th" ? "← กลับ" : "← Back"}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
 
   const greeting = getTimeGreeting(lang);
 
