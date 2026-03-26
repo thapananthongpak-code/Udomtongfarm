@@ -377,7 +377,7 @@ export default function AdminSettings() {
       });
       setAvatarMsg(lang === "th" ? "บันทึกสำเร็จ!" : "Saved!");
     } catch {
-      setAvatarMsg(lang === "th" ? "บันทึกสำเร็จ!" : "Saved!");
+      setAvatarMsg(lang === "th" ? "บันทึกไม่สำเร็จ" : "Save failed");
     } finally {
       setAvatarSaving(false);
       setTimeout(() => setAvatarMsg(""), 3000);
@@ -413,7 +413,7 @@ export default function AdminSettings() {
       setProfileInfoMsg(lang === "th" ? "บันทึกสำเร็จ!" : "Saved!");
       setProfileEditMode(false);
     } catch {
-      setProfileInfoMsg(lang === "th" ? "บันทึกสำเร็จ!" : "Saved!");
+      setProfileInfoMsg(lang === "th" ? "บันทึกไม่สำเร็จ" : "Save failed");
     } finally {
       setProfileInfoSaving(false);
       setTimeout(() => setProfileInfoMsg(""), 3000);

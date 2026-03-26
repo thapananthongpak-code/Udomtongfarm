@@ -122,9 +122,9 @@ export default function Profile() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: user!.email, avatar: avatarVal }),
       });
-      setMsg(res.ok ? t.successMsg : t.successMsg);
+      setMsg(res.ok ? t.successMsg : t.errorMsg);
     } catch {
-      setMsg(t.successMsg); // บันทึก local แล้ว
+      setMsg(t.errorMsg);
     } finally {
       setSaving(false);
       setTimeout(() => setMsg(""), 3000);
@@ -168,10 +168,10 @@ export default function Profile() {
       localStorage.setItem("user", JSON.stringify(updated));
       saveProfileCache({ name, nickname, phone, birthDate });
       window.dispatchEvent(new Event("auth-change"));
-      setInfoMsg(res.ok ? t.successMsg : t.successMsg);
-      setEditMode(false);
+      setInfoMsg(res.ok ? t.successMsg : t.errorMsg);
+      if (res.ok) setEditMode(false);
     } catch {
-      setInfoMsg(t.successMsg); // บันทึก local แล้ว
+      setInfoMsg(t.errorMsg);
     } finally {
       setInfoSaving(false);
       setTimeout(() => setInfoMsg(""), 3000);
