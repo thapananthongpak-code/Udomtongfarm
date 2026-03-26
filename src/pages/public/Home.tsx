@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSpeciesStore } from "../../store/speciesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import type { Species } from "../../types/species";
-import { RECENTLY_VIEWED_KEY } from "./SpeciesPage";
+import { getRecentViewedKey } from "./SpeciesPage";
+import { useAuth } from "../../store/AuthContext";
 import { Search, Phone, PawPrint, Leaf, ChevronUp, ShoppingCart, Sparkles, Clock } from "lucide-react";
 
 // ─── Typewriter ─────────────────────────────────────────────
@@ -298,11 +299,13 @@ function SpotlightCard({ sp, lang, t, idx }: { sp: Species; lang: string; t: Rec
 
 // ─── Recently Viewed ─────────────────────────────────────────
 function RecentlyViewed({ items, lang, t }: { items: Species[]; lang: string; t: Record<string, string> }) {
+  const { user } = useAuth();
+  const key = getRecentViewedKey(user?.email);
   const [viewed, setViewed] = useState<{ id: string; type: string }[]>([]);
   useEffect(() => {
-    try { setViewed(JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY) || "[]")); }
+    try { setViewed(JSON.parse(localStorage.getItem(key) || "[]")); }
     catch { /* ignore */ }
-  }, []);
+  }, [key]);
 
   const recentSpecies = viewed
     .map(v => items.find(x => x.id === v.id && x.type === v.type))
@@ -321,7 +324,7 @@ function RecentlyViewed({ items, lang, t }: { items: Species[]; lang: string; t:
         <button
           className="home-see-all"
           style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
-          onClick={() => { localStorage.removeItem(RECENTLY_VIEWED_KEY); setViewed([]); }}
+          onClick={() => { localStorage.removeItem(key); setViewed([]); }}
         >
           {t.recentClear}
         </button>

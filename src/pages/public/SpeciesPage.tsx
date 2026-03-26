@@ -44,23 +44,27 @@ function QRModal({ url, onClose, lang }: { url: string; onClose: () => void; lan
 
 const FAVORITES_KEY      = "uf_favorites";
 const VIEWS_KEY          = "uf_views";
-export const RECENTLY_VIEWED_KEY = "uf_recently_viewed";
 const MAX_RECENTLY_VIEWED = 10;
+
+export function getRecentViewedKey(email?: string | null) {
+  return "uf_recently_viewed_" + (email || "guest");
+}
 
 function getFavorites(): string[] {
   try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]"); } catch { return []; }
 }
-function trackView(id: string, type: string) {
+function trackView(id: string, type: string, email?: string | null) {
   try {
     const raw = JSON.parse(localStorage.getItem(VIEWS_KEY) || "{}");
     raw[id] = (raw[id] || 0) + 1;
     localStorage.setItem(VIEWS_KEY, JSON.stringify(raw));
   } catch { /* ignore */ }
   try {
-    const prev: { id: string; type: string }[] = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY) || "[]");
+    const key = getRecentViewedKey(email);
+    const prev: { id: string; type: string }[] = JSON.parse(localStorage.getItem(key) || "[]");
     const filtered = prev.filter((x) => x.id !== id);
     filtered.unshift({ id, type });
-    localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(filtered.slice(0, MAX_RECENTLY_VIEWED)));
+    localStorage.setItem(key, JSON.stringify(filtered.slice(0, MAX_RECENTLY_VIEWED)));
   } catch { /* ignore */ }
 }
 
@@ -71,6 +75,7 @@ export default function SpeciesPage() {
   const navigate = useNavigate();
   const { lang } = useSettingsStore();
   const { items, fetchAll, loading } = useSpeciesStore();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (items.length === 0) fetchAll();
@@ -78,8 +83,8 @@ export default function SpeciesPage() {
 
   // Track view count + recently viewed when species loads
   useEffect(() => {
-    if (id && type) trackView(id, type);
-  }, [id, type]);
+    if (id && type) trackView(id, type, user?.email);
+  }, [id, type, user?.email]);
 
   const { addItem } = useCartStore();
 
