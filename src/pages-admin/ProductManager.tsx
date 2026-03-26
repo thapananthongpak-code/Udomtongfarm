@@ -7,6 +7,20 @@ import type { Species } from "../types/species";
 
 type ProductRow = Species & { editing?: boolean };
 
+// Map Thai units → English
+const UNIT_MAP: Record<string, string> = {
+  "ตัว": "head",
+  "ต้น": "plant",
+  "ตัว/ต้น": "head/plant",
+  "คู่": "pair",
+  "ชุด": "set",
+  "กลุ่ม": "group",
+};
+function normalizeUnit(unit: string | undefined | null, type?: string): string {
+  if (!unit) return type === "animal" ? "head" : "plant";
+  return UNIT_MAP[unit.trim()] ?? unit;
+}
+
 export default function ProductManager() {
   const { items, fetchAll, loading } = useSpeciesStore();
   const { lang } = useSettingsStore();
@@ -51,11 +65,41 @@ export default function ProductManager() {
     return {
       price:     r.price ?? 0,
       stock:     r.stock ?? 0,
-      unit:      r.unit ?? (r.type === "animal" ? "head" : "plant"),
+      unit:      normalizeUnit(r.unit, r.type),
       available: r.available !== false,
       age:       r.age ?? null,
       gender:    r.gender ?? null,
     };
+  }
+
+  async function normalizeAllUnits() {
+    const needsFix = rows.filter(r => r.unit && UNIT_MAP[r.unit.trim()]);
+    if (needsFix.length === 0) {
+      setSuccess(lang === "th" ? "หน่วยทั้งหมดเป็นภาษาอังกฤษแล้ว" : "All units are already in English");
+      setTimeout(() => setSuccess(""), 3000);
+      return;
+    }
+    const fixed = needsFix.map(r => ({ ...r, unit: normalizeUnit(r.unit, r.type) }));
+    setRows(prev => prev.map(r => {
+      const f = fixed.find(x => x.id === r.id);
+      return f ? { ...f, editing: false } : r;
+    }));
+    setSaving("all"); setError(""); setSuccess("");
+    try {
+      const res = await authFetch(`${API_BASE}/api/products`, {
+        method: "PUT",
+        body: JSON.stringify(fixed.map(r => ({ id: r.id, ...rowPayload({ ...r, unit: normalizeUnit(r.unit, r.type) }) }))),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        setError(d.error ?? "Save failed");
+      } else {
+        setSuccess(`Fixed ${fixed.length} unit(s) to English`);
+        setTimeout(() => setSuccess(""), 3000);
+        fetchAll();
+      }
+    } catch { setError("An error occurred"); }
+    finally { setSaving(null); }
   }
 
   async function saveRow(row: ProductRow) {
@@ -168,6 +212,14 @@ export default function ProductManager() {
             </button>
           ))}
         </div>
+        <button
+          onClick={normalizeAllUnits}
+          disabled={!!saving}
+          title="Convert all Thai unit values to English"
+          style={{ padding: "9px 16px", borderRadius: 10, background: "#0ea5e9", color: "white", border: "none", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}
+        >
+          🔤 Fix Units (EN)
+        </button>
         {editCount > 0 && (
           <button
             onClick={saveAll}
@@ -228,7 +280,7 @@ export default function ProductManager() {
                     <td style={{ padding: "10px 16px" }}>
                       <input
                         type="text"
-                        value={row.unit ?? (row.type === "animal" ? "head" : "plant")}
+                        value={normalizeUnit(row.unit, row.type)}
                         onChange={e => setRow(row.id, { unit: e.target.value, editing: true })}
                         style={{ width: 72, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)" }}
                       />
