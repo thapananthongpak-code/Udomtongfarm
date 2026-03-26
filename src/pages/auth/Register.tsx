@@ -291,6 +291,21 @@ export default function Register() {
             <h2 style={{ color: "var(--text-main)", marginBottom: "10px" }}>{t.otpTitle}</h2>
             <p style={{ color: "var(--text-muted)", marginBottom: "30px", lineHeight: 1.6 }}>{t.otpDesc1} <br/><b style={{color: "var(--primary-hover)"}}>{email}</b></p>
 
+            {/* Spam warning */}
+            <div style={{
+              padding: "10px 14px", borderRadius: 12, marginBottom: 8,
+              background: "#fef9c3", border: "1px solid #f59e0b",
+              fontSize: "0.83rem", color: "#92400e", fontWeight: 600,
+              display: "flex", alignItems: "flex-start", gap: 8,
+            }}>
+              <span style={{ flexShrink: 0 }}>⚠️</span>
+              <span>
+                {lang === "th"
+                  ? "หากไม่พบอีเมลในกล่องขาเข้า กรุณาตรวจสอบโฟลเดอร์ Spam / Junk ด้วย"
+                  : "Can't find the email? Please also check your Spam / Junk folder."}
+              </span>
+            </div>
+
             <form onSubmit={onSubmitVerifyOTP} style={{ display: "grid", gap: "20px" }}>
               <input
                 value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}

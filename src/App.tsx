@@ -5,6 +5,7 @@ import { useAuth } from "./store/AuthContext";
 import { useSettingsStore } from "./store/settingsStore";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ToastProvider } from "./components/Toast";
+import { API_BASE } from "./config/api";
 
 const GREETING_KEY = "uf_show_greeting";
 
@@ -136,6 +137,25 @@ export default function App() {
     const timer = setTimeout(() => setSplash(false), 1700);
     return () => clearTimeout(timer);
   }, [splash]);
+
+  // Auto-logout: call API when browser/tab closes so DB records logout time
+  useEffect(() => {
+    const onUnload = () => {
+      const userStr = sessionStorage.getItem("user");
+      if (!userStr) return;
+      try {
+        const { email } = JSON.parse(userStr);
+        if (email) {
+          navigator.sendBeacon(
+            `${API_BASE}/api/logout`,
+            new Blob([JSON.stringify({ email })], { type: "application/json" }),
+          );
+        }
+      } catch { /* ignore */ }
+    };
+    window.addEventListener("beforeunload", onUnload);
+    return () => window.removeEventListener("beforeunload", onUnload);
+  }, []);
 
   if (splash) return <SplashScreen />;
   return (
