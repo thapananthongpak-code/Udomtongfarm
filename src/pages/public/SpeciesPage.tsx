@@ -210,7 +210,6 @@ export default function SpeciesPage() {
   if (!item) return null;
 
   const name = lang === "th" ? item.name_th : item.name_en;
-  const altName = lang === "th" ? item.name_en : item.name_th;
   const description = (lang === "en" ? item.description_en : item.description) || t.noDesc;
 
   return (
@@ -300,11 +299,6 @@ export default function SpeciesPage() {
             {name}
           </h1>
 
-          {lang === "th" && altName && (
-            <div className="sp-alt-name" style={{ fontSize: "1.5rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "20px" }}>
-              {altName}
-            </div>
-          )}
 
           {item.scientific_name && (
             <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "var(--bg-color)", padding: "8px 16px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
