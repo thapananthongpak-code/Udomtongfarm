@@ -308,7 +308,7 @@ export default function SpeciesPage() {
 
           {/* Buy section */}
           {typeof item.price === "number" && item.price > 0 && (() => {
-            const inStock = (item.stock ?? 0) > 0 || item.available !== false;
+            const inStock = item.available !== false;
             const fmt = (n: number) => n.toLocaleString("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 });
             const genderOptions = item.type === "animal"
               ? (lang === "th" ? ["ผสม", "เพศผู้", "เพศเมีย", "คู่ผสมพันธุ์"] : ["Mixed", "Male", "Female", "Breeding Pair"])
@@ -335,11 +335,11 @@ export default function SpeciesPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
                   <div>
                     <div style={{ color: "var(--primary-hover)", fontWeight: 900, fontSize: "1.8rem" }}>{fmt(item.price)}</div>
-                    <div style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>/ {item.unit ?? (item.type === "animal" ? "ตัว" : "ต้น")}</div>
+                    <div style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>/ {item.unit ?? (item.type === "animal" ? "head" : "plant")}</div>
                   </div>
                   {typeof item.stock === "number" && item.stock > 0 && (
                     <div style={{ background: "var(--primary-light)", color: "var(--primary-hover)", borderRadius: 8, padding: "4px 12px", fontWeight: 700, fontSize: "0.85rem" }}>
-                      {lang === "th" ? "เหลือ" : "Stock"} {item.stock} {item.unit ?? (item.type === "animal" ? "ตัว" : "ต้น")}
+                      {lang === "th" ? "เหลือ" : "Stock"} {item.stock} {item.unit ?? (item.type === "animal" ? "head" : "plant")}
                     </div>
                   )}
                   {!inStock && (

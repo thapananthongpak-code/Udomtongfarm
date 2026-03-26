@@ -51,7 +51,7 @@ export default function ProductManager() {
     return {
       price:     r.price ?? 0,
       stock:     r.stock ?? 0,
-      unit:      r.unit ?? (r.type === "animal" ? "ตัว" : "ต้น"),
+      unit:      r.unit ?? (r.type === "animal" ? "head" : "plant"),
       available: r.available !== false,
       age:       r.age ?? null,
       gender:    r.gender ?? null,
@@ -228,7 +228,7 @@ export default function ProductManager() {
                     <td style={{ padding: "10px 16px" }}>
                       <input
                         type="text"
-                        value={row.unit ?? (row.type === "animal" ? "ตัว" : "ต้น")}
+                        value={row.unit ?? (row.type === "animal" ? "head" : "plant")}
                         onChange={e => setRow(row.id, { unit: e.target.value, editing: true })}
                         style={{ width: 72, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)" }}
                       />
