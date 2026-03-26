@@ -300,9 +300,11 @@ export default function SpeciesPage() {
             {name}
           </h1>
 
-          <div className="sp-alt-name" style={{ fontSize: "1.5rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "20px" }}>
-            {altName}
-          </div>
+          {lang === "th" && altName && (
+            <div className="sp-alt-name" style={{ fontSize: "1.5rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "20px" }}>
+              {altName}
+            </div>
+          )}
 
           {item.scientific_name && (
             <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "var(--bg-color)", padding: "8px 16px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
