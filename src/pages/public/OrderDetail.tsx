@@ -88,9 +88,9 @@ export default function OrderDetail() {
     try {
       const res = await authFetch(`${API_BASE}/api/orders/${order.id}/cancel`, { method: "PUT" });
       const data = await res.json();
-      if (res.ok) { setCancelMsg(data.message || "ยกเลิกสำเร็จ"); fetchOrder(); }
-      else setCancelMsg(data.error || "เกิดข้อผิดพลาด");
-    } catch { setCancelMsg("เกิดข้อผิดพลาด"); }
+      if (res.ok) { setCancelMsg("ok"); fetchOrder(); }
+      else setCancelMsg(data.error || "Something went wrong");
+    } catch { setCancelMsg("Something went wrong"); }
     finally { setCancelling(false); }
   }
 
@@ -177,7 +177,7 @@ export default function OrderDetail() {
               {cancelling ? "..." : (lang === "th" ? "✕ ยกเลิกคำสั่งซื้อ" : "✕ Cancel Order")}
             </button>
           )}
-          {cancelMsg && <div style={{ fontSize: "0.8rem", color: cancelMsg.includes("สำเร็จ") ? "#15803d" : "#991b1b" }}>{cancelMsg}</div>}
+          {cancelMsg && <div style={{ fontSize: "0.8rem", color: cancelMsg === "ok" ? "#15803d" : "#991b1b" }}>{cancelMsg === "ok" ? "Order cancelled successfully" : cancelMsg}</div>}
         </div>
       </div>
 
