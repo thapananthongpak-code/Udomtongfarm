@@ -96,30 +96,6 @@ export default function SpeciesCard({ species }: Props) {
               </span>
             </div>
           )}
-          {/* + button — always visible; behavior differs by availability */}
-          <button
-            onClick={e => {
-              if (hasPrice && inStock) { e.preventDefault(); e.stopPropagation(); setShowModal(true); }
-              else handleUnavailableClick(e);
-            }}
-            style={{
-              position: "absolute", top: 10, right: 10,
-              width: 34, height: 34, borderRadius: "50%",
-              background: hasPrice && inStock ? "var(--primary)" : "rgba(100,100,100,0.75)",
-              color: "white",
-              border: "none", fontSize: "1.3rem", fontWeight: 900,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-              lineHeight: 1,
-            }}
-            title={hasPrice && inStock ? "Add to Cart" : "Not available yet"}
-          >+</button>
-          {/* Toast: not available */}
-          {showUnavailableToast && (
-            <div style={{ position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", background: "rgba(30,30,30,0.92)", color: "white", borderRadius: 8, padding: "6px 14px", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap", zIndex: 10, pointerEvents: "none" }}>
-              {lang === "th" ? "ยังไม่เปิดจำหน่าย" : "Not available yet"}
-            </div>
-          )}
           {/* Stock badge */}
           {hasPrice && typeof species.stock === "number" && species.stock > 0 && (
             <div style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.55)", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: "0.75rem", fontWeight: 700 }}>
@@ -165,6 +141,28 @@ export default function SpeciesCard({ species }: Props) {
           )}
         </div>
       </Link>
+
+      {/* + button — outside Link so overflow:hidden doesn't clip it */}
+      <button
+        onClick={e => {
+          if (hasPrice && inStock) { e.preventDefault(); e.stopPropagation(); setShowModal(true); }
+          else handleUnavailableClick(e);
+        }}
+        style={{
+          position: "absolute", top: 10, right: 10,
+          width: 34, height: 34, borderRadius: "50%",
+          background: hasPrice && inStock ? "var(--primary)" : "rgba(100,100,100,0.75)",
+          color: "white", border: "none", fontSize: "1.3rem", fontWeight: 900,
+          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.25)", lineHeight: 1, zIndex: 2,
+        }}
+        title={hasPrice && inStock ? "Add to Cart" : "Not available yet"}
+      >+</button>
+      {showUnavailableToast && (
+        <div style={{ position: "absolute", top: 48, right: 10, background: "rgba(30,30,30,0.92)", color: "white", borderRadius: 8, padding: "6px 12px", fontSize: "0.76rem", fontWeight: 700, whiteSpace: "nowrap", zIndex: 10, pointerEvents: "none" }}>
+          {lang === "th" ? "ยังไม่เปิดจำหน่าย" : "Not available yet"}
+        </div>
+      )}
 
       {/* ── Cart Modal ── */}
       {showModal && (
