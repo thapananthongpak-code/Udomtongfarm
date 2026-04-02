@@ -96,7 +96,7 @@ export default function Navbar() {
   return (
   <>
     <nav style={{
-      background: scrolled ? "var(--card-bg)" : "rgba(var(--nav-bg-rgb, 255,255,255), 0.72)",
+      background: scrolled ? "var(--card-bg)" : "var(--nav-surface, rgba(255,255,255,0.72))",
       borderBottom: `1px solid ${scrolled ? "var(--border-color)" : "transparent"}`,
       padding: "12px 24px",
       display: "flex", alignItems: "center", justifyContent: "space-between",

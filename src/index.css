@@ -72,6 +72,13 @@ html[data-theme="dark"] {
 
   --gradient-primary: linear-gradient(135deg, #00ff88 0%, #00b35f 100%);
   --gradient-hero:    radial-gradient(ellipse at top, rgba(0, 255, 136, 0.08) 0%, transparent 100%);
+
+  --nav-surface: rgba(0, 0, 0, 0.85);
+  --card-bg:     rgba(5, 10, 7, 0.92);
+}
+
+html[data-theme="dark"] .map-iframe {
+  filter: invert(90%) hue-rotate(180deg) brightness(0.85) saturate(0.9);
 }
 
 /* ────────────────────────────────────────────────────────────

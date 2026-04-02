@@ -103,6 +103,7 @@ export default function Contact() {
             src={MAP_EMBED_SRC}
             width="100%"
             height="360"
+            className="map-iframe"
             style={{ border: 0, display: "block" }}
             allowFullScreen
             loading="lazy"

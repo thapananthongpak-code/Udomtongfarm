@@ -260,7 +260,7 @@ export default function ProductManager() {
                         <img src={row.image} style={{ width: 40, height: 40, borderRadius: 7, objectFit: "cover", flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).src = "/images/placeholder.jpg"; }} />
                         <div>
                           <div style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.9rem" }}>{row.name_en || row.name_th}</div>
-                          <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>{row.type === "animal" ? "🐾" : "🌿"} {row.name_th}</div>
+                          <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>{row.type === "animal" ? "🐾" : "🌿"}</div>
                         </div>
                       </div>
                     </td>
