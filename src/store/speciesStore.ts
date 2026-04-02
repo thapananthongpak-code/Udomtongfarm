@@ -55,7 +55,7 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
       saveSoldIds([]);
       set({ items: data, soldIds: [], updatedAt: Date.now(), loading: false });
     } catch {
-      if (import.meta.env.DEV) console.warn("API Offline — using seed data fallback");
+      // API offline — using seed data fallback
       if (get().items.length === 0) {
         const sold = get().soldIds;
         set({ items: applySold(SEED_ITEMS, sold), updatedAt: Date.now(), loading: false });
@@ -111,7 +111,7 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
 
   // 🚀 ยิงข้อมูลเข้า Database Turso จริงๆ
   resetToSeed: async () => {
-    if (!confirm("ต้องการกู้คืนข้อมูลตั้งต้นและอัปเดตรูปภาพเข้า Database Turso ใช่ไหม?")) return;
+    if (!confirm("Reset all data to defaults and re-seed the database?")) return;
     set({ loading: true });
     try {
       for (const item of SEED_ITEMS) {
@@ -121,10 +121,10 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
           body: JSON.stringify(item),
         });
       }
-      await get().fetchAll(); // โหลดข้อมูลใหม่หลังจากบันทึกเสร็จ
-      alert("กู้คืนข้อมูลและอัปเดต Path รูปภาพลง Database สำเร็จแล้ว! ✨"); // 🟢 ปรับข้อความให้ชัดเจน
+      await get().fetchAll();
+      alert("Data restored successfully!");
     } catch {
-      alert("เกิดข้อผิดพลาดในการกู้คืน");
+      alert("Failed to restore data");
     } finally {
       set({ loading: false });
     }

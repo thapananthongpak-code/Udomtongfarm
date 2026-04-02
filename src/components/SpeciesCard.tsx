@@ -81,6 +81,14 @@ export default function SpeciesCard({ species }: Props) {
             className="hover-zoom-img"
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
+          {/* Not available yet — no price/stock set */}
+          {!hasPrice && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ background: "#6b7280", color: "white", borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: "0.82rem" }}>
+                {lang === "th" ? "ยังไม่เปิดจำหน่าย" : "Not available yet"}
+              </span>
+            </div>
+          )}
           {/* Out of stock overlay */}
           {hasPrice && !inStock && (
             <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -109,7 +117,7 @@ export default function SpeciesCard({ species }: Props) {
           {/* Stock badge */}
           {hasPrice && typeof species.stock === "number" && species.stock > 0 && (
             <div style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.55)", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: "0.75rem", fontWeight: 700 }}>
-              {lang === "th" ? "เหลือ" : "Stock"} {species.stock} {species.unit ?? (species.type === "animal" ? "ตัว" : "ต้น")}
+              Stock {species.stock} {species.unit ?? (species.type === "animal" ? "head" : "plant")}
             </div>
           )}
         </div>
