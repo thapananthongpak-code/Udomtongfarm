@@ -154,7 +154,7 @@ export default function ProductManager() {
 
   const editCount  = rows.filter(r => r.editing).length;
   const totalValue = rows.reduce((s, r) => s + (r.price ?? 0) * (r.stock ?? 0), 0);
-  const availCount = rows.filter(r => r.available !== false && (r.price ?? 0) > 0).length;
+  const availCount = rows.filter(r => isEffectivelyListed(r)).length;
 
   const t = {
     title:     lang === "th" ? "จัดการราคาและสต็อก" : "Product Manager",
@@ -259,8 +259,8 @@ export default function ProductManager() {
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <img src={row.image} style={{ width: 40, height: 40, borderRadius: 7, objectFit: "cover", flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).src = "/images/placeholder.jpg"; }} />
                         <div>
-                          <div style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.9rem" }}>{row.name_th}</div>
-                          <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>{row.type === "animal" ? "🐾" : "🌿"} {row.name_en}</div>
+                          <div style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.9rem" }}>{row.name_en || row.name_th}</div>
+                          <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>{row.type === "animal" ? "🐾" : "🌿"} {row.name_th}</div>
                         </div>
                       </div>
                     </td>
