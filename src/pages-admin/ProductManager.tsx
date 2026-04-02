@@ -61,12 +61,16 @@ export default function ProductManager() {
     setRows(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r));
   }
 
+  function isEffectivelyListed(r: ProductRow) {
+    return r.available !== false && (r.price ?? 0) > 0 && (r.stock ?? 0) > 0;
+  }
+
   function rowPayload(r: ProductRow) {
     return {
       price:     r.price ?? 0,
       stock:     r.stock ?? 0,
       unit:      normalizeUnit(r.unit, r.type),
-      available: r.available !== false,
+      available: isEffectivelyListed(r),
       age:       r.age ?? null,
       gender:    r.gender ?? null,
     };
@@ -317,12 +321,19 @@ export default function ProductManager() {
                     </td>
                     {/* Available toggle */}
                     <td style={{ padding: "10px 16px" }}>
-                      <button
-                        onClick={() => setRow(row.id, { available: !row.available, editing: true })}
-                        style={{ padding: "5px 12px", borderRadius: 20, border: "none", background: row.available !== false ? "#dcfce7" : "#fee2e2", color: row.available !== false ? "#15803d" : "#991b1b", fontWeight: 700, cursor: "pointer", fontSize: "0.82rem" }}
-                      >
-                        {row.available !== false ? (lang === "th" ? "✓ วางขาย" : "✓ Listed") : (lang === "th" ? "✕ ปิดขาย" : "✕ Unlisted")}
-                      </button>
+                      {(() => {
+                        const listed = isEffectivelyListed(row);
+                        const noData = (row.price ?? 0) === 0 || (row.stock ?? 0) === 0;
+                        return (
+                          <button
+                            onClick={() => !noData && setRow(row.id, { available: !row.available, editing: true })}
+                            title={noData ? (lang === "th" ? "กรุณาใส่ราคาและสต็อกก่อน" : "Set price & stock first") : undefined}
+                            style={{ padding: "5px 12px", borderRadius: 20, border: "none", background: listed ? "#dcfce7" : "#fee2e2", color: listed ? "#15803d" : "#991b1b", fontWeight: 700, cursor: noData ? "not-allowed" : "pointer", fontSize: "0.82rem", opacity: noData ? 0.7 : 1 }}
+                          >
+                            {listed ? (lang === "th" ? "✓ วางขาย" : "✓ Listed") : (lang === "th" ? "✕ ปิดขาย" : "✕ Unlisted")}
+                          </button>
+                        );
+                      })()}
                     </td>
                     {/* Save */}
                     <td style={{ padding: "10px 16px" }}>
