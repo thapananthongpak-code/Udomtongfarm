@@ -274,7 +274,10 @@ export default function ProductManager() {
                       <input
                         type="number" min={0}
                         value={row.stock ?? 0}
-                        onChange={e => setRow(row.id, { stock: parseInt(e.target.value) || 0, editing: true })}
+                        onChange={e => {
+                          const newStock = parseInt(e.target.value) || 0;
+                          setRow(row.id, { stock: newStock, editing: true, ...(newStock > 0 ? { available: true } : {}) });
+                        }}
                         style={{ width: 72, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 700 }}
                       />
                     </td>
