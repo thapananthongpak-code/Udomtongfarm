@@ -15,7 +15,14 @@ export default function SpeciesCard({ species }: Props) {
   const inStock  = (species.stock ?? 0) > 0 || species.available !== false;
 
   const [showModal, setShowModal] = useState(false);
-  const [qty, setQty]             = useState(1);
+  const [showUnavailableToast, setShowUnavailableToast] = useState(false);
+  const [qty, setQty] = useState(1);
+
+  function handleUnavailableClick(e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation();
+    setShowUnavailableToast(true);
+    setTimeout(() => setShowUnavailableToast(false), 2500);
+  }
   const [gender, setGender]       = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -81,14 +88,6 @@ export default function SpeciesCard({ species }: Props) {
             className="hover-zoom-img"
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
-          {/* Not available yet — no price/stock set */}
-          {!hasPrice && (
-            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ background: "#6b7280", color: "white", borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: "0.82rem" }}>
-                {lang === "th" ? "ยังไม่เปิดจำหน่าย" : "Not available yet"}
-              </span>
-            </div>
-          )}
           {/* Out of stock overlay */}
           {hasPrice && !inStock && (
             <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -97,22 +96,29 @@ export default function SpeciesCard({ species }: Props) {
               </span>
             </div>
           )}
-          {/* + Add to Cart button — top right */}
-          {hasPrice && inStock && (
-            <button
-              onClick={e => { e.preventDefault(); e.stopPropagation(); setShowModal(true); }}
-              style={{
-                position: "absolute", top: 10, right: 10,
-                width: 34, height: 34, borderRadius: "50%",
-                background: "var(--primary)", color: "white",
-                border: "none", fontSize: "1.3rem", fontWeight: 900,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-                transition: "transform 0.15s, box-shadow 0.15s",
-                lineHeight: 1,
-              }}
-              title={lang === "th" ? "เพิ่มเข้าตะกร้า" : "Add to Cart"}
-            >+</button>
+          {/* + button — always visible; behavior differs by availability */}
+          <button
+            onClick={e => {
+              if (hasPrice && inStock) { e.preventDefault(); e.stopPropagation(); setShowModal(true); }
+              else handleUnavailableClick(e);
+            }}
+            style={{
+              position: "absolute", top: 10, right: 10,
+              width: 34, height: 34, borderRadius: "50%",
+              background: hasPrice && inStock ? "var(--primary)" : "rgba(100,100,100,0.75)",
+              color: "white",
+              border: "none", fontSize: "1.3rem", fontWeight: 900,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+              lineHeight: 1,
+            }}
+            title={hasPrice && inStock ? "Add to Cart" : "Not available yet"}
+          >+</button>
+          {/* Toast: not available */}
+          {showUnavailableToast && (
+            <div style={{ position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", background: "rgba(30,30,30,0.92)", color: "white", borderRadius: 8, padding: "6px 14px", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap", zIndex: 10, pointerEvents: "none" }}>
+              {lang === "th" ? "ยังไม่เปิดจำหน่าย" : "Not available yet"}
+            </div>
           )}
           {/* Stock badge */}
           {hasPrice && typeof species.stock === "number" && species.stock > 0 && (
