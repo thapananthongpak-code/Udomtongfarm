@@ -390,7 +390,7 @@ export default function Checkout() {
                       style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)" }}
                     >
                       <option value="">{lang === "th" ? "-- เลือกจังหวัด --" : "-- Select Province --"}</option>
-                      {PROVINCES.map(p => <option key={p.th} value={p.th}>{lang === "th" ? p.th : p.en}</option>)}
+                      {PROVINCES.map(p => <option key={p.th} value={lang === "th" ? p.th : p.en}>{lang === "th" ? p.th : p.en}</option>)}
                     </select>
                   </div>
                   <div style={{ display: "flex", gap: 10 }}>
