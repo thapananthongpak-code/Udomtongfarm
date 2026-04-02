@@ -126,7 +126,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { lang } = useSettingsStore();
   const { items, totalPrice, clearCart } = useCartStore();
-  const { createOrder, fetchAddresses, addAddress, addresses } = useOrderStore();
+  const { createOrder, fetchAddresses, addAddress, deleteAddress, addresses } = useOrderStore();
   const { markAsSold } = useSpeciesStore();
   const { user } = useAuth();
   const appSettings = useAppSettingsStore();
@@ -330,25 +330,36 @@ export default function Checkout() {
               {addresses.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                   {addresses.map((addr) => (
-                    <label key={addr.id} style={{
-                      display: "flex", gap: 12, padding: "14px", borderRadius: 12, cursor: "pointer",
-                      border: `2px solid ${selectedAddr?.id === addr.id ? "var(--primary)" : "var(--border-color)"}`,
-                      background: selectedAddr?.id === addr.id ? "var(--primary-light)" : "var(--bg-color)",
-                      transition: "all 0.15s",
-                    }}>
-                      <input type="radio" name="addr" checked={selectedAddr?.id === addr.id} onChange={() => setSelectedAddr(addr)} style={{ marginTop: 2 }} />
-                      <div>
-                        <div style={{ fontWeight: 700, color: "var(--text-main)" }}>{addr.name} {addr.phone && `· ${addr.phone}`}</div>
-                        <div style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>
-                          {[addr.address_line, addr.district, addr.province, addr.postal_code].filter(Boolean).join(", ")}
+                    <div key={addr.id} style={{ position: "relative" }}>
+                      <label style={{
+                        display: "flex", gap: 12, padding: "14px", paddingRight: 44, borderRadius: 12, cursor: "pointer",
+                        border: `2px solid ${selectedAddr?.id === addr.id ? "var(--primary)" : "var(--border-color)"}`,
+                        background: selectedAddr?.id === addr.id ? "var(--primary-light)" : "var(--bg-color)",
+                        transition: "all 0.15s",
+                      }}>
+                        <input type="radio" name="addr" checked={selectedAddr?.id === addr.id} onChange={() => setSelectedAddr(addr)} style={{ marginTop: 2 }} />
+                        <div>
+                          <div style={{ fontWeight: 700, color: "var(--text-main)" }}>{addr.name} {addr.phone && `· ${addr.phone}`}</div>
+                          <div style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>
+                            {[addr.address_line, addr.district, addr.province, addr.postal_code].filter(Boolean).join(", ")}
+                          </div>
+                          {addr.is_default === 1 && (
+                            <span style={{ background: "var(--primary)", color: "white", fontSize: "0.7rem", padding: "2px 8px", borderRadius: 6, fontWeight: 700 }}>
+                              {lang === "th" ? "ที่อยู่หลัก" : "Default"}
+                            </span>
+                          )}
                         </div>
-                        {addr.is_default === 1 && (
-                          <span style={{ background: "var(--primary)", color: "white", fontSize: "0.7rem", padding: "2px 8px", borderRadius: 6, fontWeight: 700 }}>
-                            {lang === "th" ? "ที่อยู่หลัก" : "Default"}
-                          </span>
-                        )}
-                      </div>
-                    </label>
+                      </label>
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm(lang === "th" ? "ลบที่อยู่นี้?" : "Delete this address?")) return;
+                          await deleteAddress(addr.id!, user!.email!);
+                          if (selectedAddr?.id === addr.id) setSelectedAddr(null);
+                        }}
+                        title="Delete address"
+                        style={{ position: "absolute", top: 10, right: 10, width: 28, height: 28, borderRadius: "50%", border: "none", background: "#fee2e2", color: "#991b1b", cursor: "pointer", fontWeight: 900, fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      >✕</button>
+                    </div>
                   ))}
                 </div>
               )}

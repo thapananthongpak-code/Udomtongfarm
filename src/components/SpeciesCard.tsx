@@ -74,7 +74,7 @@ export default function SpeciesCard({ species }: Props) {
     : [];
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", overflow: "visible" }}>
       <Link
         to={`/species/${species.type}/${species.id}`}
         className={`glass-card species-card-${species.type}`}
