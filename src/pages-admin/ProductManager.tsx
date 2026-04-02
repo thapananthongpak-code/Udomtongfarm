@@ -273,36 +273,62 @@ export default function ProductManager() {
                         style={{ width: 90, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 700, fontSize: "0.9rem" }}
                       />
                     </td>
-                    {/* Stock */}
+                    {/* Stock — stepper */}
                     <td style={{ padding: "10px 16px" }}>
-                      <input
-                        type="number" min={0}
-                        value={row.stock ?? 0}
-                        onChange={e => {
-                          const newStock = parseInt(e.target.value) || 0;
-                          setRow(row.id, { stock: newStock, editing: true, ...(newStock > 0 ? { available: true } : {}) });
-                        }}
-                        style={{ width: 72, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 700 }}
-                      />
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <button
+                          onClick={() => { const v = Math.max(0, (row.stock ?? 0) - 1); setRow(row.id, { stock: v, editing: true, ...(v > 0 ? { available: true } : {}) }); }}
+                          style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 900, cursor: "pointer", fontSize: "1rem", lineHeight: 1 }}
+                        >−</button>
+                        <span style={{ minWidth: 36, textAlign: "center", fontWeight: 700, color: "var(--text-main)", fontSize: "0.9rem" }}>{row.stock ?? 0}</span>
+                        <button
+                          onClick={() => { const v = (row.stock ?? 0) + 1; setRow(row.id, { stock: v, editing: true, available: true }); }}
+                          style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--border-color)", background: "var(--bg-color)", color: "var(--text-main)", fontWeight: 900, cursor: "pointer", fontSize: "1rem", lineHeight: 1 }}
+                        >+</button>
+                      </div>
                     </td>
-                    {/* Unit */}
+                    {/* Unit — dropdown */}
                     <td style={{ padding: "10px 16px" }}>
-                      <input
-                        type="text"
+                      <select
                         value={normalizeUnit(row.unit, row.type)}
                         onChange={e => setRow(row.id, { unit: e.target.value, editing: true })}
-                        style={{ width: 72, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)" }}
-                      />
+                        style={{ width: 90, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)", cursor: "pointer", fontSize: "0.85rem" }}
+                      >
+                        <option value="head">head</option>
+                        <option value="plant">plant</option>
+                        <option value="head/plant">head/plant</option>
+                        <option value="pair">pair</option>
+                        <option value="set">set</option>
+                        <option value="group">group</option>
+                      </select>
                     </td>
-                    {/* Age */}
+                    {/* Age — dropdown */}
                     <td style={{ padding: "10px 16px" }}>
-                      <input
-                        type="text"
+                      <select
                         value={row.age ?? ""}
-                        placeholder={lang === "th" ? "เช่น 1-2 ปี" : "e.g. 1-2 yr"}
-                        onChange={e => setRow(row.id, { age: e.target.value, editing: true })}
-                        style={{ width: 90, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)", fontSize: "0.85rem" }}
-                      />
+                        onChange={e => setRow(row.id, { age: e.target.value || null as any, editing: true })}
+                        style={{ width: 90, padding: "6px 8px", borderRadius: 7, border: `1px solid ${row.editing ? "var(--primary)" : "var(--border-color)"}`, background: "var(--bg-color)", color: "var(--text-main)", cursor: "pointer", fontSize: "0.85rem" }}
+                      >
+                        <option value="">—</option>
+                        <option value="&lt;1y">&lt;1y</option>
+                        <option value="1y">1y</option>
+                        <option value="2y">2y</option>
+                        <option value="3y">3y</option>
+                        <option value="4y">4y</option>
+                        <option value="5y">5y</option>
+                        <option value="6y">6y</option>
+                        <option value="7y">7y</option>
+                        <option value="8y">8y</option>
+                        <option value="9y">9y</option>
+                        <option value="10y">10y</option>
+                        <option value="12y">12y</option>
+                        <option value="15y">15y</option>
+                        <option value="1-2y">1-2y</option>
+                        <option value="2-3y">2-3y</option>
+                        <option value="3-5y">3-5y</option>
+                        <option value="5-10y">5-10y</option>
+                        <option value=">10y">&gt;10y</option>
+                      </select>
                     </td>
                     {/* Gender */}
                     <td style={{ padding: "10px 16px" }}>
