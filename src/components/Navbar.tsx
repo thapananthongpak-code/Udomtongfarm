@@ -141,7 +141,6 @@ export default function Navbar() {
             )}
           </Link>
           <Link to="/gallery"     className={navLinkClass("/gallery")}     >{t.gallery}</Link>
-          <Link to="/faq"         className={navLinkClass("/faq")}         >{t.faq}</Link>
           <Link to="/contact"     className={navLinkClass("/contact")}     >{t.contact}</Link>
         </div>
       </div>
@@ -241,7 +240,6 @@ export default function Navbar() {
             {newSpeciesCount > 0 && <span className="nav-badge">{newSpeciesCount}</span>}
           </Link>
           <Link to="/gallery"     onClick={() => setMenuOpen(false)} className={navLinkClass("/gallery")}     style={{ fontSize: "1.05rem" }}>{t.gallery}</Link>
-          <Link to="/faq"         onClick={() => setMenuOpen(false)} className={navLinkClass("/faq")}         style={{ fontSize: "1.05rem" }}>{t.faq}</Link>
           <Link to="/contact"     onClick={() => setMenuOpen(false)} className={navLinkClass("/contact")}     style={{ fontSize: "1.05rem" }}>{t.contact}</Link>
           <button
             onClick={() => { setMenuOpen(false); openDrawer(); }}

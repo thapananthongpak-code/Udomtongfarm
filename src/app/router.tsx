@@ -10,8 +10,6 @@ import Home from "../pages/public/Home";
 import Encyclopedia from "../pages/public/Encyclopedia";
 import SpeciesPage from "../pages/public/SpeciesPage";
 import Contact from "../pages/public/Contact";
-import FAQ from "../pages/public/FAQ";
-
 import About from "../pages/public/About";
 import Gallery from "../pages/public/Gallery";
 import Wishlist from "../pages/public/Wishlist";
@@ -66,7 +64,6 @@ export const router = createBrowserRouter([
           { path: "/map",                  element: <MapPage />      },
           { path: "/compare",              element: <Compare />      },
           { path: "/contact",              element: <Contact />      },
-          { path: "/faq",                  element: <FAQ />          },
           // Shop
           { path: "/cart",                 element: <Cart />         },
           { path: "/checkout",             element: <Checkout />     },
