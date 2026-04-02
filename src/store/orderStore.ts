@@ -99,9 +99,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   createOrder: async (payload) => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(ORDERS_URL, {
+      const res = await authFetch(ORDERS_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const data = await res.json();

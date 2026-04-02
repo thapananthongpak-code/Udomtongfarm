@@ -117,6 +117,7 @@ export default function ProductManager() {
         setSuccess(lang === "th" ? `บันทึก "${row.name_th}" สำเร็จ` : `Saved "${row.name_en || row.name_th}" successfully`);
         setRow(row.id, { editing: false });
         setTimeout(() => setSuccess(""), 3000);
+        fetchAll();
       }
     } catch {
       setError(lang === "th" ? "เกิดข้อผิดพลาด" : "An error occurred");
@@ -141,6 +142,7 @@ export default function ProductManager() {
         setSuccess(lang === "th" ? `บันทึก ${changed.length} รายการสำเร็จ` : `Saved ${changed.length} items successfully`);
         setRows(prev => prev.map(r => ({ ...r, editing: false })));
         setTimeout(() => setSuccess(""), 3000);
+        fetchAll();
       }
     } catch { setError(lang === "th" ? "เกิดข้อผิดพลาด" : "An error occurred"); }
     finally { setSaving(null); }

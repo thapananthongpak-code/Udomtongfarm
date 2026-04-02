@@ -5,6 +5,8 @@ import { useOrderStore } from "../../store/orderStore";
 import { useSpeciesStore } from "../../store/speciesStore";
 import { useAuth } from "../../store/AuthContext";
 import { useSettingsStore } from "../../store/settingsStore";
+import { useAppSettingsStore } from "../../store/appSettingsStore";
+import { promptPayQRUrl } from "../../utils/promptpay";
 import type { Address, PaymentMethod, ShippingCompany } from "../../types/shop";
 import { SHIPPING_COMPANIES } from "../../types/shop";
 
@@ -60,6 +62,7 @@ export default function Checkout() {
   const { createOrder, fetchAddresses, addAddress, addresses } = useOrderStore();
   const { markAsSold } = useSpeciesStore();
   const { user } = useAuth();
+  const appSettings = useAppSettingsStore();
   const isMobile = useIsMobile();
 
   const [step, setStep]                     = useState<Step>("address");
@@ -404,16 +407,37 @@ export default function Checkout() {
 
               {payMethod === "promptpay" && (
                 <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 10, padding: 14, marginBottom: 14, fontSize: "0.88rem" }}>
-                  <div style={{ fontWeight: 700, color: "#15803d", marginBottom: 4 }}>📱 {lang === "th" ? "พร้อมเพย์" : "PromptPay"}</div>
-                  <div style={{ color: "#166534" }}>{lang === "th" ? "หมายเลขพร้อมเพย์:" : "PromptPay number:"} <strong>0xx-xxx-xxxx</strong></div>
-                  <div style={{ color: "#166534", marginTop: 4 }}>{lang === "th" ? "แอดมินจะส่งรายละเอียดหลังสั่งซื้อ" : "Admin will send details after order"}</div>
+                  <div style={{ fontWeight: 700, color: "#15803d", marginBottom: 8 }}>📱 {lang === "th" ? "พร้อมเพย์" : "PromptPay"}</div>
+                  {appSettings.promptpayPhone ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                      <img
+                        src={promptPayQRUrl(appSettings.promptpayPhone, grandTotal)}
+                        alt="PromptPay QR"
+                        style={{ width: 200, height: 200, borderRadius: 8, border: "1px solid #86efac" }}
+                      />
+                      <div style={{ color: "#166534" }}>{lang === "th" ? "หมายเลขพร้อมเพย์:" : "PromptPay number:"} <strong>{appSettings.promptpayPhone}</strong></div>
+                      <div style={{ color: "#166534", fontWeight: 700 }}>{lang === "th" ? "ยอดชำระ:" : "Amount:"} <strong>฿{grandTotal.toLocaleString()}</strong></div>
+                    </div>
+                  ) : (
+                    <div style={{ color: "#166534" }}>{lang === "th" ? "แอดมินจะส่งรายละเอียดหลังสั่งซื้อ" : "Admin will send details after order"}</div>
+                  )}
                 </div>
               )}
               {payMethod === "bank_transfer" && (
                 <div style={{ background: "#eff6ff", border: "1px solid #93c5fd", borderRadius: 10, padding: 14, marginBottom: 14, fontSize: "0.88rem" }}>
                   <div style={{ fontWeight: 700, color: "#1d4ed8", marginBottom: 4 }}>🏦 {lang === "th" ? "โอนเงินธนาคาร" : "Bank Transfer"}</div>
-                  <div style={{ color: "#1e40af" }}>{lang === "th" ? "ธนาคาร:" : "Bank:"} <strong>{lang === "th" ? "กสิกรไทย" : "KBank"}</strong> | {lang === "th" ? "เลขบัญชี:" : "Account:"} <strong>xxx-x-xxxxx-x</strong></div>
-                  <div style={{ color: "#1e40af", marginTop: 2 }}>{lang === "th" ? "ชื่อบัญชี: อุดมทอง ฟาร์ม" : "Account: Udomtong Farm"}</div>
+                  {appSettings.bankName && (
+                    <div style={{ color: "#1e40af" }}>{lang === "th" ? "ธนาคาร:" : "Bank:"} <strong>{appSettings.bankName}</strong></div>
+                  )}
+                  {appSettings.bankAccountNo && (
+                    <div style={{ color: "#1e40af", marginTop: 2 }}>{lang === "th" ? "เลขบัญชี:" : "Account No:"} <strong>{appSettings.bankAccountNo}</strong></div>
+                  )}
+                  {appSettings.bankAccountName && (
+                    <div style={{ color: "#1e40af", marginTop: 2 }}>{lang === "th" ? "ชื่อบัญชี:" : "Account Name:"} <strong>{appSettings.bankAccountName}</strong></div>
+                  )}
+                  {!appSettings.bankName && !appSettings.bankAccountNo && (
+                    <div style={{ color: "#1e40af" }}>{lang === "th" ? "แอดมินจะส่งรายละเอียดหลังสั่งซื้อ" : "Admin will send details after order"}</div>
+                  )}
                 </div>
               )}
 

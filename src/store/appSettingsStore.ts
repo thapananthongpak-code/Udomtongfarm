@@ -17,6 +17,11 @@ type AppSettingsState = {
   bannerSubtitleEn: string;
   bannerBgImage: string;
   bannerItems: BannerItem[];
+  // Payment settings
+  promptpayPhone: string;
+  bankName: string;
+  bankAccountNo: string;
+  bankAccountName: string;
   
   loading: boolean;
   error: string | null;
@@ -32,6 +37,11 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
   bannerSubtitleEn: "A dedicated space for collecting and conserving rare animals and plants in Nakhon Ratchasima",
   bannerBgImage: "",
   bannerItems: [],
+
+  promptpayPhone: "",
+  bankName: "",
+  bankAccountNo: "",
+  bankAccountName: "",
 
   loading: false,
   error: null,
@@ -49,6 +59,10 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
           bannerSubtitleEn: data.bannerSubtitleEn || get().bannerSubtitleEn,
           bannerBgImage: data.bannerBgImage || get().bannerBgImage,
           bannerItems: data.bannerItems || [],
+          promptpayPhone: data.promptpayPhone || "",
+          bankName: data.bankName || "",
+          bankAccountNo: data.bankAccountNo || "",
+          bankAccountName: data.bankAccountName || "",
           loading: false,
         });
       } else {

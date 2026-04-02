@@ -256,7 +256,7 @@ export default function AdminSettings() {
   }
 
   async function savePromoBanner() {
-    const token = JSON.parse(sessionStorage.getItem("user") || "{}");
+    const userObj = JSON.parse(sessionStorage.getItem("user") || "{}");
     const success = await appSettings.updateSettings(
       {
         bannerTitleTh: appSettings.bannerTitleTh,
@@ -266,9 +266,23 @@ export default function AdminSettings() {
         bannerBgImage: appSettings.bannerBgImage,
         bannerItems: appSettings.bannerItems
       },
-      btoa(JSON.stringify({ role: token.role }))
+      userObj.token || ""
     );
     if(success) toast(lang === "th" ? "บันทึกแบนเนอร์เรียบร้อย" : "Banner saved successfully", "success");
+  }
+
+  async function savePaymentSettings() {
+    const userObj = JSON.parse(sessionStorage.getItem("user") || "{}");
+    const success = await appSettings.updateSettings(
+      {
+        promptpayPhone: appSettings.promptpayPhone,
+        bankName: appSettings.bankName,
+        bankAccountNo: appSettings.bankAccountNo,
+        bankAccountName: appSettings.bankAccountName,
+      },
+      userObj.token || ""
+    );
+    if (success) toast(lang === "th" ? "บันทึกข้อมูลการชำระเงินเรียบร้อย" : "Payment settings saved", "success");
   }
 
   function downloadBackup() {
@@ -1009,6 +1023,52 @@ export default function AdminSettings() {
             </div>
           </div>
           <button className="btn-primary" onClick={savePromoBanner} disabled={appSettings.loading} style={{ width: "fit-content", padding: "10px 28px", borderRadius: 12, marginTop: 12 }}>
+            {appSettings.loading ? t.processing : t.btnSave}
+          </button>
+        </div>
+      </Section>
+
+      {/* ── Payment Settings ── */}
+      <Section title={lang === "th" ? "ตั้งค่าการชำระเงิน" : "Payment Settings"} icon={<span style={{ fontSize: 18 }}>💳</span>}>
+        <div style={{ display: "grid", gap: 16 }}>
+          <FieldRow label={lang === "th" ? "เบอร์ PromptPay" : "PromptPay Phone"}>
+            <input
+              value={appSettings.promptpayPhone}
+              onChange={(e) => useAppSettingsStore.setState({ promptpayPhone: e.target.value })}
+              style={inputStyle}
+              placeholder="0xx-xxx-xxxx"
+            />
+          </FieldRow>
+          <FieldRow label={lang === "th" ? "ชื่อธนาคาร" : "Bank Name"}>
+            <input
+              value={appSettings.bankName}
+              onChange={(e) => useAppSettingsStore.setState({ bankName: e.target.value })}
+              style={inputStyle}
+              placeholder={lang === "th" ? "เช่น ธนาคารกสิกรไทย" : "e.g. Kasikorn Bank"}
+            />
+          </FieldRow>
+          <FieldRow label={lang === "th" ? "เลขบัญชี" : "Account Number"}>
+            <input
+              value={appSettings.bankAccountNo}
+              onChange={(e) => useAppSettingsStore.setState({ bankAccountNo: e.target.value })}
+              style={inputStyle}
+              placeholder="xxx-x-xxxxx-x"
+            />
+          </FieldRow>
+          <FieldRow label={lang === "th" ? "ชื่อบัญชี" : "Account Name"}>
+            <input
+              value={appSettings.bankAccountName}
+              onChange={(e) => useAppSettingsStore.setState({ bankAccountName: e.target.value })}
+              style={inputStyle}
+              placeholder={lang === "th" ? "ชื่อ-นามสกุลเจ้าของบัญชี" : "Account holder name"}
+            />
+          </FieldRow>
+          <button
+            className="btn-primary"
+            onClick={savePaymentSettings}
+            disabled={appSettings.loading}
+            style={{ width: "fit-content", padding: "10px 28px", borderRadius: 12 }}
+          >
             {appSettings.loading ? t.processing : t.btnSave}
           </button>
         </div>
