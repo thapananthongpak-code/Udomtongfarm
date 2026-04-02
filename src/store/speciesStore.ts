@@ -51,15 +51,9 @@ export const useSpeciesStore = create<SpeciesState>((set, get) => ({
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error("API Offline");
       const data: Species[] = await response.json();
-      // Clear soldIds for items that the API now shows as back in stock
-      const prevSold = get().soldIds;
-      const stillSold = prevSold.filter(id => {
-        const fresh = data.find(s => s.id === id);
-        if (!fresh) return true;
-        return (fresh.stock ?? 0) === 0 || fresh.available === false;
-      });
-      if (stillSold.length !== prevSold.length) saveSoldIds(stillSold);
-      set({ items: applySold(data, stillSold), soldIds: stillSold, updatedAt: Date.now(), loading: false });
+      // API is the source of truth — trust it completely, clear all soldIds
+      saveSoldIds([]);
+      set({ items: data, soldIds: [], updatedAt: Date.now(), loading: false });
     } catch {
       if (import.meta.env.DEV) console.warn("API Offline — using seed data fallback");
       if (get().items.length === 0) {
