@@ -143,8 +143,8 @@ export default function Checkout() {
 
   const [addrForm, setAddrForm] = useState<Omit<Address, "id" | "is_default">>({
     user_email: user?.email ?? "",
-    name: user?.name ?? "",
-    phone: user?.phone ?? "",
+    name: "",
+    phone: "",
     address_line: "",
     district: "",
     province: "",
@@ -163,7 +163,7 @@ export default function Checkout() {
   useEffect(() => {
     if (user?.email) {
       fetchAddresses(user.email);
-      setAddrForm(f => ({ ...f, user_email: user.email!, name: user.name ?? "", phone: user.phone ?? "" }));
+      setAddrForm(f => ({ ...f, user_email: user.email! }));
     }
   }, [user?.email]);
 
