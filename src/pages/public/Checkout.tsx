@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCartStore } from "../../store/cartStore";
 import { useOrderStore } from "../../store/orderStore";
@@ -270,17 +270,17 @@ export default function Checkout() {
       </h1>
 
       {/* Step progress bar */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 32 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 32 }}>
         {steps.map((s, idx) => {
           const stepOrder = { address: 0, payment: 1, review: 2 };
           const currentIdx = stepOrder[step];
           const isDone    = stepOrder[s.id] < currentIdx;
           const isActive  = s.id === step;
           return (
-            <div key={s.id} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+            <Fragment key={s.id}>
               <div
                 onClick={() => { if (isDone) setStep(s.id); }}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: isDone ? "pointer" : "default", flex: idx < steps.length - 1 ? "none" : 1 }}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: isDone ? "pointer" : "default" }}
               >
                 <div style={{
                   width: 36, height: 36, borderRadius: "50%",
@@ -299,9 +299,9 @@ export default function Checkout() {
                 </div>
               </div>
               {idx < steps.length - 1 && (
-                <div style={{ flex: 1, height: 3, margin: "0 8px", marginBottom: 22, borderRadius: 4, background: isDone || isActive ? "var(--primary)" : "var(--border-color)", transition: "background 0.3s ease" }} />
+                <div style={{ flex: 1, height: 3, margin: "0 8px", marginTop: 17, borderRadius: 4, background: isDone || isActive ? "var(--primary)" : "var(--border-color)", transition: "background 0.3s ease" }} />
               )}
-            </div>
+            </Fragment>
           );
         })}
       </div>
