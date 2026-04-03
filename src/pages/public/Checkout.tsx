@@ -270,40 +270,62 @@ export default function Checkout() {
       </h1>
 
       {/* Step progress bar */}
-      <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 32 }}>
-        {steps.map((s, idx) => {
-          const stepOrder = { address: 0, payment: 1, review: 2 };
-          const currentIdx = stepOrder[step];
-          const isDone    = stepOrder[s.id] < currentIdx;
-          const isActive  = s.id === step;
-          return (
-            <Fragment key={s.id}>
-              <div
-                onClick={() => { if (isDone) setStep(s.id); }}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: isDone ? "pointer" : "default" }}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  background: isActive ? "var(--primary)" : isDone ? "var(--primary)" : "var(--bg-color)",
-                  border: isActive || isDone ? "none" : "2px solid var(--border-color)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: isActive || isDone ? "white" : "var(--text-muted)",
-                  fontWeight: 900, fontSize: "0.9rem",
-                  boxShadow: isActive ? "0 4px 16px rgba(43,87,64,0.35)" : "none",
-                  transition: "all 0.3s ease",
-                }}>
+      <div style={{ marginBottom: 32 }}>
+        {/* Row 1: circles + lines */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {steps.map((s, idx) => {
+            const stepOrder = { address: 0, payment: 1, review: 2 };
+            const currentIdx = stepOrder[step];
+            const isDone    = stepOrder[s.id] < currentIdx;
+            const isActive  = s.id === step;
+            return (
+              <Fragment key={s.id}>
+                <div
+                  onClick={() => { if (isDone) setStep(s.id); }}
+                  style={{
+                    width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                    background: isActive || isDone ? "var(--primary)" : "var(--bg-color)",
+                    border: isActive || isDone ? "none" : "2px solid var(--border-color)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: isActive || isDone ? "white" : "var(--text-muted)",
+                    fontWeight: 900, fontSize: "0.9rem",
+                    boxShadow: isActive ? "0 4px 16px rgba(43,87,64,0.35)" : "none",
+                    transition: "all 0.3s ease",
+                    cursor: isDone ? "pointer" : "default",
+                  }}
+                >
                   {isDone ? "✓" : idx + 1}
                 </div>
-                <div style={{ marginTop: 6, fontSize: isMobile ? "0.7rem" : "0.82rem", fontWeight: isActive ? 800 : 600, color: isActive ? "var(--primary-hover)" : isDone ? "var(--primary-hover)" : "var(--text-muted)", textAlign: "center", whiteSpace: "nowrap" }}>
+                {idx < steps.length - 1 && (
+                  <div style={{ flex: 1, height: 3, margin: "0 8px", borderRadius: 4, background: isDone || isActive ? "var(--primary)" : "var(--border-color)", transition: "background 0.3s ease" }} />
+                )}
+              </Fragment>
+            );
+          })}
+        </div>
+        {/* Row 2: labels */}
+        <div style={{ display: "flex", alignItems: "flex-start", marginTop: 6 }}>
+          {steps.map((s, idx) => {
+            const stepOrder = { address: 0, payment: 1, review: 2 };
+            const currentIdx = stepOrder[step];
+            const isDone    = stepOrder[s.id] < currentIdx;
+            const isActive  = s.id === step;
+            return (
+              <Fragment key={s.id}>
+                <div style={{
+                  width: 36, flexShrink: 0, textAlign: "center", overflow: "visible",
+                  fontSize: isMobile ? "0.7rem" : "0.82rem",
+                  fontWeight: isActive ? 800 : 600,
+                  color: isActive || isDone ? "var(--primary-hover)" : "var(--text-muted)",
+                  whiteSpace: "nowrap",
+                }}>
                   {lang === "th" ? ["ที่อยู่","จัดส่ง/ชำระ","ยืนยัน"][idx] : ["Address","Ship/Pay","Review"][idx]}
                 </div>
-              </div>
-              {idx < steps.length - 1 && (
-                <div style={{ flex: 1, height: 3, margin: "0 8px", marginTop: 17, borderRadius: 4, background: isDone || isActive ? "var(--primary)" : "var(--border-color)", transition: "background 0.3s ease" }} />
-              )}
-            </Fragment>
-          );
-        })}
+                {idx < steps.length - 1 && <div style={{ flex: 1 }} />}
+              </Fragment>
+            );
+          })}
+        </div>
       </div>
 
       {error && (
