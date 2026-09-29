@@ -1,160 +1,84 @@
 import { Link } from "react-router-dom";
-import { useSettingsStore } from "../store/settingsStore";
-import { Leaf, MapPin, Phone, Map } from "lucide-react";
+import { ArrowUp, Clock, MapPin, Phone, Rss } from "lucide-react";
+import { useT } from "../lib/i18n";
+import { CONTACT } from "../lib/site";
+import { usePrefs } from "../store/prefs";
+import { FacebookIcon, LogoMark } from "./Icons";
 
 export default function Footer() {
-  const { lang } = useSettingsStore();
+  const t = useT();
+  const lang = usePrefs((s) => s.lang);
   const year = new Date().getFullYear();
 
-  const t = {
-    desc: lang === "th"
-      ? "ระบบสารานุกรมสิ่งมีชีวิตในฟาร์มอุดมทอง รวบรวมข้อมูลสัตว์และพืชพันธุ์หายากอย่างครบถ้วน"
-      : "Udomtong Farm Encyclopedia — a comprehensive database of rare animals and plants.",
-    quickLinks: lang === "th" ? "ลิงก์ด่วน" : "Quick Links",
-    home: lang === "th" ? "หน้าแรก" : "Home",
-    encyclo: lang === "th" ? "สารานุกรม" : "Encyclopedia",
-    login: lang === "th" ? "เข้าสู่ระบบ" : "Login",
-    contact: lang === "th" ? "ติดต่อเรา" : "Contact",
-    address: lang === "th" ? "ที่อยู่" : "Address",
-    addressText: lang === "th" ? "ฟาร์มอุดมทอง จ.ชัยภูมิ" : "Udomtong Farm, Chaiyaphum",
-    rights: lang === "th" ? "สงวนลิขสิทธิ์" : "All rights reserved",
-    followUs: lang === "th" ? "ติดตามเรา" : "Follow Us",
-    mapLink: lang === "th" ? "ดูแผนที่ฟาร์ม" : "View Farm Map",
-  };
-
   return (
-    <footer style={{
-      background: "var(--card-bg)",
-      borderTop: "1px solid var(--border-color)",
-      padding: "60px 24px 30px 24px",
-      marginTop: "40px",
-    }}>
-      <div className="footer-grid" style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: 40,
-        marginBottom: 40,
-      }}>
-        {/* Brand column */}
-        <div>
-          <div style={{
-            background: "var(--primary-light)",
-            color: "var(--primary-hover)",
-            padding: "6px 14px",
-            borderRadius: 8,
-            fontWeight: 800,
-            fontSize: 20,
-            display: "inline-block",
-            marginBottom: 16,
-          }}>
-            <Leaf size={18} color="var(--primary-hover)" /> Udomtong
-          </div>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.7, margin: 0 }}>
-            {t.desc}
-          </p>
+    <footer className="site-footer">
+      <div className="container site-footer__grid">
+        <div className="site-footer__brand">
+          <Link to="/" className="brand brand--footer">
+            <LogoMark size={40} />
+            <span className="brand__text">
+              <span className="brand__name">{t.brand}</span>
+              <span className="brand__sub">{t.brandSub}</span>
+            </span>
+          </Link>
+          <p>{t.footer.about}</p>
         </div>
 
-        {/* Quick links */}
-        <div>
-          <h4 style={{ color: "var(--text-main)", fontWeight: 800, marginTop: 0, marginBottom: 16, fontSize: "1rem" }}>
-            {t.quickLinks}
-          </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              { to: "/", label: t.home },
-              { to: "/encyclopedia", label: t.encyclo },
-              { to: "/contact", label: t.contact },
-              { to: "/login", label: t.login },
-            ].map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                style={{
-                  color: "var(--text-muted)",
-                  textDecoration: "none",
-                  fontSize: "0.95rem",
-                  fontWeight: 500,
-                  transition: "color 0.2s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary-hover)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
-              >
-                → {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
+        <nav aria-label={t.footer.explore}>
+          <h2 className="site-footer__title">{t.footer.explore}</h2>
+          <ul className="site-footer__list">
+            <li><Link to="/encyclopedia">{t.nav.encyclopedia}</Link></li>
+            <li><Link to="/gallery">{t.nav.gallery}</Link></li>
+            <li><Link to="/compare">{t.nav.compare}</Link></li>
+            <li><Link to="/saved">{t.nav.saved}</Link></li>
+            <li><Link to="/about">{t.nav.about}</Link></li>
+          </ul>
+        </nav>
 
-        {/* Contact */}
         <div>
-          <h4 style={{ color: "var(--text-main)", fontWeight: 800, marginTop: 0, marginBottom: 16, fontSize: "1rem" }}>
-            {t.contact}
-          </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, color: "var(--text-muted)", fontSize: "0.9rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}><MapPin size={14} color="#ef4444" /> {t.addressText}</div>
-            <a href="tel:0811733620" style={{ color: "var(--text-muted)", textDecoration: "none" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary-hover)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>
-              <Phone size={14} color="#16a34a" style={{ display: "inline", verticalAlign: "middle", marginRight: 6 }} /> 081-173-3620
-            </a>
-            <Link to="/map" style={{ color: "var(--text-muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--primary-hover)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>
-              <Map size={14} color="#0369a1" /> {t.mapLink}
-            </Link>
-          </div>
-        </div>
-
-        {/* Social */}
-        <div>
-          <h4 style={{ color: "var(--text-main)", fontWeight: 800, marginTop: 0, marginBottom: 16, fontSize: "1rem" }}>
-            {t.followUs}
-          </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <a
-              href="https://www.facebook.com/udomtongfarm"
-              target="_blank" rel="noopener noreferrer"
-              className="footer-social-link"
-            >
-              <span className="footer-social-icon footer-social-fb">f</span>
-              Facebook
-            </a>
-            <a
-              href="https://line.me/ti/p/~udomtongfarm"
-              target="_blank" rel="noopener noreferrer"
-              className="footer-social-link"
-            >
-              <span className="footer-social-icon footer-social-line">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.952 9.026c0-4.59-4.601-8.326-10.252-8.326C4.05.7-.5 4.436-.5 9.026c0 4.115 3.65 7.56 8.581 8.21.334.072.79.22.904.505.103.26.068.666.033.928l-.146.876c-.044.26-.204 1.017.891.554s5.916-3.484 8.073-5.97c1.49-1.635 2.116-3.295 2.116-5.103z"/></svg>
+          <h2 className="site-footer__title">{t.footer.visit}</h2>
+          <ul className="site-footer__list site-footer__list--icons">
+            <li>
+              <MapPin size={16} aria-hidden />
+              <Link to="/visit">{CONTACT.address[lang]}</Link>
+            </li>
+            <li>
+              <Phone size={16} aria-hidden />
+              <a href={`tel:${CONTACT.phone}`}>{CONTACT.phoneDisplay}</a>
+            </li>
+            <li>
+              <Clock size={16} aria-hidden />
+              <span>
+                {t.visit.hoursValue}
+                <br />
+                {t.visit.hoursNote}
               </span>
-              LINE
-            </a>
-            <a
-              href="https://www.youtube.com/@udomtongfarm"
-              target="_blank" rel="noopener noreferrer"
-              className="footer-social-link"
-            >
-              <span className="footer-social-icon footer-social-yt">▶</span>
-              YouTube
-            </a>
-          </div>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="site-footer__title">{t.footer.follow}</h2>
+          <ul className="site-footer__list site-footer__list--icons">
+            <li>
+              <FacebookIcon size={16} />
+              <a href={CONTACT.facebookUrl} target="_blank" rel="noopener noreferrer">
+                Facebook
+              </a>
+            </li>
+            <li>
+              <Rss size={16} aria-hidden />
+              <a href="/feed.xml">{t.footer.rss}</a>
+            </li>
+          </ul>
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        paddingTop: 20,
-        borderTop: "1px solid var(--border-color)",
-        display: "flex",
-        justifyContent: "center",
-        color: "var(--text-muted)",
-        fontSize: "0.85rem",
-      }}>
-        © {year} Udomtong Farm — {t.rights}
+      <div className="container site-footer__bottom">
+        <p>{t.footer.rights(year)}</p>
+        <button type="button" className="link-btn" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+          {t.footer.backToTop} <ArrowUp size={15} aria-hidden />
+        </button>
       </div>
     </footer>
   );

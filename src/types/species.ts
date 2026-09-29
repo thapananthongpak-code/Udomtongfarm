@@ -1,5 +1,8 @@
 export type SpeciesType = "animal" | "plant";
 
+/** IUCN Red List category codes used on the site. */
+export type ConservationStatus = "LC" | "NT" | "VU" | "EN" | "CR";
+
 export type Reference = {
   title: string;
   url: string;
@@ -12,23 +15,16 @@ export type Species = {
   name_th: string;
   name_en: string;
   scientific_name?: string;
+  status?: ConservationStatus;
 
   short_description: string;
-  short_description_en?: string; // 🟢 เพิ่มฟิลด์คำอธิบายสั้น (EN)
+  short_description_en?: string;
 
   description: string;
-  description_en?: string;       // 🟢 เพิ่มฟิลด์คำอธิบายเต็ม (EN)
+  description_en?: string;
 
   image: string;
   tags?: string[];
-
-  available?: boolean;  // พร้อมจำหน่าย (default = true)
-  quantity?: number;    // จำนวนที่มีพร้อมขาย (legacy)
-  price?: number;       // ราคาขาย (บาท)
-  stock?: number;       // จำนวนสต็อก
-  unit?: string;        // หน่วย เช่น "ตัว", "ต้น", "คู่"
-  age?: string;         // อายุ เช่น "6 เดือน - 1 ปี"
-  gender?: string;      // เพศที่มีจำหน่าย เช่น "ผสม", "เพศผู้", "เพศเมีย"
 
   references: Reference[];
 };

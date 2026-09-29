@@ -7,6 +7,7 @@ export const animals: Species[] = [
     name_th: "หงส์ดำ",
     name_en: "Black Swan",
     scientific_name: "Cygnus atratus",
+    status: "LC",
     short_description: "หงส์สีดำเด่น นกน้ำขนาดใหญ่จากออสเตรเลีย",
     short_description_en: "Striking black waterbird native to Australia",
     description:
@@ -25,6 +26,7 @@ export const animals: Species[] = [
     name_th: "หงส์ขาว",
     name_en: "Mute Swan",
     scientific_name: "Cygnus olor",
+    status: "LC",
     short_description: "หงส์สีขาวสง่างาม พบได้ในยุโรปและเอเชีย",
     short_description_en: "Elegant white swan native to Europe and Asia",
     description:
@@ -43,6 +45,7 @@ export const animals: Species[] = [
     name_th: "ห่านอียิปต์",
     name_en: "Egyptian Goose",
     scientific_name: "Alopochen aegyptiaca",
+    status: "LC",
     short_description: "ห่านน้ำจากแอฟริกา ลวดลายเด่น แต้มรอบตาสีน้ำตาล",
     short_description_en: "African waterbird with distinctive eye-patches and colorful plumage",
     description:
@@ -79,6 +82,7 @@ export const animals: Species[] = [
     name_th: "นกยูง",
     name_en: "Indian Peafowl",
     scientific_name: "Pavo cristatus",
+    status: "LC",
     short_description: "นกยูงอินเดีย หางยาวสวยงาม เป็นนกประจำชาติอินเดีย",
     short_description_en: "India's national bird, famed for the male's spectacular iridescent tail display",
     description:
@@ -97,6 +101,7 @@ export const animals: Species[] = [
     name_th: "ไก่ฟ้าหูขาว",
     name_en: "White-eared Pheasant",
     scientific_name: "Crossoptilon crossoptilon",
+    status: "LC",
     short_description: "ไก่ฟ้าหูขาวยาว จากเทือกเขาสูงของจีน-ทิเบต",
     short_description_en: "Large pheasant with striking white ear-tufts from high-altitude China and Tibet",
     description:
@@ -133,6 +138,7 @@ export const animals: Species[] = [
     name_th: "นกแก้วมาคอว์",
     name_en: "Scarlet Macaw",
     scientific_name: "Ara macao",
+    status: "LC",
     short_description: "มาคอว์สีแดงสด ขนาดใหญ่จากอเมริกากลาง-ใต้ อายุยืน",
     short_description_en: "Brilliant red-yellow-blue macaw from Central and South American rainforests",
     description:
@@ -151,6 +157,7 @@ export const animals: Species[] = [
     name_th: "นกแก้วริงเน็ก",
     name_en: "Rose-ringed Parakeet",
     scientific_name: "Psittacula krameri",
+    status: "LC",
     short_description: "นกแก้วสีเขียว ตัวผู้มีวงแหวนชมพู-ดำรอบคอ ปรับตัวเก่งมาก",
     short_description_en: "Green parakeet; males have a rose-pink neck ring; highly adaptable worldwide",
     description:
@@ -169,6 +176,7 @@ export const animals: Species[] = [
     name_th: "นกแก้วคริมสันเบลลี่",
     name_en: "Crimson-bellied Parakeet",
     scientific_name: "Pyrrhura perlata",
+    status: "VU",
     short_description: "คอนัวร์ขนาดเล็ก ท้องแดงเด่น จากป่าฝนบราซิล นิสัยอ่อนโยน",
     short_description_en: "Small Pyrrhura conure with striking crimson belly from Brazilian rainforests",
     description:
@@ -205,6 +213,7 @@ export const animals: Species[] = [
     name_th: "ไก่ต๊อก",
     name_en: "Helmeted Guineafowl",
     scientific_name: "Numida meleagris",
+    status: "LC",
     short_description: "ไก่ต๊อกลายจุดขาว ช่วยกำจัดแมลงในฟาร์ม เสียงดังเตือนภัย",
     short_description_en: "African bird with white-spotted plumage; excellent natural pest controller on farms",
     description:
@@ -223,6 +232,7 @@ export const animals: Species[] = [
     name_th: "ไก่ป่า",
     name_en: "Red Junglefowl",
     scientific_name: "Gallus gallus",
+    status: "LC",
     short_description: "บรรพบุรุษของไก่บ้านทั่วโลก พบในป่าเอเชียใต้-ตะวันออกเฉียงใต้",
     short_description_en: "Wild ancestor of all domestic chickens, native to South and Southeast Asian forests",
     description:
@@ -241,6 +251,7 @@ export const animals: Species[] = [
     name_th: "ไก่ฟ้าสีทอง",
     name_en: "Golden Pheasant",
     scientific_name: "Chrysolophus pictus",
+    status: "LC",
     short_description: "ไก่ฟ้าสีสันสดจากจีน ตัวผู้มีหัวทองและแผงคอลายเกล็ดงดงาม",
     short_description_en: "Brilliantly colored Chinese pheasant with golden crest and scaled red-yellow cape",
     description:

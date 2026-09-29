@@ -1,0 +1,23 @@
+{
+  "name": "Udomtong Farm Nature Journal",
+  "short_name": "Udomtong",
+  "description": "A bilingual field guide to the rare animals and plants of Udomtong Farm, Chaiyaphum.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f3ea",
+  "theme_color": "#1f4d36",
+  "lang": "en",
+  "categories": ["education", "books", "lifestyle"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Encyclopedia", "url": "/encyclopedia" },
+    { "name": "Gallery", "url": "/gallery" },
+    { "name": "Saved", "url": "/saved" }
+  ]
+}

@@ -1,35 +1,86 @@
-const CACHE = "udomtong-v1";
-const STATIC = ["/", "/encyclopedia", "/about", "/gallery", "/faq", "/contact", "/manifest.json"];
+// Udomtong Farm service worker
+// - Pages: network first, falling back to the cached app shell when offline.
+// - Hashed build assets: cache first (their URLs change on every build).
+// - Images and other static files: stale-while-revalidate.
 
-self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(STATIC)).then(() => self.skipWaiting())
+const VERSION = "v2";
+const SHELL_CACHE = `udomtong-shell-${VERSION}`;
+const ASSET_CACHE = `udomtong-assets-${VERSION}`;
+const IMAGE_CACHE = `udomtong-images-${VERSION}`;
+const KEEP = [SHELL_CACHE, ASSET_CACHE, IMAGE_CACHE];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(SHELL_CACHE)
+      .then((cache) => cache.addAll(["/", "/manifest.webmanifest", "/favicon.svg"]))
+      .then(() => self.skipWaiting()),
   );
 });
 
-self.addEventListener("activate", e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      // The previous version cached every page forever, so visitors never saw new builds.
+      const hadLegacyCache = keys.includes("udomtong-v1");
+      await Promise.all(keys.filter((key) => !KEEP.includes(key)).map((key) => caches.delete(key)));
+      await self.clients.claim();
+      if (hadLegacyCache) {
+        const windows = await self.clients.matchAll({ type: "window" });
+        windows.forEach((client) => client.navigate(client.url));
+      }
+    })(),
   );
 });
 
-self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
-  const url = new URL(e.request.url);
-  // Skip API calls — always network
-  if (url.pathname.startsWith("/api")) return;
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const net = fetch(e.request).then(res => {
-        if (res.ok && url.origin === location.origin) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return res;
-      });
-      return cached || net;
+async function networkFirstPage(request) {
+  const cache = await caches.open(SHELL_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response.ok) cache.put("/", response.clone());
+    return response;
+  } catch {
+    return (await cache.match("/")) || Response.error();
+  }
+}
+
+async function cacheFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) cache.put(request, response.clone());
+  return response;
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  const network = fetch(request)
+    .then((response) => {
+      if (response.ok) cache.put(request, response.clone());
+      return response;
     })
-  );
+    .catch(() => cached || Response.error());
+  return cached || network;
+}
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirstPage(request));
+    return;
+  }
+  if (url.pathname.startsWith("/assets/")) {
+    event.respondWith(cacheFirst(request, ASSET_CACHE));
+    return;
+  }
+  if (url.pathname.startsWith("/images/") || url.pathname.startsWith("/icons/")) {
+    event.respondWith(staleWhileRevalidate(request, IMAGE_CACHE));
+  }
 });

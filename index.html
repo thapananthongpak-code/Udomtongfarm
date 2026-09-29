@@ -2,50 +2,95 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Udomtong Farm — Nature Encyclopedia</title>
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#2b5740" />
-    <meta name="description" content="Udomtong Farm — Explore and learn about rare animals and plants at Udomtong Farm, Nakhon Ratchasima." />
-    <meta name="keywords" content="Udomtong Farm, nature, encyclopedia, species, animals, plants, rare breeds" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Udomtong Farm | Nature Journal</title>
+    <meta name="description" content="A bilingual field guide to the rare animals and plants cared for at Udomtong Farm in Chaiyaphum, Thailand." />
     <meta name="author" content="Udomtong Farm" />
+    <meta name="theme-color" content="#1f4d36" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1411" media="(prefers-color-scheme: dark)" />
     <link rel="canonical" href="https://udomtongfarm.com/" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="alternate" type="application/rss+xml" title="Udomtong Farm Nature Journal" href="/feed.xml" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Udomtong Farm" />
     <meta property="og:url" content="https://udomtongfarm.com/" />
-    <meta property="og:title" content="Udomtong Farm — Nature Encyclopedia" />
-    <meta property="og:description" content="Explore the diversity of rare animals and plants at Udomtong Farm." />
+    <meta property="og:title" content="Udomtong Farm | Nature Journal" />
+    <meta property="og:description" content="A bilingual field guide to the rare animals and plants cared for at Udomtong Farm in Chaiyaphum, Thailand." />
     <meta property="og:image" content="https://udomtongfarm.com/og-image.jpg" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="th_TH" />
-    <meta property="og:site_name" content="Udomtong Farm" />
 
-    <!-- Twitter Card -->
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Udomtong Farm — Nature Encyclopedia" />
-    <meta name="twitter:description" content="Explore the diversity of rare animals and plants at Udomtong Farm." />
+    <meta name="twitter:title" content="Udomtong Farm | Nature Journal" />
+    <meta name="twitter:description" content="A bilingual field guide to the rare animals and plants cared for at Udomtong Farm in Chaiyaphum, Thailand." />
     <meta name="twitter:image" content="https://udomtongfarm.com/og-image.jpg" />
 
-    <!-- Apple -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="UdomtongFarm" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Udomtong" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Inter:wght@400..700&family=Noto+Serif+Thai:wght@500..700&display=swap"
+    />
+
+    <!-- Apply saved theme and language before first paint to avoid a flash -->
     <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").catch(() => {});
-        });
+      (function () {
+        try {
+          var raw = localStorage.getItem("uf_prefs");
+          var p = raw ? JSON.parse(raw) : {};
+          var theme = p.theme || localStorage.getItem("theme");
+          if (theme !== "light" && theme !== "dark") {
+            theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          var lang = p.lang || localStorage.getItem("lang");
+          var d = document.documentElement;
+          d.setAttribute("data-theme", theme);
+          if (lang === "th" || lang === "en") d.setAttribute("lang", lang);
+          if (p.textSize) d.setAttribute("data-text-size", p.textSize);
+        } catch (e) {
+          /* storage unavailable: keep defaults */
+        }
+      })();
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Udomtong Farm",
+        "alternateName": "ฟาร์มอุดมทอง",
+        "url": "https://udomtongfarm.com/",
+        "image": "https://udomtongfarm.com/og-image.jpg",
+        "telephone": "+66811733620",
+        "sameAs": ["https://www.facebook.com/Udomtongfarm"],
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Mueang Chaiyaphum",
+          "addressRegion": "Chaiyaphum",
+          "postalCode": "36000",
+          "addressCountry": "TH"
+        }
       }
     </script>
+  </head>
+  <body>
+    <noscript>
+      <p style="padding: 24px; font-family: system-ui, sans-serif">
+        Udomtong Farm Nature Journal needs JavaScript to display its articles. Please enable JavaScript and reload the page.
+      </p>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

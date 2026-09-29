@@ -7,6 +7,7 @@ export const plants: Species[] = [
     name_th: "ต้นสักทอง",
     name_en: "Teak",
     scientific_name: "Tectona grandis",
+    status: "LC",
     short_description: "ราชาแห่งไม้เนื้อแข็ง เนื้อทนทาน ต้านน้ำและแมลงได้ตามธรรมชาติ",
     short_description_en: "King of tropical hardwoods; naturally oil-rich, water and insect resistant",
     description:
@@ -43,6 +44,7 @@ export const plants: Species[] = [
     name_th: "ต้นพะยูง",
     name_en: "Siamese Rosewood",
     scientific_name: "Dalbergia cochinchinensis",
+    status: "EN",
     short_description: "ไม้หวงห้ามสูงสุด เนื้อสีม่วง-แดง ราคาสูงที่สุดในบรรดาไม้เนื้อแข็งเอเชีย",
     short_description_en: "Asia's most valuable rosewood; protected by CITES and Thai law due to illegal logging",
     description:
@@ -61,6 +63,7 @@ export const plants: Species[] = [
     name_th: "ต้นพยอม",
     name_en: "White Meranti (Payom)",
     scientific_name: "Shorea roxburghii",
+    status: "VU",
     short_description: "ไม้ในวงศ์ยาง ดอกหอม นิยมปลูกตามวัดและถนน",
     short_description_en: "Fragrant-flowered Dipterocarp tree planted at temples and roadsides across Southeast Asia",
     description:
@@ -79,6 +82,7 @@ export const plants: Species[] = [
     name_th: "ต้นตะเคียนทอง",
     name_en: "Takhian (Hopea)",
     scientific_name: "Hopea odorata",
+    status: "VU",
     short_description: "ไม้ยืนต้นขนาดใหญ่ วงศ์ยาง เนื้อแข็งมาก มีตำนานสิ่งศักดิ์สิทธิ์",
     short_description_en: "Giant Dipterocarp with very hard water-resistant timber and rich Thai spiritual folklore",
     description:
@@ -97,6 +101,7 @@ export const plants: Species[] = [
     name_th: "ต้นชิงชัน",
     name_en: "Dalbergia (Chingchan)",
     scientific_name: "Dalbergia oliveri",
+    status: "EN",
     short_description: "ไม้เนื้อแข็งสกุล Dalbergia เนื้อสีม่วง-แดง ใกล้เคียงพะยูง อยู่ใน CITES",
     short_description_en: "CITES-listed Dalbergia hardwood with purple-red grain; used in fine furniture and instruments",
     description:
@@ -115,6 +120,7 @@ export const plants: Species[] = [
     name_th: "ต้นยางนา",
     name_en: "Yang Na",
     scientific_name: "Dipterocarpus alatus",
+    status: "CR",
     short_description: "ต้นไม้ยักษ์วงศ์ยาง สูงถึง 50 เมตร น้ำมันยางมีประโยชน์หลากหลาย",
     short_description_en: "Giant Dipterocarp reaching 50 m; resin used for wood treatment and traditional medicine",
     description:
@@ -169,6 +175,7 @@ export const plants: Species[] = [
     name_th: "ต้นประดู่แดง",
     name_en: "Narra (Red Paduak)",
     scientific_name: "Pterocarpus indicus",
+    status: "VU",
     short_description: "ไม้ประจำชาติฟิลิปปินส์ ดอกเหลืองหอม น้ำยางสีแดงมีประโยชน์ทางยา",
     short_description_en: "Philippines' national tree; fragrant yellow flowers; red resin used medicinally",
     description:
