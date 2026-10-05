@@ -2,33 +2,38 @@
   "name": "udomtongfarm",
   "version": "3.0.0",
   "private": true,
-  "description": "Udomtong Farm: a bilingual online collection of the rare animals and plants cared for at Udomtong Farm, Chaiyaphum.",
+  "type": "module",
+  "description": "Udomtong Farm: the bilingual promotional website of Udomtong Farm, Chaiyaphum, with a collection of its rare animals and plants.",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "db:seed-sql": "node scripts/build-seed-sql.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
-    "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
-    "next": "16.3.8",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "server-only": "^0.0.1",
+    "react-router-dom": "^7.13.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3",
+    "@eslint/js": "^9.39.1",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.1",
-    "eslint-config-next": "16.3.8",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
     "tailwindcss": "^4.3.3",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^7.3.1"
   }
 }

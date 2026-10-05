@@ -1,42 +1,17 @@
-"use client";
-
-import Link from "next/link";
-import { useActionState, useState } from "react";
-import type { SpeciesFormState } from "@/app/[lang]/admin/actions";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import SpeciesImage from "@/components/species/SpeciesImage";
-import type { Dictionary } from "@/i18n";
+import { useT } from "@/i18n/hooks";
+import { saveSpecies, type SaveResult, type SpeciesFormValues as Values } from "@/lib/admin";
 import { STATUS_CODES, type Source, type Species } from "@/lib/species/types";
-import { getBrowserClient } from "@/lib/supabase/browser";
-import { SPECIES_BUCKET } from "@/lib/supabase/env";
-
-const IDLE: SpeciesFormState = { status: "idle" };
+import { SPECIES_BUCKET, supabase } from "@/lib/supabase";
+import { useData } from "@/state/data";
 
 type Props = {
-  action: (state: SpeciesFormState, formData: FormData) => Promise<SpeciesFormState>;
   /** The species being edited, or null when adding a new one. */
   species: Species | null;
-  cancelHref: string;
-  labels: Dictionary["admin"]["form"];
-  errors: Dictionary["admin"]["errors"];
-  statusLabels: Dictionary["status"];
-  typeLabels: { animal: string; plant: string };
-};
-
-type Values = {
-  id: string;
-  type: Species["type"];
-  name_th: string;
-  name_en: string;
-  scientific_name: string;
-  status: string;
-  summary_th: string;
-  summary_en: string;
-  body_th: string;
-  body_en: string;
-  image: string;
-  tags: string;
-  featured: boolean;
-  published: boolean;
+  /** Where to go after saving or cancelling. */
+  listHref: string;
 };
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -58,22 +33,44 @@ const initialValues = (sp: Species | null): Values => ({
   published: sp?.published ?? true,
 });
 
-// Fields are controlled so that nothing typed is lost when the server reports a problem.
-export default function SpeciesForm({ action, species, cancelHref, labels, errors, statusLabels, typeLabels }: Props) {
-  const [state, formAction, pending] = useActionState(action, IDLE);
+export default function SpeciesForm({ species, listHref }: Props) {
+  const t = useT();
+  const labels = t.admin.form;
+  const errors = t.admin.errors;
+  const statusLabels = t.status;
+  const typeLabels = { animal: t.common.animal, plant: t.common.plant };
+  const navigate = useNavigate();
+  const { reload } = useData();
   const [values, setValues] = useState<Values>(() => initialValues(species));
   const [sources, setSources] = useState<Source[]>(species?.sources ?? []);
   const [upload, setUpload] = useState<"idle" | "busy" | "failed">("idle");
+  const [result, setResult] = useState<SaveResult | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const problems = result && !result.ok ? result.fields : undefined;
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setPending(true);
+    const outcome = await saveSpecies(values, sources, species?.id ?? null);
+    if (outcome.ok) {
+      await reload();
+      navigate(listHref);
+      return;
+    }
+    setResult(outcome);
+    setPending(false);
+    window.scrollTo({ top: 0 });
+  }
 
   const set = <K extends keyof Values>(key: K, value: Values[K]) => setValues((current) => ({ ...current, [key]: value }));
-  const errorFor = (name: string) => (state.fields?.[name] ? errors[state.fields[name]] : null);
+  const errorFor = (name: string) => (problems?.[name] ? errors[problems[name]] : null);
 
   async function onFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
 
-    const supabase = getBrowserClient();
     if (!supabase || file.size > MAX_UPLOAD_BYTES) {
       setUpload("failed");
       return;
@@ -134,10 +131,10 @@ export default function SpeciesForm({ action, species, cancelHref, labels, error
   const section = "grid gap-6 border-t border-line py-10 lg:grid-cols-[14rem_1fr] lg:gap-12";
 
   return (
-    <form action={formAction} className="mt-10" noValidate>
-      {state.status === "error" && state.code && (
+    <form onSubmit={submit} className="mt-10" noValidate>
+      {result && !result.ok && (
         <p role="alert" className="notice notice-error mb-8 max-w-xl">
-          {errors[state.code]}
+          {errors[result.code]}
         </p>
       )}
 
@@ -213,7 +210,7 @@ export default function SpeciesForm({ action, species, cancelHref, labels, error
           {labels.photo}
         </h2>
         <div className="grid gap-6 sm:grid-cols-[10rem_1fr]">
-          <SpeciesImage src={values.image} alt="" sizes="10rem" fit="contain" className="aspect-square w-40" />
+          <SpeciesImage src={values.image} alt="" fit="contain" className="aspect-square w-40" />
           <div className="space-y-4">
             <div>
               <label className={`btn ${upload === "busy" ? "pointer-events-none opacity-50" : ""}`}>
@@ -261,7 +258,6 @@ export default function SpeciesForm({ action, species, cancelHref, labels, error
 
           <div>
             <p className="field-label">{labels.sources}</p>
-            <input type="hidden" name="sources" value={JSON.stringify(sources)} />
             <ul className="space-y-3">
               {sources.map((source, index) => {
                 const update = (patch: Partial<Source>) =>
@@ -332,7 +328,7 @@ export default function SpeciesForm({ action, species, cancelHref, labels, error
         <button type="submit" className="btn btn-primary" disabled={pending || upload === "busy"}>
           {pending ? labels.saving : labels.save}
         </button>
-        <Link href={cancelHref} className="btn btn-quiet">
+        <Link to={listHref} className="btn btn-quiet">
           {labels.cancel}
         </Link>
       </div>

@@ -1,9 +1,8 @@
-// Writes supabase/seed.sql from src/data/species.json.
-// Run with `npm run db:seed-sql` after editing the JSON file.
+// Writes supabase/seed.sql from src/data/species.ts.
+// Run with `npm run db:seed-sql` after editing that file.
 
-import { readFileSync, writeFileSync } from "node:fs";
-
-const species = JSON.parse(readFileSync(new URL("../src/data/species.json", import.meta.url), "utf8"));
+import { writeFileSync } from "node:fs";
+import { seedSpecies as species } from "../src/data/species.ts";
 
 const text = (value) => (value === null || value === undefined ? "null" : `'${String(value).replaceAll("'", "''")}'`);
 const textArray = (values) => (values.length ? `array[${values.map(text).join(", ")}]` : "'{}'");

@@ -1,10 +1,14 @@
-import Link from "next/link";
-import { format, getDictionary, localePath, type Locale } from "@/i18n";
-import { addressFor, displayUrl, formatPhone, getSiteSettings } from "@/lib/settings";
+import { Link } from "react-router-dom";
+import { format, localePath } from "@/i18n";
+import { useLang, useT } from "@/i18n/hooks";
+import { addressFor, displayUrl, formatPhone } from "@/lib/farm";
+import { useData } from "@/state/data";
 
-export default async function SiteFooter({ lang }: { lang: Locale }) {
-  const t = getDictionary(lang);
-  const contact = await getSiteSettings();
+export default function SiteFooter() {
+  const lang = useLang();
+  const t = useT();
+  const { settings: contact } = useData();
+
   const explore = [
     { href: "/collection", label: t.nav.collection },
     { href: "/collection?type=animal", label: t.common.animals },
@@ -26,7 +30,7 @@ export default async function SiteFooter({ lang }: { lang: Locale }) {
           <ul className="mt-4 space-y-2 text-[0.9375rem]">
             {explore.map((link) => (
               <li key={link.href}>
-                <Link href={localePath(lang, link.href)} className="text-muted transition-colors hover:text-ink">
+                <Link to={localePath(lang, link.href)} className="text-muted transition-colors hover:text-ink">
                   {link.label}
                 </Link>
               </li>
@@ -57,7 +61,7 @@ export default async function SiteFooter({ lang }: { lang: Locale }) {
       <div className="border-t border-line">
         <div className="shell flex flex-col gap-2 py-6 text-[0.8125rem] text-faint sm:flex-row sm:items-center sm:justify-between">
           <p>{format(t.footer.rights, { year: new Date().getFullYear() })}</p>
-          <Link href={localePath(lang, "/privacy")} className="transition-colors hover:text-ink">
+          <Link to={localePath(lang, "/privacy")} className="transition-colors hover:text-ink">
             {t.footer.privacy}
           </Link>
         </div>

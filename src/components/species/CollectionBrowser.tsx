@@ -1,8 +1,7 @@
-"use client";
-
-import { usePathname, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
-import { format, type Dictionary, type Locale } from "@/i18n";
+import { useSearchParams } from "react-router-dom";
+import { format } from "@/i18n";
+import { useLang, useT } from "@/i18n/hooks";
 import {
   isSortMode,
   isSpeciesType,
@@ -17,7 +16,7 @@ import {
 import { STATUS_CODES, type SpeciesCardData, type SpeciesType, type Status } from "@/lib/species/types";
 import SpeciesCard from "./SpeciesCard";
 
-export type Filters = {
+type Filters = {
   q: string;
   type: SpeciesType | "all";
   status: Status | "threatened" | "any";
@@ -25,16 +24,7 @@ export type Filters = {
   sort: SortMode;
 };
 
-export const DEFAULT_FILTERS: Filters = { q: "", type: "all", status: "any", tag: "", sort: "az" };
-
-type Labels = Dictionary["collection"] & { all: string; animals: string; plants: string };
-
-type SharedProps = {
-  species: SpeciesCardData[];
-  lang: Locale;
-  labels: Labels;
-  statusLabels: Dictionary["status"];
-};
+const DEFAULT_FILTERS: Filters = { q: "", type: "all", status: "any", tag: "", sort: "az" };
 
 function readFilters(params: URLSearchParams): Filters {
   const type = params.get("type");
@@ -49,32 +39,23 @@ function readFilters(params: URLSearchParams): Filters {
   };
 }
 
-function toQuery(filters: Filters): string {
+function toParams(filters: Filters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.type !== "all") params.set("type", filters.type);
   if (filters.status !== "any") params.set("status", filters.status);
   if (filters.tag) params.set("group", filters.tag);
   if (filters.sort !== "az") params.set("sort", filters.sort);
-  const query = params.toString();
-  return query ? `?${query}` : "";
+  return params;
 }
 
-/** Reads the filters from the URL and writes changes back, so a filtered view can be shared as a link. */
-export default function CollectionBrowser(props: SharedProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const filters = useMemo(() => readFilters(new URLSearchParams(searchParams)), [searchParams]);
-
-  const update = (next: Filters) => window.history.replaceState(null, "", pathname + toQuery(next));
-
-  return <CollectionView {...props} filters={filters} onChange={update} />;
-}
-
-/** `onChange` is absent while the page is still static HTML, before the browser has read the URL. */
-type ViewProps = SharedProps & { filters: Filters; onChange?: (next: Filters) => void };
-
-export function CollectionView({ species, lang, labels, statusLabels, filters, onChange }: ViewProps) {
+/** The searchable grid of species. Filters are kept in the address, so a filtered view can be shared as a link. */
+export default function CollectionBrowser({ species }: { species: SpeciesCardData[] }) {
+  const lang = useLang();
+  const t = useT();
+  const labels = t.collection;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filters = useMemo(() => readFilters(searchParams), [searchParams]);
   const tags = useMemo(() => listTags(species), [species]);
 
   const visible = useMemo(() => {
@@ -88,13 +69,14 @@ export function CollectionView({ species, lang, labels, statusLabels, filters, o
     return sortSpecies(searchSpecies(list, filters.q), filters.sort, lang);
   }, [species, filters, lang]);
 
-  const set = (patch: Partial<Filters>) => onChange?.({ ...filters, ...patch });
-  const isFiltered = JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTERS);
+  const update = (next: Filters) => setSearchParams(toParams(next), { replace: true, preventScrollReset: true });
+  const set = (patch: Partial<Filters>) => update({ ...filters, ...patch });
+  const isFiltered = toParams(filters).toString() !== "";
 
   const departments: { value: Filters["type"]; label: string }[] = [
-    { value: "all", label: labels.all },
-    { value: "animal", label: labels.animals },
-    { value: "plant", label: labels.plants },
+    { value: "all", label: t.common.all },
+    { value: "animal", label: t.common.animals },
+    { value: "plant", label: t.common.plants },
   ];
 
   return (
@@ -130,9 +112,7 @@ export function CollectionView({ species, lang, labels, statusLabels, filters, o
                   aria-pressed={active}
                   onClick={() => set({ type: department.value })}
                   className={`-ml-px min-h-11 flex-1 border px-4 text-[0.9375rem] first:ml-0 lg:flex-none ${
-                    active
-                      ? "relative border-ink bg-ink text-paper"
-                      : "border-line-strong bg-surface text-muted hover:text-ink"
+                    active ? "relative border-ink bg-ink text-paper" : "border-line-strong bg-surface text-muted hover:text-ink"
                   }`}
                 >
                   {department.label}
@@ -156,7 +136,7 @@ export function CollectionView({ species, lang, labels, statusLabels, filters, o
             <option value="threatened">{labels.statusThreatened}</option>
             {STATUS_CODES.map((code) => (
               <option key={code} value={code}>
-                {code} · {statusLabels[code]}
+                {code} · {t.status[code]}
               </option>
             ))}
           </select>
@@ -166,12 +146,7 @@ export function CollectionView({ species, lang, labels, statusLabels, filters, o
           <label htmlFor="collection-group" className="field-label">
             {labels.group}
           </label>
-          <select
-            id="collection-group"
-            className="input"
-            value={filters.tag}
-            onChange={(event) => set({ tag: event.target.value })}
-          >
+          <select id="collection-group" className="input" value={filters.tag} onChange={(event) => set({ tag: event.target.value })}>
             <option value="">{labels.groupAny}</option>
             {tags.map(({ tag, count }) => (
               <option key={tag} value={tag}>
@@ -201,7 +176,7 @@ export function CollectionView({ species, lang, labels, statusLabels, filters, o
       <div className="flex min-h-14 items-center justify-between gap-4 text-[0.875rem] text-muted">
         <p aria-live="polite">{format(labels.results, { shown: visible.length, total: species.length })}</p>
         {isFiltered && (
-          <button type="button" className="link" onClick={() => onChange?.(DEFAULT_FILTERS)}>
+          <button type="button" className="link" onClick={() => update(DEFAULT_FILTERS)}>
             {labels.clear}
           </button>
         )}
@@ -211,7 +186,7 @@ export function CollectionView({ species, lang, labels, statusLabels, filters, o
         <ul className="grid grid-cols-2 gap-x-6 gap-y-12 pt-4 md:grid-cols-3 md:gap-x-8 lg:grid-cols-4">
           {visible.map((sp, index) => (
             <li key={sp.id}>
-              <SpeciesCard species={sp} lang={lang} statusLabels={statusLabels} priority={index < 4} />
+              <SpeciesCard species={sp} priority={index < 4} />
             </li>
           ))}
         </ul>

@@ -1,27 +1,22 @@
-"use client";
-
-import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { localePath, type Locale } from "@/i18n";
-import { useSession } from "@/components/SessionProvider";
-
-type Props = {
-  speciesId: string;
-  lang: Locale;
-  labels: { save: string; saved: string; signInToSave: string };
-};
+import { useLocation, useNavigate } from "react-router-dom";
+import { localePath } from "@/i18n";
+import { useLang, useT } from "@/i18n/hooks";
+import { useSession } from "@/state/session";
 
 /** Saves a species to the member's list. Visitors who are not signed in are sent to sign in first. */
-export default function FavoriteButton({ speciesId, lang, labels }: Props) {
+export default function FavoriteButton({ speciesId }: { speciesId: string }) {
+  const lang = useLang();
+  const labels = useT().species;
   const { status, favorites, toggleFavorite } = useSession();
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [busy, setBusy] = useState(false);
   const saved = favorites.has(speciesId);
 
   async function onClick() {
     if (status !== "member") {
-      router.push(`${localePath(lang, "/login")}?next=${encodeURIComponent(pathname)}`);
+      navigate(`${localePath(lang, "/login")}?next=${encodeURIComponent(pathname)}`);
       return;
     }
     setBusy(true);

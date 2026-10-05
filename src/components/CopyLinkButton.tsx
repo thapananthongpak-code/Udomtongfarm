@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 
 export default function CopyLinkButton({ label, copiedLabel }: { label: string; copiedLabel: string }) {

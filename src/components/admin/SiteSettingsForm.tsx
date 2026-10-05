@@ -1,23 +1,16 @@
-"use client";
+import { useState } from "react";
+import { useT } from "@/i18n/hooks";
+import { saveSiteSettings, type SaveResult } from "@/lib/admin";
+import type { SiteSettings } from "@/lib/farm";
+import { useData } from "@/state/data";
 
-import { useActionState, useState } from "react";
-import type { SiteFormState } from "@/app/[lang]/admin/actions";
-import type { Dictionary } from "@/i18n";
-import type { SiteSettings } from "@/lib/settings";
-
-const IDLE: SiteFormState = { status: "idle" };
-
-type Props = {
-  action: (state: SiteFormState, formData: FormData) => Promise<SiteFormState>;
-  settings: SiteSettings;
-  labels: Dictionary["admin"]["siteForm"];
-  errors: Dictionary["admin"]["errors"];
-};
-
-// Fields are controlled so that nothing typed is lost when the server reports a problem.
-export default function SiteSettingsForm({ action, settings, labels, errors }: Props) {
-  const [state, formAction, pending] = useActionState(action, IDLE);
+export default function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
+  const t = useT().admin;
+  const labels = t.siteForm;
+  const { reload } = useData();
   const [values, setValues] = useState<SiteSettings>(settings);
+  const [result, setResult] = useState<SaveResult | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const fields: { name: keyof SiteSettings; label: string; hint?: string; type?: string; lang?: string }[] = [
     { name: "phone", label: labels.phone, hint: labels.phoneHint, type: "tel" },
@@ -27,21 +20,32 @@ export default function SiteSettingsForm({ action, settings, labels, errors }: P
     { name: "address_en", label: labels.addressEn, lang: "en" },
   ];
 
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    const outcome = await saveSiteSettings(values);
+    if (outcome.ok) await reload();
+    setResult(outcome);
+    setSaving(false);
+  }
+
+  const problems = result && !result.ok ? result.fields : undefined;
+
   return (
-    <form action={formAction} className="mt-10 max-w-xl space-y-6 border-t border-line pt-10" noValidate>
-      {state.status === "error" && state.code && (
+    <form onSubmit={submit} className="mt-10 max-w-xl space-y-6 border-t border-line pt-10" noValidate>
+      {result && !result.ok && (
         <p role="alert" className="notice notice-error">
-          {errors[state.code]}
+          {t.errors[result.code]}
         </p>
       )}
-      {state.status === "saved" && (
+      {result?.ok && (
         <p role="status" className="notice">
           {labels.saved}
         </p>
       )}
 
       {fields.map((field) => {
-        const problem = state.fields?.[field.name];
+        const problem = problems?.[field.name];
         return (
           <div key={field.name}>
             <label htmlFor={field.name} className="field-label">
@@ -49,7 +53,6 @@ export default function SiteSettingsForm({ action, settings, labels, errors }: P
             </label>
             <input
               id={field.name}
-              name={field.name}
               type={field.type ?? "text"}
               lang={field.lang}
               value={values[field.name]}
@@ -57,13 +60,13 @@ export default function SiteSettingsForm({ action, settings, labels, errors }: P
               aria-invalid={problem ? true : undefined}
               className="input"
             />
-            {problem ? <p className="field-error">{errors[problem]}</p> : field.hint && <p className="field-hint">{field.hint}</p>}
+            {problem ? <p className="field-error">{t.errors[problem]}</p> : field.hint && <p className="field-hint">{field.hint}</p>}
           </div>
         );
       })}
 
-      <button type="submit" className="btn btn-primary" disabled={pending}>
-        {pending ? labels.saving : labels.save}
+      <button type="submit" className="btn btn-primary" disabled={saving}>
+        {saving ? labels.saving : labels.save}
       </button>
     </form>
   );

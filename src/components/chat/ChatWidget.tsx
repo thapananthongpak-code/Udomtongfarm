@@ -1,23 +1,20 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
-import type { Dictionary, Locale } from "@/i18n";
+import type { Dictionary } from "@/i18n";
+import { useLang, useT } from "@/i18n/hooks";
+import { CHAT_LIMITS as limits } from "@/lib/chat-limits";
 
 type Message = { role: "user" | "assistant"; content: string };
 type ErrorCode = keyof Dictionary["chat"]["errors"];
-
-type Props = {
-  lang: Locale;
-  labels: Dictionary["chat"];
-  /** Longest message a visitor may send, and how much of the conversation goes with each request. */
-  limits: { messageLength: number; history: number };
-};
 
 const isErrorCode = (value: unknown, labels: Dictionary["chat"]): value is ErrorCode =>
   typeof value === "string" && value in labels.errors;
 
 /** A small chat window, opened from a button in the corner, for questions about the farm. */
-export default function ChatWidget({ lang, labels, limits }: Props) {
+export default function ChatWidget() {
+  const lang = useLang();
+  const labels = useT().chat;
+  // The button stays hidden until the server confirms the chat has an API key.
+  const [enabled, setEnabled] = useState(false);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
@@ -25,6 +22,19 @@ export default function ChatWidget({ lang, labels, limits }: Props) {
   const [error, setError] = useState<ErrorCode | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/chat")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body) => {
+        if (!cancelled) setEnabled(body?.enabled === true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Keep the newest text in view as the reply arrives.
   useEffect(() => {
@@ -98,6 +108,8 @@ export default function ChatWidget({ lang, labels, limits }: Props) {
       setBusy(false);
     }
   }
+
+  if (!enabled) return null;
 
   if (!open) {
     return (
