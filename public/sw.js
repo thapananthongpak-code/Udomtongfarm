@@ -1,35 +1,15 @@
-const CACHE = "udomtong-v1";
-const STATIC = ["/", "/encyclopedia", "/about", "/gallery", "/faq", "/contact", "/manifest.json"];
+// Earlier versions of this site installed a caching service worker.
+// This replacement removes it: it clears the old caches and unregisters itself.
+self.addEventListener("install", () => self.skipWaiting());
 
-self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(STATIC)).then(() => self.skipWaiting())
-  );
-});
-
-self.addEventListener("activate", e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
-  const url = new URL(e.request.url);
-  // Skip API calls — always network
-  if (url.pathname.startsWith("/api")) return;
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const net = fetch(e.request).then(res => {
-        if (res.ok && url.origin === location.origin) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return res;
-      });
-      return cached || net;
-    })
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+      await self.registration.unregister();
+      const windows = await self.clients.matchAll({ type: "window" });
+      windows.forEach((client) => client.navigate(client.url));
+    })(),
   );
 });
