@@ -403,7 +403,7 @@ const en = {
       {
         title: "The chat assistant",
         body: [
-          "The chat assistant is powered by Claude, an AI model made by Anthropic. The questions you type are sent to Anthropic so that an answer can be written. We do not save chat conversations on this site, and they disappear when you close or reload the page.",
+          "The chat assistant is powered by Gemini, an AI model made by Google. The questions you type are sent to Google so that an answer can be written. We do not save chat conversations on this site, and they disappear when you close or reload the page.",
           "Please do not type personal or sensitive information into the chat.",
         ],
       },

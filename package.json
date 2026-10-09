@@ -13,7 +13,7 @@
     "db:seed-sql": "node scripts/build-seed-sql.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.131.0",
+    "@google/genai": "^2.28.0",
     "@supabase/supabase-js": "^2.117.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
