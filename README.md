@@ -2,13 +2,13 @@
 
 The promotional website of Udomtong Farm, Chaiyaphum, Thailand: a bilingual (Thai and English) introduction to the farm and a collection of the rare animals and plants bred there.
 
-Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the Claude API through one small Vercel function.
+Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the Gemini API through one small Vercel function.
 
 ## What the site does
 
 - **Home, About and Visit pages** that present the farm: about 11 rai, free to enter, with activities, a four-room homestay and a café, plus hours, map, directions and FAQ.
 - **Collection** of every species, with search across Thai, English and scientific names, and filters for department, group and IUCN status. Each species has its own page.
-- **Chat assistant** that answers visitors' questions about the farm, its animals and plants, and how to get in touch. It runs on Claude Haiku.
+- **Chat assistant** that answers visitors' questions about the farm, its animals and plants, and how to get in touch. It runs on Google Gemini.
 - **Sign-in with Google** for visitors who want to keep a saved list of species. There are no passwords on this site, so none can be lost.
 - **Admin dashboard** for changing photographs and information: every species, and the farm's phone number, Facebook link, map link and address.
 - Thai and English versions of every page under `/th` and `/en`.
@@ -25,20 +25,20 @@ npm run lint
 
 The site runs without any configuration. It then shows the species in `src/data/species.ts`; sign-in, saved lists and the admin dashboard are switched off, and the chat button is hidden. Each part is switched on by its own settings, described below.
 
-Copy `.env.example` to `.env.local` for local settings. On Vercel, add the same values under **Settings → Environment Variables** and redeploy.
+Copy `.env.example` to `.env.local` for local settings. Real keys go in `.env.local` only: `.env.example` is a template that is published with the code. On Vercel, add the same values under **Settings → Environment Variables** and redeploy.
 
 ## Chat assistant
 
-1. Create an API key in the [Anthropic Console](https://console.anthropic.com/) under **API keys**.
-2. Set it as `ANTHROPIC_API_KEY`. The chat button then appears on every page.
+1. Create an API key in [Google AI Studio](https://aistudio.google.com/apikey).
+2. Set it as `GEMINI_API_KEY`. The chat button then appears on every page.
 
 The key is a secret. Never commit it, and never give it a name starting with `VITE_`: anything with that prefix is built into the pages and can be read by every visitor.
 
 The key is used only by `api/chat.ts`, which Vercel runs on its servers. `npm run dev` runs the same file locally, so the chat works there too. `npm run preview` only serves the built pages, so the chat button stays hidden in that mode.
 
-What the assistant knows is built in `api/_lib/knowledge.ts` from the same text the pages show: the farm story, activities, homestay, visiting details, FAQ, contact details and the species list. Updating those updates its answers. Its instructions are at the top of that file.
+What the assistant knows is built in `api/_lib/knowledge.ts` from the same text the pages show: the farm story, activities, homestay, visiting details, FAQ, contact details and the species list. Updating those updates its answers. Its instructions are at the top of that file. The model is named in `api/chat.ts`.
 
-Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap message length, conversation length and requests per visitor, but the per-visitor limit is kept in memory and is only a first line of defence. **Set a monthly spending limit in the Anthropic Console** so that misuse cannot run up a bill.
+Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap message length, conversation length and requests per visitor, but the per-visitor limit is kept in memory and is only a first line of defence. **Check the quota and billing settings for the key in Google AI Studio** so that misuse cannot run up a bill.
 
 ## Supabase (sign-in, saved lists, admin)
 

@@ -77,7 +77,7 @@ function chatApiInDev(): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   // Make the settings in .env.local visible to api/chat.ts when it runs inside the dev server.
-  for (const name of ["ANTHROPIC_API_KEY", "VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY"]) {
+  for (const name of ["GEMINI_API_KEY", "VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY"]) {
     if (env[name] && !process.env[name]) process.env[name] = env[name];
   }
   const siteUrl = (env.VITE_SITE_URL || "https://udomtongfarm.vercel.app").replace(/\/+$/, "");

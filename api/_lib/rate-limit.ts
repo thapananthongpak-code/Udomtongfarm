@@ -2,7 +2,7 @@ import { CHAT_LIMITS } from "../../src/lib/chat-limits.js";
 
 // Recent request times per visitor address. This lives in memory, so it is counted
 // separately on each server instance and resets when one restarts. It slows down
-// casual overuse; a spending limit on the Anthropic account is the real backstop.
+// casual overuse; a spending limit on the Google account is the real backstop.
 const recent = new Map<string, number[]>();
 
 export function isRateLimited(address: string, now = Date.now()): boolean {
