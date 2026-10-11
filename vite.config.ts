@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import { seedSpecies } from "./src/data/species";
 
-const STATIC_PATHS = ["", "/collection", "/about", "/visit", "/privacy"];
+const STATIC_PATHS = ["", "/collection", "/cafe", "/about", "/visit", "/privacy"];
 const LOCALES = ["th", "en"];
 
 /** Writes sitemap.xml and robots.txt into the build, listing every page in both languages. */

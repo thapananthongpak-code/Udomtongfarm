@@ -2,10 +2,12 @@
 // show, so updating the site's wording or the collection updates the assistant's answers.
 
 import { createClient } from "@supabase/supabase-js";
+import { seedMenu } from "../../src/data/menu.js";
 import { seedSpecies } from "../../src/data/species.js";
 import en from "../../src/i18n/dictionaries/en.js";
 import th from "../../src/i18n/dictionaries/th.js";
 import { DEFAULT_CONTACT, FOUNDER, SETTINGS_FIELDS, formatPhone, type SiteSettings } from "../../src/lib/farm.js";
+import { sortMenu, type MenuItem } from "../../src/lib/menu.js";
 import type { Species } from "../../src/lib/species/types.js";
 
 // The same public values the website uses. Vercel makes them available to this function too.
@@ -16,21 +18,23 @@ const supabase =
     ? createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } })
     : null;
 
-/** The published collection and contact details: from Supabase when connected, otherwise the bundled data. */
-async function loadFarmData(): Promise<{ species: Species[]; contact: SiteSettings }> {
-  if (!supabase) return { species: seedSpecies, contact: DEFAULT_CONTACT };
+/** The published collection, café menu and contact details: from Supabase when connected, otherwise the bundled data. */
+async function loadFarmData(): Promise<{ species: Species[]; menu: MenuItem[]; contact: SiteSettings }> {
+  if (!supabase) return { species: seedSpecies, menu: seedMenu, contact: DEFAULT_CONTACT };
 
-  const [species, settings] = await Promise.all([
+  const [species, menu, settings] = await Promise.all([
     supabase.from("species").select("*").eq("published", true),
+    supabase.from("menu_items").select("*").eq("published", true),
     supabase.from("site_settings").select(SETTINGS_FIELDS.join(",")).eq("id", 1).maybeSingle(),
   ]);
   return {
     species: species.error ? seedSpecies : (species.data as Species[]),
+    menu: menu.error ? seedMenu : (menu.data as MenuItem[]),
     contact: settings.error || !settings.data ? DEFAULT_CONTACT : (settings.data as unknown as SiteSettings),
   };
 }
 
-const INSTRUCTIONS = `You are the visitor assistant on the website of Udomtong Farm (ฟาร์มอุดมทอง), a farm in Chaiyaphum province, Thailand, that breeds rare animals and plants and is open to the public. People reach you through a small chat window on the site. Most are members of the public deciding whether to visit, or curious about an animal or plant kept at the farm.
+const INSTRUCTIONS = `You are the visitor assistant on the website of Udomtong Farm (อุดมทองฟาร์ม), a farm in Chaiyaphum province, Thailand, that breeds rare animals and plants and is open to the public. People reach you through a small chat window on the site. Most are members of the public deciding whether to visit, or curious about an animal or plant kept at the farm.
 
 How to answer:
 
@@ -38,7 +42,7 @@ Facts about the farm itself must come from the farm information below, which is 
 
 Entry to the farm is free, and for homestay guests the drinking water, breakfast and fishing are free. No other prices have been published, so do not describe anything else as free or quote a price for it. Rooms are booked by contacting the farm; you cannot take a booking yourself.
 
-The farm describes the café as something it will have. Do not say it is open now.
+The farm describes the café as something it will have. Do not say it is open now. The café menu below is a preview of what it plans to serve. Give the price of a drink only when the menu lists one; otherwise say that prices have not been published yet.
 
 For questions about the biology or care of a species in the list, use the species information below. You may add well-established general facts about that species when they help, but do not invent details about the individual animals or plants at this farm.
 
@@ -61,13 +65,18 @@ function speciesLine(sp: Species): string {
   ]);
 }
 
+function menuLine(item: MenuItem): string {
+  const price = item.price === null ? "price not published" : `${item.price} baht`;
+  return `- ${item.name_th} / ${item.name_en || item.name_th} (${item.category}; ${price})`;
+}
+
 /**
  * The part of the prompt that is the same for every visitor: the instructions and
  * everything the farm has published. Species are sorted so the text is identical
  * from one request to the next, which lets Gemini reuse it at a lower price.
  */
 export async function buildFarmKnowledge(): Promise<{ prompt: string; species: Species[] }> {
-  const { species, contact } = await loadFarmData();
+  const { species, menu, contact } = await loadFarmData();
   const sorted = [...species].sort((a, b) => a.id.localeCompare(b.id));
   const animals = sorted.filter((sp) => sp.type === "animal");
   const plants = sorted.filter((sp) => sp.type === "plant");
@@ -79,7 +88,6 @@ export async function buildFarmKnowledge(): Promise<{ prompt: string; species: S
     "<about>",
     ...th.about.story,
     ...en.about.story,
-    `Farm area: ${en.farm.areaFull} / ${th.farm.areaFull}`,
     `Owner and founder: ${FOUNDER.name.th} / ${FOUNDER.name.en}`,
     ...th.farm.offers.map((offer) => `${offer.title}: ${offer.body}`),
     ...en.farm.offers.map((offer) => `${offer.title}: ${offer.body}`),
@@ -94,6 +102,10 @@ export async function buildFarmKnowledge(): Promise<{ prompt: string; species: S
     ...th.farm.stay.map((row) => `${row.label}: ${row.value}`),
     ...en.farm.stay.map((row) => `${row.label}: ${row.value}`),
     "</homestay>",
+    "",
+    "<cafe_menu>",
+    ...sortMenu(menu).map(menuLine),
+    "</cafe_menu>",
     "",
     "<visiting>",
     `Admission: ${en.visit.admissionValue} / ${th.visit.admissionValue}`,

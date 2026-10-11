@@ -14,8 +14,8 @@ export default function About() {
   usePageMeta(t.nav.about, t.meta.about);
 
   const numbers = [
-    { value: t.farm.areaValue, label: t.farm.areaLabel },
     { value: t.farm.admissionValue, label: t.farm.admissionLabel },
+    { value: t.farm.roomsValue, label: t.farm.roomsLabel },
     // The count is left out until the collection has been read.
     ...(status === "ready" ? [{ value: String(species.length), label: t.home.statSpecies }] : []),
   ];

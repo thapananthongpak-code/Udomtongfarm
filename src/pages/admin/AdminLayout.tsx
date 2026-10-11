@@ -22,6 +22,7 @@ export default function AdminLayout() {
   const links = [
     { href: "/admin", label: t.overview },
     { href: "/admin/species", label: t.species },
+    { href: "/admin/menu", label: t.menu },
     { href: "/admin/site", label: t.site },
   ];
 

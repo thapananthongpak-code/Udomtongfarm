@@ -13,6 +13,7 @@ export default function SiteFooter() {
     { href: "/collection", label: t.nav.collection },
     { href: "/collection?type=animal", label: t.common.animals },
     { href: "/collection?type=plant", label: t.common.plants },
+    { href: "/cafe", label: t.nav.cafe },
     { href: "/about", label: t.nav.about },
     { href: "/visit", label: t.nav.visit },
   ];

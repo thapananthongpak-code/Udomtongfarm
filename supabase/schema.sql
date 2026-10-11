@@ -39,6 +39,22 @@ create table if not exists public.favorites (
   primary key (user_id, species_id)
 );
 
+-- The café menu. Price is in whole baht and stays empty until the café has set one.
+create table if not exists public.menu_items (
+  id uuid primary key default gen_random_uuid(),
+  category text not null check (category in ('coffee', 'cocoa', 'tea', 'other')),
+  name_th text not null,
+  name_en text not null default '',
+  description_th text not null default '',
+  description_en text not null default '',
+  price integer check (price >= 0),
+  image text not null default '',
+  sort_order integer not null default 0,
+  published boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Contact details shown on the site. There is always exactly one row.
 create table if not exists public.site_settings (
   id integer primary key default 1 check (id = 1),
@@ -54,7 +70,7 @@ insert into public.site_settings (id, phone, facebook_url, map_url, address_th, 
 values (
   1,
   '0811733620',
-  'https://www.facebook.com/Udomtongfarm',
+  'https://www.facebook.com/profile.php?id=61584861394833',
   'https://maps.app.goo.gl/wZU3hkUTgYLfEhK38',
   'ตำบลห้วยบง อำเภอเมืองชัยภูมิ จังหวัดชัยภูมิ 36000',
   'Huai Bong, Mueang Chaiyaphum, Chaiyaphum 36000, Thailand'
@@ -88,6 +104,11 @@ $$;
 drop trigger if exists species_touch_updated_at on public.species;
 create trigger species_touch_updated_at
   before update on public.species
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists menu_items_touch_updated_at on public.menu_items;
+create trigger menu_items_touch_updated_at
+  before update on public.menu_items
   for each row execute function public.touch_updated_at();
 
 drop trigger if exists site_settings_touch_updated_at on public.site_settings;
@@ -144,6 +165,7 @@ alter table public.species enable row level security;
 alter table public.profiles enable row level security;
 alter table public.favorites enable row level security;
 alter table public.site_settings enable row level security;
+alter table public.menu_items enable row level security;
 
 grant select on public.species to anon, authenticated;
 grant insert, update, delete on public.species to authenticated;
@@ -152,6 +174,8 @@ grant select on public.profiles to authenticated;
 revoke update on public.profiles from anon, authenticated;
 grant update (display_name) on public.profiles to authenticated;
 grant select, insert, delete on public.favorites to authenticated;
+grant select on public.menu_items to anon, authenticated;
+grant insert, update, delete on public.menu_items to authenticated;
 grant select on public.site_settings to anon, authenticated;
 grant update on public.site_settings to authenticated;
 
@@ -202,6 +226,27 @@ create policy "Members remove from their saved list" on public.favorites
   for delete to authenticated
   using (user_id = (select auth.uid()));
 
+drop policy if exists "Published menu items are public" on public.menu_items;
+create policy "Published menu items are public" on public.menu_items
+  for select to anon, authenticated
+  using (published or public.is_admin());
+
+drop policy if exists "Admins add menu items" on public.menu_items;
+create policy "Admins add menu items" on public.menu_items
+  for insert to authenticated
+  with check (public.is_admin());
+
+drop policy if exists "Admins edit menu items" on public.menu_items;
+create policy "Admins edit menu items" on public.menu_items
+  for update to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Admins delete menu items" on public.menu_items;
+create policy "Admins delete menu items" on public.menu_items
+  for delete to authenticated
+  using (public.is_admin());
+
 drop policy if exists "Site settings are public" on public.site_settings;
 create policy "Site settings are public" on public.site_settings
   for select to anon, authenticated
@@ -214,6 +259,7 @@ create policy "Admins edit site settings" on public.site_settings
   with check (public.is_admin());
 
 -- ── Photo storage ────────────────────────────────────────────
+-- One bucket holds every photograph. Café menu photos are kept under menu/ inside it.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('species', 'species', true, 5242880, array['image/jpeg', 'image/png', 'image/webp'])

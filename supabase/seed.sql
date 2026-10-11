@@ -38,3 +38,25 @@ values
   ('kratom', 'plant', 'ต้นกระท่อม', 'Kratom', 'Mitragyna speciosa', null, 'พืชพื้นถิ่นวงศ์กาแฟ กฎหมายไทยปลดล็อกปี 2564 อยู่ระหว่างศึกษาวิจัยทางการแพทย์', 'Southeast Asian coffee-family plant; decriminalized in Thailand in 2021; under medical research', 'กระท่อมเป็นพืชในวงศ์กาแฟ (Rubiaceae) สูง 4–16 เมตร มีถิ่นกำเนิดในเอเชียตะวันออกเฉียงใต้ โดยเฉพาะไทย มาเลเซีย และอินโดนีเซีย ใบรูปไข่ขนาดใหญ่ 14–20 ซม. ออกดอกสีเหลืองเป็นช่อทรงกลม สารออกฤทธิ์หลักในใบ คือ Mitragynine และ 7-Hydroxymitragynine ซึ่งมีฤทธิ์ต่อตัวรับ Opioid ในสมอง ในปริมาณน้อยช่วยกระตุ้น ในปริมาณมากมีฤทธิ์สงบประสาท ใช้งานดั้งเดิมในชุมชนชนบทเพื่อบรรเทาอาการปวดและเพิ่มความอดทนในการทำงาน ประเทศไทยปลดล็อกกระท่อมออกจากบัญชียาเสพติดในปี พ.ศ. 2564 ปัจจุบันอยู่ระหว่างการศึกษาเพื่อใช้ประโยชน์ทางการแพทย์และพัฒนาเป็นสมุนไพรเศรษฐกิจ การค้าและการใช้งานมีข้อกำกับแตกต่างกันในแต่ละประเทศ', 'Kratom is a tropical tree in the coffee family (Rubiaceae), native to Southeast Asia — especially Thailand, Malaysia, and Indonesia — growing 4–16 m tall. Large oval leaves 14–20 cm; yellow globular flower clusters. Active leaf compounds — Mitragynine and 7-Hydroxymitragynine — act on opioid receptors: stimulating at low doses, sedating at high doses. Traditionally used in rural communities for pain relief and work endurance. Thailand decriminalized Kratom in 2021 (B.E. 2564); it is currently under research for medical applications and development as an economic herb. Trade and use regulations vary significantly by country — check local laws before any use.', '/images/plants/kratom.jpg', array['Botanical'], '[{"title":"Wikipedia - Mitragyna speciosa","url":"https://en.wikipedia.org/wiki/Mitragyna_speciosa"}]'::jsonb, false, true),
   ('flame-tree', 'plant', 'ต้นทองกวาว', 'Flame-of-the-forest', 'Butea monosperma', null, 'ดอกสีส้ม-แดงเด่น ออกดอกตอนผลัดใบ สีย้อมธรรมชาติ ยาอายุรเวท', 'Brilliant orange-red flowers bloom on bare branches; natural dye source and Ayurvedic medicine', 'ทองกวาวเป็นไม้ยืนต้นขนาดกลางในวงศ์ถั่ว (Fabaceae) สูง 10–15 เมตร มีถิ่นกำเนิดในเอเชียใต้ ตั้งแต่อินเดีย เนปาล ไปจนถึงเอเชียตะวันออกเฉียงใต้รวมถึงไทย ออกดอกสีส้ม-แดงสดเป็นช่อขนาดใหญ่ในช่วงมกราคม-มีนาคม ขณะที่ต้นยังไม่มีใบหรือผลัดใบ ทำให้ดูโดดเด่นราวกับต้นไม้กำลังลุกไหม้ จึงได้ชื่อว่า Flame-of-the-forest ใบประกอบแบบขนนก ใบย่อย 3 ใบ รูปกลม-รี ฝักแบน ยาว 15–20 ซม. มีเมล็ดเดียว ดอกสีส้มใช้สกัดสีย้อมธรรมชาติสีเหลือง-ส้มสำหรับเทศกาลโฮลีในอินเดีย เปลือก ราก ดอก และเมล็ดมีสรรพคุณทางยาในตำราอายุรเวทและตำรายาไทย รักษาแผล ลดอาการอักเสบ และบำรุงร่างกาย เนื้อไม้เบา ใช้งานทั่วไป', 'Flame-of-the-forest (Thongkwao) is a medium deciduous tree (Fabaceae), native to South Asia from India and Nepal to Southeast Asia including Thailand, growing 10–15 m tall. Famous for its spectacular clusters of brilliant orange-red flowers that bloom January–March while the tree is entirely leafless — creating a dramatic flaming appearance that gives the tree its common name. Trifoliate pinnate leaves; flat pods 15–20 cm with a single seed. Orange flowers yield a yellow-orange natural dye used in India''s Holi festival. Bark, roots, flowers, and seeds are used in Ayurvedic and Thai traditional medicine for wound healing, reducing inflammation, and as a tonic. Lightweight wood has general utility applications.', '/images/plants/thongkwao.jpg', array['Ornamental'], '[{"title":"Wikipedia - Butea monosperma","url":"https://en.wikipedia.org/wiki/Butea_monosperma"}]'::jsonb, false, true)
 on conflict (id) do nothing;
+
+-- Loads the sample café menu (12 items), only while the menu is still empty.
+-- Once the café has entered its own menu, running this again adds nothing.
+
+insert into public.menu_items (category, name_th, name_en, description_th, description_en, sort_order)
+select *
+from (
+  values
+    ('coffee', 'อเมริกาโน่', 'Americano', 'กาแฟดำ ร้อนหรือเย็น', 'Black coffee, hot or iced', 1),
+    ('coffee', 'ลาเต้', 'Latte', 'เอสเปรสโซกับนมสด', 'Espresso with fresh milk', 2),
+    ('coffee', 'คาปูชิโน่', 'Cappuccino', 'เอสเปรสโซ นมสด และฟองนม', 'Espresso, milk and milk foam', 3),
+    ('coffee', 'มอคค่า', 'Mocha', 'กาแฟผสมโกโก้และนมสด', 'Coffee with cocoa and milk', 4),
+    ('cocoa', 'โกโก้ร้อน', 'Hot cocoa', 'โกโก้เข้มข้นกับนมสด', 'Rich cocoa with fresh milk', 1),
+    ('cocoa', 'โกโก้เย็น', 'Iced cocoa', 'โกโก้เข้มข้นใส่น้ำแข็ง', 'Rich cocoa over ice', 2),
+    ('cocoa', 'โกโก้ปั่น', 'Cocoa frappé', 'โกโก้ปั่นกับน้ำแข็ง', 'Cocoa blended with ice', 3),
+    ('tea', 'ชาไทย', 'Thai tea', 'ชาไทยใส่นม', 'Thai tea with milk', 1),
+    ('tea', 'ชาเขียวนม', 'Green tea latte', 'ชาเขียวกับนมสด', 'Green tea with fresh milk', 2),
+    ('tea', 'ชามะนาว', 'Lemon tea', 'ชาดำกับน้ำมะนาว', 'Black tea with lime juice', 3),
+    ('other', 'นมสด', 'Fresh milk', 'ร้อน เย็น หรือปั่น', 'Hot, iced or blended', 1),
+    ('other', 'น้ำผึ้งมะนาวโซดา', 'Honey lemon soda', 'น้ำผึ้ง มะนาว และโซดา', 'Honey, lime and soda', 2)
+) as sample (category, name_th, name_en, description_th, description_en, sort_order)
+where not exists (select 1 from public.menu_items);

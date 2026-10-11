@@ -6,11 +6,12 @@ Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the G
 
 ## What the site does
 
-- **Home, About and Visit pages** that present the farm: about 11 rai, free to enter, with activities, a four-room homestay and a café, plus hours, map, directions and FAQ.
+- **Home, About and Visit pages** that present the farm: free to enter, with activities, a four-room homestay and a café, plus hours, map, directions and FAQ.
+- **Café page** with the drinks menu, grouped into coffee, cocoa, tea and other drinks.
 - **Collection** of every species, with search across Thai, English and scientific names, and filters for department, group and IUCN status. Each species has its own page.
 - **Chat assistant** that answers visitors' questions about the farm, its animals and plants, and how to get in touch. It runs on Google Gemini.
 - **Sign-in with Google** for visitors who want to keep a saved list of species. There are no passwords on this site, so none can be lost.
-- **Admin dashboard** for changing photographs and information: every species, and the farm's phone number, Facebook link, map link and address.
+- **Admin dashboard** for changing photographs and information: every species, the café menu, and the farm's phone number, Facebook link, map link and address.
 - Thai and English versions of every page under `/th` and `/en`.
 
 ## Getting started
@@ -23,7 +24,7 @@ npm run preview    # serve the built site locally
 npm run lint
 ```
 
-The site runs without any configuration. It then shows the species in `src/data/species.ts`; sign-in, saved lists and the admin dashboard are switched off, and the chat button is hidden. Each part is switched on by its own settings, described below.
+The site runs without any configuration. It then shows the species in `src/data/species.ts` and the sample menu in `src/data/menu.ts`; sign-in, saved lists and the admin dashboard are switched off, and the chat button is hidden. Each part is switched on by its own settings, described below.
 
 Copy `.env.example` to `.env.local` for local settings. Real keys go in `.env.local` only: `.env.example` is a template that is published with the code. On Vercel, add the same values under **Settings → Environment Variables** and redeploy.
 
@@ -43,7 +44,7 @@ Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap mess
 ## Supabase (sign-in, saved lists, admin)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. In the project's **SQL Editor**, run `supabase/schema.sql`, then `supabase/seed.sql`. The first creates the tables, access rules and photo storage. The second loads the starting collection.
+2. In the project's **SQL Editor**, run `supabase/schema.sql`, then `supabase/seed.sql`. The first creates the tables, access rules and photo storage. The second loads the starting collection and a sample café menu. Both are safe to run again after an update to this code: existing data is kept.
 3. Set these from **Project Settings → API**:
 
    ```ini
@@ -68,13 +69,16 @@ Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap mess
 | What | Where |
 | --- | --- |
 | Species information and photographs | Admin dashboard → Animals and plants |
+| Café menu: drinks, prices and photographs | Admin dashboard → Café menu |
 | Phone, Facebook link, map link, address | Admin dashboard → Farm details |
 | Farm story, activities, homestay and café text, hours, FAQ, all interface text | `src/i18n/dictionaries/th.ts` and `en.ts` |
 | Founder profile | `src/lib/farm.ts` |
 | Thai names for groups | `TAG_TH` in `src/lib/species/helpers.ts` |
 | Colours and type | `src/index.css` |
 
-Before Supabase is connected, species live in `src/data/species.ts` and contact details in `src/lib/farm.ts`. After editing the species file, run `npm run db:seed-sql` to regenerate `supabase/seed.sql`.
+Before Supabase is connected, species live in `src/data/species.ts`, the sample café menu in `src/data/menu.ts`, and contact details in `src/lib/farm.ts`. After editing the species or menu file, run `npm run db:seed-sql` to regenerate `supabase/seed.sql`.
+
+The note at the top of the Café page, which says the café is getting ready to open, is `cafe.notice` in the two dictionary files.
 
 ## Project structure
 

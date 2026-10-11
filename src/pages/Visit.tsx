@@ -24,8 +24,6 @@ export default function Visit() {
             {t.visit.hoursValue}
             <span className="block text-muted">{t.visit.hoursNote}</span>
           </dd>
-          <dt>{t.visit.area}</dt>
-          <dd>{t.farm.areaFull}</dd>
           <dt>{t.visit.onSite}</dt>
           <dd>
             {t.visit.onSiteValue}
