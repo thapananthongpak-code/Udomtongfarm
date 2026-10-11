@@ -192,6 +192,7 @@ const en = {
     phone: "Phone",
     phoneHours: "Daily, 08:00 to 18:00",
     facebook: "Facebook",
+    openFacebook: "Open the Facebook page",
     facebookNote: "News and updates from the farm",
     openMaps: "Open in Google Maps",
     mapTitle: "Map of Udomtong Farm",

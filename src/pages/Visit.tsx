@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import PageIntro from "@/components/PageIntro";
 import { useLang, useT } from "@/i18n/hooks";
-import { MAP_EMBED_URL, addressFor, displayUrl, formatPhone } from "@/lib/farm";
+import { MAP_EMBED_URL, addressFor, formatPhone } from "@/lib/farm";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { useData } from "@/state/data";
 
@@ -40,8 +40,8 @@ export default function Visit() {
             <>
               <dt>{t.visit.facebook}</dt>
               <dd>
-                <a href={contact.facebook_url} target="_blank" rel="noreferrer" className="link break-all">
-                  {displayUrl(contact.facebook_url)}
+                <a href={contact.facebook_url} target="_blank" rel="noreferrer" className="link">
+                  {t.visit.openFacebook}
                 </a>
                 <span className="block text-muted">{t.visit.facebookNote}</span>
               </dd>

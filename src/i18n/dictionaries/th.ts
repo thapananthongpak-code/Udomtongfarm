@@ -193,6 +193,7 @@ const th: Dictionary = {
     phone: "โทรศัพท์",
     phoneHours: "ทุกวัน 08:00 ถึง 18:00 น.",
     facebook: "Facebook",
+    openFacebook: "เปิดเพจ Facebook",
     facebookNote: "ติดตามข่าวสารและอัปเดตจากฟาร์ม",
     openMaps: "เปิดใน Google Maps",
     mapTitle: "แผนที่อุดมทองฟาร์ม",
