@@ -9,7 +9,7 @@ import type { Bilingual, Locale } from "../i18n/config.js";
  */
 export const DEFAULT_CONTACT = {
   phone: "0811733620",
-  facebook_url: "https://www.facebook.com/Udomtongfarm",
+  facebook_url: "https://www.facebook.com/profile.php?id=61584861394833",
   map_url: "https://maps.app.goo.gl/wZU3hkUTgYLfEhK38",
   address_th: "ตำบลห้วยบง อำเภอเมืองชัยภูมิ จังหวัดชัยภูมิ 36000",
   address_en: "Huai Bong, Mueang Chaiyaphum, Chaiyaphum 36000, Thailand",
@@ -48,5 +48,5 @@ export function formatPhone(phone: string): string {
   return phone;
 }
 
-/** A link without its protocol, for display: "facebook.com/Udomtongfarm". */
+/** A link without its protocol, for display: "facebook.com/profile.php?id=61584861394833". */
 export const displayUrl = (url: string) => url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/+$/, "");

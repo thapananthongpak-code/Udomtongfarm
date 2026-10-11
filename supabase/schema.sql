@@ -70,7 +70,7 @@ insert into public.site_settings (id, phone, facebook_url, map_url, address_th, 
 values (
   1,
   '0811733620',
-  'https://www.facebook.com/Udomtongfarm',
+  'https://www.facebook.com/profile.php?id=61584861394833',
   'https://maps.app.goo.gl/wZU3hkUTgYLfEhK38',
   'ตำบลห้วยบง อำเภอเมืองชัยภูมิ จังหวัดชัยภูมิ 36000',
   'Huai Bong, Mueang Chaiyaphum, Chaiyaphum 36000, Thailand'
