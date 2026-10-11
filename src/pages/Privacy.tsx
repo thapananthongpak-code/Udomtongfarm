@@ -1,6 +1,6 @@
 import PageIntro from "@/components/PageIntro";
 import { useT } from "@/i18n/hooks";
-import { displayUrl, formatPhone } from "@/lib/farm";
+import { formatPhone } from "@/lib/farm";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { useData } from "@/state/data";
 
@@ -32,7 +32,7 @@ export default function Privacy() {
               <>
                 <span className="mx-3 text-faint">·</span>
                 <a href={contact.facebook_url} target="_blank" rel="noreferrer" className="link">
-                  {displayUrl(contact.facebook_url)}
+                  {t.visit.facebook}
                 </a>
               </>
             )}

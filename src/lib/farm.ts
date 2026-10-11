@@ -47,6 +47,3 @@ export function formatPhone(phone: string): string {
   if (digits.length === 9) return `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5)}`;
   return phone;
 }
-
-/** A link without its protocol, for display: "facebook.com/profile.php?id=61584861394833". */
-export const displayUrl = (url: string) => url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/+$/, "");

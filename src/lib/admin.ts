@@ -187,6 +187,20 @@ export async function deleteMenuItem(id: string): Promise<boolean> {
 
 const link = text(500).refine((value) => value === "" || /^https:\/\/\S+$/.test(value));
 
+/**
+ * A link copied from Facebook carries language and tracking parameters.
+ * Only `id` is part of a page's address, so the rest is dropped before saving.
+ */
+function tidyFacebookUrl(value: string): string {
+  if (!URL.canParse(value)) return value;
+  const url = new URL(value);
+  if (!/(^|\.)facebook\.com$/.test(url.hostname)) return value;
+  const id = url.searchParams.get("id");
+  url.search = id ? `?id=${encodeURIComponent(id)}` : "";
+  url.hash = "";
+  return url.toString();
+}
+
 const siteSchema = z.object({
   phone: text(20).regex(/^\d{9,10}$/),
   facebook_url: link,
@@ -205,7 +219,8 @@ export async function saveSiteSettings(values: SiteSettings): Promise<SaveResult
   }
 
   // Asking for the row back shows whether the update was allowed: a non-admin updates nothing.
-  const { data, error } = await supabase.from("site_settings").update(parsed.data).eq("id", 1).select("id");
+  const row = { ...parsed.data, facebook_url: tidyFacebookUrl(parsed.data.facebook_url) };
+  const { data, error } = await supabase.from("site_settings").update(row).eq("id", 1).select("id");
   if (error) return { ok: false, code: "unknown" };
   if (data.length === 0) return { ok: false, code: "forbidden" };
   return { ok: true };

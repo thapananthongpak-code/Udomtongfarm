@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { format, localePath } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
-import { addressFor, displayUrl, formatPhone } from "@/lib/farm";
+import { addressFor, formatPhone } from "@/lib/farm";
 import { useData } from "@/state/data";
 
 export default function SiteFooter() {
@@ -51,7 +51,7 @@ export default function SiteFooter() {
             {contact.facebook_url && (
               <p>
                 <a href={contact.facebook_url} target="_blank" rel="noreferrer" className="transition-colors hover:text-ink">
-                  {displayUrl(contact.facebook_url)}
+                  {t.visit.facebook}
                 </a>
               </p>
             )}
