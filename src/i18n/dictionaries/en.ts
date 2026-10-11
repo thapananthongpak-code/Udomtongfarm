@@ -8,6 +8,7 @@ const en = {
 
   nav: {
     collection: "Collection",
+    cafe: "Café",
     about: "About",
     visit: "Visit",
     signIn: "Sign in",
@@ -42,9 +43,8 @@ const en = {
 
   /** Facts about the farm, quoted on several pages and by the chat assistant. */
   farm: {
-    areaValue: "11",
-    areaLabel: "Rai of farmland, approximately",
-    areaFull: "About 11 rai (roughly 1.8 hectares)",
+    roomsValue: "4",
+    roomsLabel: "Homestay rooms",
     admissionValue: "Free",
     admissionLabel: "Admission",
     offerTitle: "What you will find",
@@ -84,7 +84,7 @@ const en = {
 
   home: {
     title: "A new landmark in Chaiyaphum, home to rare animals and plants.",
-    lede: "Udomtong Farm grew out of the dedication and passion of Mr. Terawut Thongpak: about 11 rai set aside for breeding animals and plants, and open to visitors free of charge.",
+    lede: "Udomtong Farm grew out of the dedication and passion of Mr. Terawut Thongpak: a place set aside for breeding animals and plants, and open to visitors free of charge.",
     browse: "Explore the collection",
     visit: "Plan a visit",
     onView: "From the collection",
@@ -148,13 +148,22 @@ const en = {
     photoNote: "Photograph for identification.",
   },
 
+  cafe: {
+    eyebrow: "Café",
+    title: "The café menu",
+    lede: "Coffee, cocoa and tea for visitors to the farm.",
+    notice: "The café is getting ready to open. This is a preview of the menu: photographs of the drinks and prices will be added later.",
+    categories: { coffee: "Coffee", cocoa: "Cocoa", tea: "Tea", other: "Other drinks" },
+    empty: "The menu is being prepared.",
+  },
+
   about: {
     eyebrow: "About",
     title: "Udomtong Farm",
     lede: "A farm for breeding animals and plants, and a new landmark for Chaiyaphum.",
     storyTitle: "How the farm began",
     story: [
-      "Udomtong Farm grew out of the dedication and passion of Mr. Terawut Thongpak, who wanted a place to breed animals and plants. It covers about 11 rai in Chaiyaphum province.",
+      "Udomtong Farm grew out of the dedication and passion of Mr. Terawut Thongpak, who wanted a place to breed animals and plants in Chaiyaphum province.",
       "The farm is open to visitors free of charge, as a new landmark for Chaiyaphum. Visitors can ride an ATV around the farm, feed animals such as the peacocks and swans, and collect hens' eggs. The homestay has four rooms, and a café on the farm will serve drinks.",
     ],
     valuesTitle: "Three commitments",
@@ -176,7 +185,6 @@ const en = {
     hoursNote: "By appointment",
     admission: "Admission",
     admissionValue: "Free",
-    area: "Farm area",
     onSite: "On the farm",
     onSiteValue: "Activities, a four-room homestay and a café",
     onSiteNote: "Details are further down this page",
@@ -219,7 +227,7 @@ const en = {
       },
       {
         q: "Is there somewhere to get a drink?",
-        a: "The farm will have a café serving drinks to visitors.",
+        a: "The farm will have a café serving drinks to visitors. A preview of the menu is on the Café page.",
       },
       {
         q: "Can I bring students or a group?",
@@ -279,9 +287,11 @@ const en = {
     title: "Dashboard",
     overview: "Dashboard",
     species: "Animals and plants",
+    menu: "Café menu",
     site: "Farm details",
     backToSite: "Back to the site",
     speciesCard: "Change photographs and information for each animal and plant.",
+    menuCard: "Add drinks to the café menu, and change their names, prices and photographs.",
     siteCard: "Change the phone number, Facebook link, map link and address.",
     manage: "Manage",
     total: "Species",
@@ -299,6 +309,12 @@ const en = {
     edit: "Edit",
     view: "View",
     empty: "There are no species yet.",
+    newMenuItem: "Add a menu item",
+    editMenuItem: "Edit menu item",
+    menuEmpty: "There are no menu items yet.",
+    category: "Category",
+    price: "Price",
+    noPrice: "Not set",
     form: {
       identity: "Identity",
       id: "Web address name",
@@ -337,6 +353,21 @@ const en = {
       delete: "Delete this species",
       deleteConfirm: "Delete this species permanently?",
     },
+    menuForm: {
+      details: "Menu item",
+      category: "Category",
+      nameEnHint: "Optional. The Thai name is shown when this is empty.",
+      descriptionTh: "Thai description",
+      descriptionEn: "English description",
+      descriptionHint: "One short line, shown under the name",
+      price: "Price in baht",
+      priceHint: "A whole number, for example 60. Leave empty to show no price.",
+      sortOrder: "Position",
+      sortOrderHint: "Lower numbers are shown first within the category.",
+      published: "Shown on the café page",
+      delete: "Delete this menu item",
+      deleteConfirm: "Delete this menu item permanently?",
+    },
     siteForm: {
       title: "Farm details",
       lede: "These details appear in the footer, on the Visit page and in the chat assistant's answers.",
@@ -360,6 +391,7 @@ const en = {
       url: "Enter a full link starting with https://",
       image: "Upload a photo, or enter a path that starts with /images/",
       phone: "Enter a phone number of 9 or 10 digits.",
+      number: "Enter a whole number, without decimals or symbols.",
       forbidden: "You do not have permission to do this.",
       unknown: "Something went wrong. Please try again.",
     },
@@ -451,9 +483,10 @@ const en = {
   },
 
   meta: {
-    home: "Udomtong Farm in Chaiyaphum, Thailand: about 11 rai of rare animals and plants, free to visit, with ATV rides, animal feeding, a four-room homestay and a café.",
+    home: "Udomtong Farm in Chaiyaphum, Thailand: rare animals and plants, free to visit, with ATV rides, animal feeding, a four-room homestay and a café.",
     collection: "Search every animal and plant at Udomtong Farm by name, department, group and conservation status.",
     about: "The story of Udomtong Farm, created by Mr. Terawut Thongpak to breed animals and plants in Chaiyaphum.",
+    cafe: "A preview of the café menu at Udomtong Farm, Chaiyaphum: coffee, cocoa and tea.",
     visit: "Opening hours, directions, map and contact details for Udomtong Farm, Chaiyaphum. Entry is free.",
     privacy: "How Udomtong Farm handles the personal data of people who sign in or use the chat assistant.",
   },

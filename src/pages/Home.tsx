@@ -31,10 +31,10 @@ export default function Home() {
   );
 
   const stats: { value: string | number; label: string }[] = [
-    { value: t.farm.areaValue, label: t.farm.areaLabel },
     { value: t.farm.admissionValue, label: t.farm.admissionLabel },
     { value: all.length, label: t.home.statSpecies },
     { value: threatened.length, label: t.home.statThreatened },
+    { value: t.farm.roomsValue, label: t.farm.roomsLabel },
   ];
 
   const departments = [

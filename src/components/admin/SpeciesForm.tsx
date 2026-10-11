@@ -2,9 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SpeciesImage from "@/components/species/SpeciesImage";
 import { useT } from "@/i18n/hooks";
-import { saveSpecies, type SaveResult, type SpeciesFormValues as Values } from "@/lib/admin";
+import { saveSpecies, uploadPhoto, type SaveResult, type SpeciesFormValues as Values } from "@/lib/admin";
 import { STATUS_CODES, type Source, type Species } from "@/lib/species/types";
-import { SPECIES_BUCKET, supabase } from "@/lib/supabase";
 import { useData } from "@/state/data";
 
 type Props = {
@@ -13,8 +12,6 @@ type Props = {
   /** Where to go after saving or cancelling. */
   listHref: string;
 };
-
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 const initialValues = (sp: Species | null): Values => ({
   id: sp?.id ?? "",
@@ -71,21 +68,10 @@ export default function SpeciesForm({ species, listHref }: Props) {
     event.target.value = "";
     if (!file) return;
 
-    if (!supabase || file.size > MAX_UPLOAD_BYTES) {
-      setUpload("failed");
-      return;
-    }
-
     setUpload("busy");
-    const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `${values.id || "species"}-${Date.now()}.${extension}`;
-    const { error } = await supabase.storage.from(SPECIES_BUCKET).upload(path, file, { cacheControl: "31536000" });
-    if (error) {
-      setUpload("failed");
-      return;
-    }
-    set("image", supabase.storage.from(SPECIES_BUCKET).getPublicUrl(path).data.publicUrl);
-    setUpload("idle");
+    const url = await uploadPhoto(file, values.id || "species");
+    if (url) set("image", url);
+    setUpload(url ? "idle" : "failed");
   }
 
   const textField = (name: keyof Values & string, label: string, options: { hint?: string; lang?: string; required?: boolean } = {}) => {

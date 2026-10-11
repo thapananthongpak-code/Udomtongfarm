@@ -26,6 +26,7 @@ export default function SiteHeader() {
 
   const links = [
     { href: "/collection", label: labels.collection, active: path.startsWith("/collection") || path.startsWith("/species") },
+    { href: "/cafe", label: labels.cafe, active: path.startsWith("/cafe") },
     { href: "/about", label: labels.about, active: path.startsWith("/about") },
     { href: "/visit", label: labels.visit, active: path.startsWith("/visit") },
   ];

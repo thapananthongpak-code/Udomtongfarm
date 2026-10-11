@@ -4,6 +4,7 @@ import { OldSpeciesAddress, RootRedirect } from "@/components/Redirects";
 import About from "@/pages/About";
 import Account from "@/pages/Account";
 import AuthCallback from "@/pages/AuthCallback";
+import Cafe from "@/pages/Cafe";
 import Collection from "@/pages/Collection";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: "collection", element: <Collection /> },
       { path: "species/:id", element: <SpeciesPage /> },
       { path: "species/:type/:id", element: <OldSpeciesAddress /> },
+      { path: "cafe", element: <Cafe /> },
       { path: "about", element: <About /> },
       { path: "visit", element: <Visit /> },
       { path: "privacy", element: <Privacy /> },
@@ -42,6 +44,9 @@ export const router = createBrowserRouter([
           { path: "species", lazy: page(() => import("@/pages/admin/SpeciesList")) },
           { path: "species/new", lazy: page(() => import("@/pages/admin/SpeciesEdit")) },
           { path: "species/:id", lazy: page(() => import("@/pages/admin/SpeciesEdit")) },
+          { path: "menu", lazy: page(() => import("@/pages/admin/MenuList")) },
+          { path: "menu/new", lazy: page(() => import("@/pages/admin/MenuEdit")) },
+          { path: "menu/:id", lazy: page(() => import("@/pages/admin/MenuEdit")) },
           { path: "site", lazy: page(() => import("@/pages/admin/SiteSettings")) },
         ],
       },

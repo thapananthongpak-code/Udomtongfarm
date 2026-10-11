@@ -1,21 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { seedMenu } from "@/data/menu";
 import { seedSpecies } from "@/data/species";
 import { DEFAULT_CONTACT, SETTINGS_FIELDS, type SiteSettings } from "@/lib/farm";
+import type { MenuItem } from "@/lib/menu";
 import type { Species } from "@/lib/species/types";
 import { supabase } from "@/lib/supabase";
 import { DataContext, type DataState } from "./data";
 
-type Loaded = Pick<DataState, "status" | "species" | "settings">;
+type Loaded = Pick<DataState, "status" | "species" | "menu" | "settings">;
 
-// Without Supabase the bundled collection is used straight away.
+// Without Supabase the bundled collection and menu are used straight away.
 const START: Loaded = supabase
-  ? { status: "loading", species: [], settings: DEFAULT_CONTACT }
-  : { status: "ready", species: seedSpecies, settings: DEFAULT_CONTACT };
+  ? { status: "loading", species: [], menu: [], settings: DEFAULT_CONTACT }
+  : { status: "ready", species: seedSpecies, menu: seedMenu, settings: DEFAULT_CONTACT };
 
 async function readFromSupabase(): Promise<Loaded | null> {
   if (!supabase) return null;
-  const [species, settings] = await Promise.all([
+  const [species, menu, settings] = await Promise.all([
     supabase.from("species").select("*").eq("published", true).order("name_en"),
+    supabase.from("menu_items").select("*").eq("published", true),
     supabase.from("site_settings").select(SETTINGS_FIELDS.join(",")).eq("id", 1).maybeSingle(),
   ]);
 
@@ -25,6 +28,7 @@ async function readFromSupabase(): Promise<Loaded | null> {
   return {
     status: "ready",
     species: species.error ? seedSpecies : (species.data as Species[]),
+    menu: menu.error ? seedMenu : (menu.data as MenuItem[]),
     settings: settings.error || !settings.data ? DEFAULT_CONTACT : (settings.data as unknown as SiteSettings),
   };
 }
