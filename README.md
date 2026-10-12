@@ -13,6 +13,7 @@ Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the G
 - **Sign-in with Google** for visitors who want to keep a saved list of species. There are no passwords on this site, so none can be lost.
 - **Admin dashboard** for changing photographs and information: every species, the café menu, and the farm's phone number, Facebook link, map link and address.
 - Thai and English versions of every page under `/th` and `/en`.
+- **Text size control** (normal, large, extra large) in the header, remembered in the browser, and markup that works with screen readers.
 
 ## Getting started
 
@@ -117,6 +118,16 @@ The admin pages are hidden from everyone who is not an admin, but that is only f
 The project is set up for Vercel with the **Vite** framework preset. `vercel.json` sends every address except `/api/*` to `index.html`, and Vercel turns `api/chat.ts` into a serverless function automatically.
 
 Pushing to the `main` branch publishes to production. Pushing any other branch creates a preview deployment.
+
+## Accessibility
+
+- **Text size:** the buttons in the header (and in the menu on narrow screens) set the root font size to 100%, 112.5% or 125%. Every size in the stylesheet is in `rem`, so everything follows. Keep it that way: a size written in `px` would ignore the control. The choice is stored under `text-size` in the browser, and a small script in `index.html` applies it before the page is drawn.
+- **Page changes:** the site is a single-page app, which browsers do not announce to screen readers. `RouteAnnouncer` in `src/components/Layout.tsx` reads out the new page's title and moves keyboard focus to the page content. Changing a filter does not do this.
+- **Chat window:** replies are announced once, when complete, not word by word. Pressing Escape closes the window and returns focus to the button that opened it.
+- **Colours:** text colours meet 4.5:1 and the borders of fields and buttons meet 3:1 (`--control` in `src/index.css`). Check a new colour before using it for text.
+- **Language:** the page language is set on `<html>`, and scientific names are marked `lang="la"` so they are not read in the wrong voice.
+
+New pages should keep the heading order (one `h1`, then `h2`, then `h3`), label every field, and give images a useful `alt` or an empty one when the text next to them already says it.
 
 ## Limitations
 

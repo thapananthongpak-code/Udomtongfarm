@@ -22,6 +22,10 @@ export default function ChatWidget() {
   const [error, setError] = useState<ErrorCode | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const launcherRef = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+  // What a screen reader announces. A reply is read once it is complete, not word by word as it streams.
+  const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -40,6 +44,12 @@ export default function ChatWidget() {
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
   }, [messages, error]);
+
+  // Closing the window puts keyboard focus back on the button that opened it.
+  useEffect(() => {
+    if (!open && wasOpen.current) launcherRef.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -62,14 +72,17 @@ export default function ChatWidget() {
     setDraft("");
     setError(null);
     setBusy(true);
+    setAnnouncement(labels.thinking);
 
     const appendToReply = (chunk: string) =>
       setMessages((current) => {
         const last = current[current.length - 1];
         return [...current.slice(0, -1), { ...last, content: last.content + chunk }];
       });
-    const dropEmptyReply = () =>
+    const dropEmptyReply = () => {
+      setAnnouncement("");
       setMessages((current) => (current[current.length - 1]?.content === "" ? current.slice(0, -1) : current));
+    };
 
     try {
       const response = await fetch("/api/chat", {
@@ -88,16 +101,20 @@ export default function ChatWidget() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let received = false;
+      let reply = "";
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
         if (chunk) {
           received = true;
+          reply += chunk;
           appendToReply(chunk);
         }
       }
-      if (!received) {
+      if (received) {
+        setAnnouncement(reply);
+      } else {
         dropEmptyReply();
         setError("unavailable");
       }
@@ -115,6 +132,7 @@ export default function ChatWidget() {
     return (
       <button
         type="button"
+        ref={launcherRef}
         onClick={() => setOpen(true)}
         className="btn btn-primary fixed bottom-5 right-5 z-40 shadow-[0_10px_30px_-10px_rgb(0_0_0/0.5)] print:hidden"
       >
@@ -135,16 +153,16 @@ export default function ChatWidget() {
       lang={lang}
       className="fixed inset-x-3 bottom-3 z-50 flex max-h-[min(36rem,calc(100dvh-1.5rem))] flex-col border border-ink bg-surface shadow-[0_24px_60px_-20px_rgb(0_0_0/0.5)] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[24rem] print:hidden"
     >
-      <header className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
+      <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
         <h2 className="font-serif text-xl">{labels.title}</h2>
         <button type="button" onClick={() => setOpen(false)} aria-label={labels.close} className="-mr-2 p-2 text-muted hover:text-ink">
           <svg aria-hidden viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.25">
             <path d="m3 3 10 10M13 3 3 13" />
           </svg>
         </button>
-      </header>
+      </div>
 
-      <div ref={logRef} role="log" aria-live="polite" className="flex-1 space-y-4 overflow-y-auto px-5 py-5 text-[0.9375rem] leading-relaxed">
+      <div ref={logRef} role="region" aria-label={labels.title} tabIndex={0} className="flex-1 space-y-4 overflow-y-auto px-5 py-5 text-[0.9375rem] leading-relaxed">
         <p className="text-muted">{labels.greeting}</p>
 
         {messages.length === 0 && (
@@ -180,6 +198,10 @@ export default function ChatWidget() {
           </p>
         )}
       </div>
+
+      <p role="status" aria-atomic="true" className="sr-only">
+        {announcement}
+      </p>
 
       <form
         onSubmit={(event) => {

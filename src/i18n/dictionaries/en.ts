@@ -16,7 +16,14 @@ const en = {
     menu: "Menu",
     close: "Close",
     switchLanguage: "ภาษาไทย",
-    switchLanguageLabel: "เปลี่ยนเป็นภาษาไทย",
+  },
+
+  a11y: {
+    textSize: "Text size",
+    normal: "Normal",
+    large: "Large",
+    extraLarge: "Extra large",
+    letter: "A",
   },
 
   common: {
@@ -126,6 +133,7 @@ const en = {
     sortStatus: "Most threatened first",
     results: "Showing {shown} of {total}",
     clear: "Clear filters",
+    listHeading: "Species list",
     emptyTitle: "No species match these filters",
     emptyBody: "Try a different spelling, or remove a filter to see more.",
   },

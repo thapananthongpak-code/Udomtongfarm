@@ -10,9 +10,11 @@
   --wall: #eeece5;
   --ink: #171716;
   --muted: #5c5b55;
-  --faint: #74736c;
+  --faint: #66655e;
   --line: #e2e0d8;
   --line-strong: #c6c3b8;
+  /* Borders of buttons and fields. 3:1 against the page, as WCAG asks for interface parts. */
+  --control: #85837a;
   --accent: #2c4a3a;
   --on-accent: #f8f7f3;
   --danger: #9a2a1f;
@@ -38,6 +40,7 @@
   --color-faint: var(--faint);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-control: var(--control);
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
   --color-danger: var(--danger);
@@ -49,6 +52,14 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-padding-top: 6rem;
+  }
+
+  /* The visitor's text size choice (see src/lib/textSize.ts). Everything is in rem, so it all follows. */
+  html[data-text-size="lg"] {
+    font-size: 112.5%;
+  }
+  html[data-text-size="xl"] {
+    font-size: 125%;
   }
 
   body {
@@ -180,7 +191,7 @@
     color: var(--on-accent);
   }
   .btn-quiet {
-    border-color: var(--line-strong);
+    border-color: var(--control);
   }
   .btn-danger {
     border-color: var(--danger);
@@ -220,7 +231,7 @@
     width: 100%;
     min-height: 2.75rem;
     padding: 0.5rem 0.75rem;
-    border: 1px solid var(--line-strong);
+    border: 1px solid var(--control);
     border-radius: 2px;
     background: var(--surface);
     color: var(--ink);

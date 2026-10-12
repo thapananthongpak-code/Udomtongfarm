@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f8f7f3" />
 
+    <script>
+      // Apply the visitor's saved text size before the page is drawn, so it does not jump.
+      try {
+        var size = window.localStorage.getItem("text-size");
+        if (size === "lg" || size === "xl") document.documentElement.dataset.textSize = size;
+      } catch (e) {}
+    </script>
+
     <title>อุดมทองฟาร์ม | สัตว์และพืชหายาก จังหวัดชัยภูมิ</title>
     <meta
       name="description"

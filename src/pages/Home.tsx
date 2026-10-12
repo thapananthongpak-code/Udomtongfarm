@@ -73,7 +73,7 @@ export default function Home() {
             <figcaption className="mt-4 flex items-baseline justify-between gap-4 text-[0.9375rem]">
               <span>
                 <span className="font-serif text-lg">{speciesName(lead, lang)}</span>
-                {lead.scientific_name && <span className="scientific ml-2 text-muted">{lead.scientific_name}</span>}
+                {lead.scientific_name && <span lang="la" className="scientific ml-2 text-muted">{lead.scientific_name}</span>}
               </span>
               <span className="eyebrow shrink-0">{t.home.onView}</span>
             </figcaption>
@@ -170,7 +170,7 @@ export default function Home() {
                       <span className="font-serif text-xl decoration-1 underline-offset-4 group-hover:underline">
                         {speciesName(sp, lang)}
                       </span>
-                      {sp.scientific_name && <span className="scientific ml-3 hidden text-muted sm:inline">{sp.scientific_name}</span>}
+                      {sp.scientific_name && <span lang="la" className="scientific ml-3 hidden text-muted sm:inline">{sp.scientific_name}</span>}
                     </span>
                     {sp.status && <StatusBadge status={sp.status} labels={t.status} full />}
                   </Link>

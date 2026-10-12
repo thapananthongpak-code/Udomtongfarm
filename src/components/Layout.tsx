@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, Outlet, ScrollRestoration, useLocation, useParams } from "react-router-dom";
 import { isLocale } from "@/i18n";
 import { useT } from "@/i18n/hooks";
@@ -6,6 +6,34 @@ import { withLocale } from "@/lib/paths";
 import ChatWidget from "./chat/ChatWidget";
 import SiteFooter from "./SiteFooter";
 import SiteHeader from "./SiteHeader";
+
+/**
+ * Tells screen-reader users that the page changed. In a single-page app the browser does not do this,
+ * so the new page's title is read out and keyboard focus moves to the top of the page content.
+ */
+function RouteAnnouncer() {
+  const { pathname } = useLocation();
+  const previous = useRef(pathname);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (previous.current === pathname) return;
+    previous.current = pathname;
+
+    // The new page sets its title in its own effect, so give it a moment first.
+    const timer = window.setTimeout(() => {
+      setMessage(document.title);
+      document.getElementById("main")?.focus({ preventScroll: true });
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [pathname]);
+
+  return (
+    <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+      {message}
+    </div>
+  );
+}
 
 /** The frame around every page: header, footer and the chat button. */
 export default function Layout() {
@@ -29,11 +57,12 @@ export default function Layout() {
         {t.site.skip}
       </a>
       <SiteHeader />
-      <main id="main" className="flex-1">
+      <main id="main" tabIndex={-1} className="flex-1 outline-none">
         <Outlet />
       </main>
       <SiteFooter />
       <ChatWidget />
+      <RouteAnnouncer />
       <ScrollRestoration />
     </div>
   );

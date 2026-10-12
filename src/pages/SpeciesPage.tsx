@@ -75,7 +75,7 @@ function SpeciesEntry({ sp, all }: { sp: Species; all: Species[] }) {
         <div className="lg:col-span-6">
           <p className="eyebrow">{department}</p>
           <h1 className="display mt-4 text-4xl sm:text-5xl lg:text-6xl">{name}</h1>
-          {sp.scientific_name && <p className="scientific mt-3 text-2xl text-muted">{sp.scientific_name}</p>}
+          {sp.scientific_name && <p lang="la" className="scientific mt-3 text-2xl text-muted">{sp.scientific_name}</p>}
           <p className="lede mt-7">{speciesSummary(sp, lang)}</p>
 
           <dl className="label-list mt-9 text-[0.9375rem]">
