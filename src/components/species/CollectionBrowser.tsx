@@ -112,7 +112,7 @@ export default function CollectionBrowser({ species }: { species: SpeciesCardDat
                   aria-pressed={active}
                   onClick={() => set({ type: department.value })}
                   className={`-ml-px min-h-11 flex-1 border px-4 text-[0.9375rem] first:ml-0 lg:flex-none ${
-                    active ? "relative border-ink bg-ink text-paper" : "border-line-strong bg-surface text-muted hover:text-ink"
+                    active ? "relative border-ink bg-ink text-paper" : "border-control bg-surface text-muted hover:text-ink"
                   }`}
                 >
                   {department.label}
@@ -182,6 +182,7 @@ export default function CollectionBrowser({ species }: { species: SpeciesCardDat
         )}
       </div>
 
+      <h2 className="sr-only">{labels.listHeading}</h2>
       {visible.length > 0 ? (
         <ul className="grid grid-cols-2 gap-x-6 gap-y-12 pt-4 md:grid-cols-3 md:gap-x-8 lg:grid-cols-4">
           {visible.map((sp, index) => (

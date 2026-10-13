@@ -25,7 +25,7 @@ export default function SpeciesCard({ species, priority = false }: { species: Sp
             {speciesName(species, lang)}
           </h3>
           {species.scientific_name && (
-            <p className="scientific mt-0.5 text-[0.9375rem] leading-snug text-muted">{species.scientific_name}</p>
+            <p lang="la" className="scientific mt-0.5 text-[0.9375rem] leading-snug text-muted">{species.scientific_name}</p>
           )}
         </div>
         {species.status && (

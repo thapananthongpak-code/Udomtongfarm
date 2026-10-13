@@ -55,7 +55,7 @@ export default function SpeciesList() {
                       <SpeciesImage src={sp.image} alt="" className="size-12 shrink-0" />
                       <div className="min-w-0">
                         <p className="font-serif text-lg leading-snug">{speciesName(sp, lang)}</p>
-                        {sp.scientific_name && <p className="scientific text-[0.875rem] text-muted">{sp.scientific_name}</p>}
+                        {sp.scientific_name && <p lang="la" className="scientific text-[0.875rem] text-muted">{sp.scientific_name}</p>}
                       </div>
                     </div>
                   </td>

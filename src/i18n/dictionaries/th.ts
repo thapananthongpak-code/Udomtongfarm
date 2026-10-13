@@ -18,7 +18,14 @@ const th: Dictionary = {
     menu: "เมนู",
     close: "ปิด",
     switchLanguage: "English",
-    switchLanguageLabel: "Switch to English",
+  },
+
+  a11y: {
+    textSize: "ขนาดตัวอักษร",
+    normal: "ปกติ",
+    large: "ใหญ่",
+    extraLarge: "ใหญ่มาก",
+    letter: "ก",
   },
 
   common: {
@@ -127,6 +134,7 @@ const th: Dictionary = {
     sortStatus: "ถูกคุกคามมากที่สุดก่อน",
     results: "แสดง {shown} จาก {total} ชนิด",
     clear: "ล้างตัวกรอง",
+    listHeading: "รายการสัตว์และพืช",
     emptyTitle: "ไม่พบชนิดที่ตรงกับตัวกรอง",
     emptyBody: "ลองสะกดคำค้นหาใหม่ หรือนำตัวกรองออกเพื่อดูเพิ่มเติม",
   },

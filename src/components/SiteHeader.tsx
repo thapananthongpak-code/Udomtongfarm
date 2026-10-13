@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { localePath, otherLocale, rememberLocale } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
 import { useSession } from "@/state/session";
+import TextSizeControl from "./TextSizeControl";
 
 export default function SiteHeader() {
   const lang = useLang();
@@ -48,7 +49,7 @@ export default function SiteHeader() {
           {t.site.name}
         </Link>
 
-        <nav aria-label={labels.menu} className="hidden items-center gap-8 text-[0.9375rem] md:flex">
+        <nav aria-label={labels.menu} className="hidden items-center gap-8 text-[0.9375rem] xl:flex">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -63,12 +64,12 @@ export default function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-6 text-[0.9375rem] md:flex">
+        <div className="hidden items-center gap-5 text-[0.9375rem] xl:flex">
+          <TextSizeControl />
           <a
             href={localePath(target, path)}
             hrefLang={target}
             lang={target}
-            aria-label={labels.switchLanguageLabel}
             onClick={switchLanguage}
             className="text-muted transition-colors hover:text-ink"
           >
@@ -81,7 +82,7 @@ export default function SiteHeader() {
 
         <button
           type="button"
-          className="btn btn-sm btn-quiet md:hidden"
+          className="btn btn-sm btn-quiet xl:hidden"
           aria-expanded={open}
           aria-controls="mobile-menu"
           onClick={() => setOpen((value) => !value)}
@@ -91,7 +92,7 @@ export default function SiteHeader() {
       </div>
 
       {open && (
-        <nav id="mobile-menu" aria-label={labels.menu} className="border-t border-line bg-paper md:hidden">
+        <nav id="mobile-menu" aria-label={labels.menu} className="border-t border-line bg-paper xl:hidden">
           <ul className="shell divide-y divide-line py-2">
             {[...links, { ...account, active: false }].map((link) => (
               <li key={link.href}>
@@ -105,6 +106,10 @@ export default function SiteHeader() {
                 </Link>
               </li>
             ))}
+            <li className="flex items-center justify-between gap-4 py-3.5">
+              <span className="text-muted">{t.a11y.textSize}</span>
+              <TextSizeControl />
+            </li>
             <li>
               <a href={localePath(target, path)} hrefLang={target} lang={target} onClick={switchLanguage} className="block py-3.5 text-muted">
                 {labels.switchLanguage}
