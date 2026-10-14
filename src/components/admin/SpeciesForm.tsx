@@ -5,6 +5,7 @@ import { localePath } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
 import { saveSpecies, uploadPhoto, type SaveResult, type SpeciesFormValues as Values } from "@/lib/admin";
 import { STATUS_CODES, type Source, type Species } from "@/lib/species/types";
+import { useUnsavedChanges } from "@/lib/useUnsavedChanges";
 import { useData } from "@/state/data";
 
 type Props = {
@@ -46,6 +47,9 @@ export default function SpeciesForm({ species, listHref }: Props) {
   const [upload, setUpload] = useState<"idle" | "busy" | "failed">("idle");
   const [result, setResult] = useState<SaveResult | null>(null);
   const [pending, setPending] = useState(false);
+  // What the form held when it opened, to tell whether there is anything to lose.
+  const [opened] = useState(() => JSON.stringify([initialValues(species), species?.sources ?? []]));
+  const { allowLeave } = useUnsavedChanges(JSON.stringify([values, sources]) !== opened, t.admin.unsavedConfirm);
 
   const problems = result && !result.ok ? result.fields : undefined;
 
@@ -55,6 +59,7 @@ export default function SpeciesForm({ species, listHref }: Props) {
     const outcome = await saveSpecies(values, sources, species?.id ?? null);
     if (outcome.ok) {
       await reload();
+      allowLeave();
       // A new entry opens on its own page, where its QR code is ready to take away.
       if (species) navigate(listHref);
       else navigate(localePath(lang, `/admin/species/${values.id.trim()}`), { state: { created: true } });

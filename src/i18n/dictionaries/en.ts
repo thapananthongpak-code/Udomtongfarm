@@ -324,6 +324,17 @@ const en = {
     siteCard: "Change the phone number, Facebook link, map link and address.",
     textsCard: "Change the site name, the farm story, activities, homestay details, FAQ and other texts.",
     manage: "Manage",
+    visits: {
+      title: "Site visitors",
+      online: "On the site now",
+      today: "Today",
+      lastSevenDays: "Last 7 days",
+      total: "All time",
+      lastFourteen: "Last 14 days",
+      note: "This counts browsers, once a day each, not people: one person opening the site on a phone and a computer counts twice. Admins are not counted, and “On the site now” leaves out your own page. Only admins can see these numbers.",
+      unavailable: "The visit counts could not be read. If the site was only just updated, run supabase/update-2026-10.sql once in the Supabase SQL Editor.",
+    },
+    unsavedConfirm: "You have changes that are not saved. Leave this page without saving them?",
     total: "Species",
     published: "Published",
     drafts: "Drafts",
@@ -602,6 +613,13 @@ const en = {
           "To ask for a copy of your data, or about anything else in this policy, contact the farm by phone or through our Facebook page.",
         ],
       },
+      {
+        title: "Visitor numbers",
+        body: [
+          "We count how many browsers open the site each day. It is a single total: it holds no IP address, name or anything that identifies you. Your browser keeps the date it was last counted, so that it is not counted twice on the same day.",
+          "While a page is open, your browser says \"here\" so that the admins can see how many people are on the site at that moment. Nothing else is attached, nothing is recorded, and it disappears when you close the page. Only admins can see these numbers.",
+        ],
+      },
     ],
   },
 
@@ -624,6 +642,7 @@ const en = {
     title: "Something went wrong",
     body: "This page could not be loaded. Please try again.",
     retry: "Try again",
+    dataProblem: "The farm's latest information could not be loaded, so a saved copy is shown that may be out of date.",
   },
 
   meta: {

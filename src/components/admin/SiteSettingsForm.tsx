@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useT } from "@/i18n/hooks";
 import { saveSiteSettings, type SaveResult } from "@/lib/admin";
 import type { SiteSettings } from "@/lib/farm";
+import { useUnsavedChanges } from "@/lib/useUnsavedChanges";
 import { useData } from "@/state/data";
 
 export default function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
@@ -11,6 +12,8 @@ export default function SiteSettingsForm({ settings }: { settings: SiteSettings 
   const [values, setValues] = useState<SiteSettings>(settings);
   const [result, setResult] = useState<SaveResult | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(() => JSON.stringify(settings));
+  useUnsavedChanges(JSON.stringify(values) !== saved, t.unsavedConfirm);
 
   const fields: { name: keyof SiteSettings; label: string; hint?: string; type?: string; lang?: string }[] = [
     { name: "phone", label: labels.phone, hint: labels.phoneHint, type: "tel" },
@@ -24,7 +27,10 @@ export default function SiteSettingsForm({ settings }: { settings: SiteSettings 
     event.preventDefault();
     setSaving(true);
     const outcome = await saveSiteSettings(values);
-    if (outcome.ok) await reload();
+    if (outcome.ok) {
+      await reload();
+      setSaved(JSON.stringify(values));
+    }
     setResult(outcome);
     setSaving(false);
   }

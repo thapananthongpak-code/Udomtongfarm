@@ -6,6 +6,7 @@ import { withLocale } from "@/lib/paths";
 import { useData } from "@/state/data";
 import ChatWidget from "./chat/ChatWidget";
 import PageLoading from "./PageLoading";
+import PresenceTracker from "./PresenceTracker";
 import SiteFooter from "./SiteFooter";
 import SiteHeader from "./SiteHeader";
 
@@ -42,7 +43,7 @@ export default function Layout() {
   const { lang } = useParams();
   const { pathname, search, hash } = useLocation();
   const t = useT();
-  const { status } = useData();
+  const { status, problem, reload } = useData();
 
   useEffect(() => {
     if (isLocale(lang)) document.documentElement.lang = lang;
@@ -60,6 +61,16 @@ export default function Layout() {
         {t.site.skip}
       </a>
       <SiteHeader />
+      {problem && (
+        <div role="status" className="border-b border-line bg-wall print:hidden">
+          <div className="shell flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3 text-[0.9375rem]">
+            <p>{t.error.dataProblem}</p>
+            <button type="button" className="link" onClick={() => void reload()}>
+              {t.error.retry}
+            </button>
+          </div>
+        </div>
+      )}
       <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {/* A page is drawn once its texts are known, so an edited text never flashes its old wording. */}
         {status === "loading" ? (
@@ -72,6 +83,7 @@ export default function Layout() {
       </main>
       <SiteFooter />
       <ChatWidget />
+      <PresenceTracker />
       <RouteAnnouncer />
       <ScrollRestoration />
     </div>

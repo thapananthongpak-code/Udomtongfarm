@@ -4,6 +4,7 @@ import SpeciesImage from "@/components/species/SpeciesImage";
 import { useT } from "@/i18n/hooks";
 import { saveMenuItem, uploadPhoto, type MenuFormValues as Values, type SaveResult } from "@/lib/admin";
 import { MENU_CATEGORIES, type MenuCategory, type MenuItem } from "@/lib/menu";
+import { useUnsavedChanges } from "@/lib/useUnsavedChanges";
 import { useData } from "@/state/data";
 
 type Props = {
@@ -36,6 +37,8 @@ export default function MenuForm({ item, listHref }: Props) {
   const [upload, setUpload] = useState<"idle" | "busy" | "failed">("idle");
   const [result, setResult] = useState<SaveResult | null>(null);
   const [pending, setPending] = useState(false);
+  const [opened] = useState(() => JSON.stringify(initialValues(item)));
+  const { allowLeave } = useUnsavedChanges(JSON.stringify(values) !== opened, t.admin.unsavedConfirm);
 
   const problems = result && !result.ok ? result.fields : undefined;
 
@@ -45,6 +48,7 @@ export default function MenuForm({ item, listHref }: Props) {
     const outcome = await saveMenuItem(values, item?.id ?? null);
     if (outcome.ok) {
       await reload();
+      allowLeave();
       navigate(listHref);
       return;
     }

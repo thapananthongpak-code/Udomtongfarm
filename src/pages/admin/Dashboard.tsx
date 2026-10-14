@@ -2,12 +2,17 @@ import { Link } from "react-router-dom";
 import { localePath } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
 import { useAdminSpecies } from "@/lib/useAdminSpecies";
+import { useVisitStats } from "@/lib/useVisitStats";
 
 export default function Dashboard() {
   const lang = useLang();
   const t = useT().admin;
   const species = useAdminSpecies();
   const published = species?.filter((sp) => sp.published).length ?? 0;
+  const visits = useVisitStats();
+  const stats_ = visits === null || visits === "unavailable" ? null : visits;
+  const biggest = Math.max(1, ...(stats_?.days.map((day) => day.visitors) ?? [0]));
+  const dayFormat = new Intl.DateTimeFormat(lang === "th" ? "th-TH" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
   const stats = [
     { label: t.total, value: species ? species.length : "–" },
@@ -36,7 +41,50 @@ export default function Dashboard() {
         ))}
       </dl>
 
-      <ul className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <section aria-labelledby="visitors" className="mt-14 border-t border-line pt-10">
+        <h2 id="visitors" className="font-serif text-2xl">
+          {t.visits.title}
+        </h2>
+        {visits === "unavailable" ? (
+          <p className="notice mt-5 max-w-xl">{t.visits.unavailable}</p>
+        ) : (
+          <>
+            <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-4 md:gap-x-10">
+              {[
+                { label: t.visits.online, value: stats_?.online },
+                { label: t.visits.today, value: stats_?.today },
+                { label: t.visits.lastSevenDays, value: stats_?.lastSevenDays },
+                { label: t.visits.total, value: stats_?.total },
+              ].map((item) => (
+                <div key={item.label} className="flex flex-col-reverse border-t border-ink pt-4">
+                  <dt className="mt-1 text-[0.8125rem] text-muted">{item.label}</dt>
+                  <dd className="font-serif text-4xl md:text-5xl">{item.value ?? "–"}</dd>
+                </div>
+              ))}
+            </dl>
+
+            {stats_ && (
+              <>
+                <h3 className="eyebrow mt-10">{t.visits.lastFourteen}</h3>
+                <ol className="mt-4 max-w-xl space-y-1.5">
+                  {stats_.days.map((day) => (
+                    <li key={day.day} className="grid grid-cols-[4.5rem_1fr_2.5rem] items-center gap-3 text-[0.875rem]">
+                      <span className="text-muted">{dayFormat.format(new Date(`${day.day}T00:00:00Z`))}</span>
+                      <span aria-hidden className="h-3 bg-wall">
+                        <span className="block h-full bg-ink" style={{ width: `${(day.visitors / biggest) * 100}%` }} />
+                      </span>
+                      <span className="text-right tabular-nums">{day.visitors}</span>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+            <p className="mt-6 max-w-xl text-[0.8125rem] text-faint">{t.visits.note}</p>
+          </>
+        )}
+      </section>
+
+      <ul className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {areas.map((area) => (
           <li key={area.href}>
             <Link
