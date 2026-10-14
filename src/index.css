@@ -566,3 +566,74 @@
   }
 }
 
+/* ── Receipt ─────────────────────────────────────────────────
+   An 80 mm receipt for a thermal printer. It is hidden on screen. While one is being printed the
+   page's body carries data-print="receipt", and only the receipt is shown. */
+
+.receipt-root {
+  display: none;
+}
+
+@page receipt {
+  size: 80mm auto;
+  margin: 3mm;
+}
+
+@media print {
+  body[data-print="receipt"] {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  body[data-print="receipt"] #root {
+    display: none !important;
+  }
+  body[data-print="receipt"] .receipt-root {
+    display: block;
+    page: receipt;
+    width: 72mm;
+    margin: 0 auto;
+    background: #fff;
+    color: #000;
+    font-family: "IBM Plex Sans Thai", ui-sans-serif, system-ui, sans-serif;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .receipt-root p {
+    margin: 0;
+  }
+  .receipt-root hr {
+    margin: 6px 0;
+    border: 0;
+    border-top: 1px dashed #000;
+  }
+  .receipt-root table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .receipt-root td {
+    padding: 1px 0;
+    vertical-align: top;
+  }
+  .receipt-center {
+    text-align: center;
+  }
+  .receipt-right {
+    text-align: right;
+    white-space: nowrap;
+    padding-left: 6px;
+  }
+  .receipt-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .receipt-strong {
+    font-weight: 700;
+  }
+  .receipt-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 700;
+  }
+}
+
