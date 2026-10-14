@@ -30,7 +30,7 @@ export default function AdminLayout() {
 
   return (
     <div className="shell pb-8 pt-10 md:pt-14">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ink pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ink pb-4 print:hidden">
         <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
           <p className="eyebrow">{t.eyebrow}</p>
           <nav aria-label={t.eyebrow} className="flex flex-wrap gap-x-6 gap-y-1 text-[0.9375rem]">

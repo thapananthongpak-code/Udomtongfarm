@@ -62,7 +62,13 @@ export default function Layout() {
       <SiteHeader />
       <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {/* A page is drawn once its texts are known, so an edited text never flashes its old wording. */}
-        {status === "loading" ? <PageLoading /> : <Outlet />}
+        {status === "loading" ? (
+          <PageLoading />
+        ) : (
+          <div key={pathname} className="page-enter">
+            <Outlet />
+          </div>
+        )}
       </main>
       <SiteFooter />
       <ChatWidget />

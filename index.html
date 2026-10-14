@@ -6,10 +6,12 @@
     <meta name="theme-color" content="#f8f7f3" />
 
     <script>
-      // Apply the visitor's saved text size before the page is drawn, so it does not jump.
+      // Apply the customer's saved text size and colour contrast before the page is drawn, so it does not jump.
       try {
         var size = window.localStorage.getItem("text-size");
         if (size === "lg" || size === "xl") document.documentElement.dataset.textSize = size;
+        var contrast = window.localStorage.getItem("contrast");
+        if (contrast === "light" || contrast === "dark") document.documentElement.dataset.contrast = contrast;
       } catch (e) {}
     </script>
 

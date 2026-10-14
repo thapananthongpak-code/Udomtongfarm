@@ -151,7 +151,7 @@ export default function ChatWidget() {
       role="dialog"
       aria-label={labels.title}
       lang={lang}
-      className="fixed inset-x-3 bottom-3 z-50 flex max-h-[min(36rem,calc(100dvh-1.5rem))] flex-col border border-ink bg-surface shadow-[0_24px_60px_-20px_rgb(0_0_0/0.5)] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[24rem] print:hidden"
+      className="pop-enter fixed inset-x-3 bottom-3 z-50 flex max-h-[min(36rem,calc(100dvh-1.5rem))] flex-col border border-ink bg-surface shadow-[0_24px_60px_-20px_rgb(0_0_0/0.5)] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[24rem] print:hidden"
     >
       <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
         <h2 className="font-serif text-xl">{labels.title}</h2>

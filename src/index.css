@@ -28,6 +28,43 @@
   color-scheme: light;
 }
 
+/* High-contrast modes, chosen with the buttons in the header (see src/lib/contrast.ts).
+   Only the tokens change, so every part of the site follows. Text is 7:1 or better on its ground
+   and the borders of fields and buttons are the full text colour. */
+:root[data-contrast="light"] {
+  --paper: #ffffff;
+  --surface: #ffffff;
+  --wall: #f1f1f1;
+  --ink: #000000;
+  --muted: #1a1a1a;
+  --faint: #262626;
+  --line: #595959;
+  --line-strong: #000000;
+  --control: #000000;
+  --accent: #000000;
+  --on-accent: #ffffff;
+  --danger: #a00000;
+
+  color-scheme: light;
+}
+
+:root[data-contrast="dark"] {
+  --paper: #000000;
+  --surface: #000000;
+  --wall: #141414;
+  --ink: #ffffff;
+  --muted: #f2f2f2;
+  --faint: #e6e6e6;
+  --line: #a6a6a6;
+  --line-strong: #ffffff;
+  --control: #ffffff;
+  --accent: #ffd400;
+  --on-accent: #000000;
+  --danger: #ff9b8f;
+
+  color-scheme: dark;
+}
+
 @theme inline {
   --font-sans: "IBM Plex Sans Thai", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Newsreader", "Noto Serif Thai", Georgia, "Times New Roman", serif;
@@ -81,6 +118,14 @@
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
+  }
+  :root[data-contrast] :focus-visible {
+    outline-width: 3px;
+  }
+
+  /* Underlines and borders are drawn solid in the high-contrast modes. */
+  :root[data-contrast] .link {
+    text-decoration-color: currentColor;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -299,3 +344,153 @@
     padding-right: 1.5rem;
   }
 }
+
+/* ── Motion ───────────────────────────────────────────────────
+   Hover and press feedback for buttons, links, menus and cards. All of it sits inside a
+   no-preference query, so a customer who asks their device for less motion gets none of the
+   movement (the colour changes above still apply). */
+
+@layer components {
+  /* The header's links: an underline that draws in from the left. */
+  .nav-link {
+    position: relative;
+    padding-block: 0.25rem;
+    color: var(--muted);
+    transition: color 0.15s;
+  }
+  .nav-link:hover,
+  .nav-link[aria-current="page"] {
+    color: var(--ink);
+  }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: -1px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .nav-link:hover::after,
+  .nav-link[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @layer components {
+    .btn {
+      transition:
+        background-color 0.15s,
+        color 0.15s,
+        border-color 0.15s,
+        transform 0.15s,
+        box-shadow 0.2s;
+    }
+    .btn:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px -8px rgb(0 0 0 / 0.45);
+    }
+    .btn:not(:disabled):active {
+      transform: translateY(0) scale(0.97);
+      box-shadow: none;
+    }
+
+    .contrast-swatch {
+      transition: transform 0.15s;
+    }
+    .contrast-swatch:hover {
+      transform: scale(1.1);
+    }
+    .contrast-swatch:active {
+      transform: scale(0.94);
+    }
+
+    .nav-link::after {
+      transition: transform 0.25s ease-out;
+    }
+
+    .link {
+      transition:
+        text-decoration-color 0.15s,
+        text-decoration-thickness 0.15s;
+    }
+    .link:hover {
+      text-decoration-thickness: 2px;
+    }
+
+    /* Photographs and their frames ease in a little when the card around them is hovered. */
+    .zoom-on-hover {
+      transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+    .group:hover .zoom-on-hover,
+    .group:focus-visible .zoom-on-hover {
+      transform: scale(1.05);
+    }
+
+    /* Cards that lift off the page. */
+    .lift {
+      transition:
+        transform 0.2s,
+        box-shadow 0.2s,
+        border-color 0.15s;
+    }
+    .lift:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 24px -16px rgb(0 0 0 / 0.5);
+    }
+
+    /* A row in a menu that nudges toward the pointer. */
+    .nudge {
+      transition: transform 0.2s;
+    }
+    .nudge:hover {
+      transform: translateX(0.25rem);
+    }
+
+    .page-enter {
+      animation: page-enter 0.35s ease-out both;
+    }
+    .menu-enter {
+      animation: menu-enter 0.22s ease-out both;
+      transform-origin: top;
+    }
+    .pop-enter {
+      animation: pop-enter 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+      transform-origin: bottom right;
+    }
+  }
+
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes menu-enter {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes pop-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+

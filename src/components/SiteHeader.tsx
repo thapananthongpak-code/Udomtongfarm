@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { localePath, otherLocale, rememberLocale } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
 import { useSession } from "@/state/session";
+import ContrastControl from "./ContrastControl";
 import TextSizeControl from "./TextSizeControl";
 
 export default function SiteHeader() {
@@ -43,7 +44,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-md print:hidden">
       <div className="shell flex h-16 items-center justify-between gap-6">
         <Link to={localePath(lang)} className="font-serif text-xl tracking-tight" onClick={() => setOpen(false)}>
           {t.site.name}
@@ -55,9 +56,7 @@ export default function SiteHeader() {
               key={link.href}
               to={localePath(lang, link.href)}
               aria-current={link.active ? "page" : undefined}
-              className={`border-b py-1 transition-colors ${
-                link.active ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"
-              }`}
+              className="nav-link"
             >
               {link.label}
             </Link>
@@ -66,6 +65,7 @@ export default function SiteHeader() {
 
         <div className="hidden items-center gap-5 text-[0.9375rem] xl:flex">
           <TextSizeControl />
+          <ContrastControl />
           <a
             href={localePath(target, path)}
             hrefLang={target}
@@ -92,7 +92,7 @@ export default function SiteHeader() {
       </div>
 
       {open && (
-        <nav id="mobile-menu" aria-label={labels.menu} className="border-t border-line bg-paper xl:hidden">
+        <nav id="mobile-menu" aria-label={labels.menu} className="menu-enter border-t border-line bg-paper xl:hidden">
           <ul className="shell divide-y divide-line py-2">
             {[...links, { ...account, active: false }].map((link) => (
               <li key={link.href}>
@@ -100,7 +100,7 @@ export default function SiteHeader() {
                   to={localePath(lang, link.href)}
                   aria-current={link.active ? "page" : undefined}
                   onClick={() => setOpen(false)}
-                  className="block py-3.5 font-serif text-2xl"
+                  className="nudge block py-3.5 font-serif text-2xl"
                 >
                   {link.label}
                 </Link>
@@ -109,6 +109,10 @@ export default function SiteHeader() {
             <li className="flex items-center justify-between gap-4 py-3.5">
               <span className="text-muted">{t.a11y.textSize}</span>
               <TextSizeControl />
+            </li>
+            <li className="flex items-center justify-between gap-4 py-3.5">
+              <span className="text-muted">{t.a11y.contrast}</span>
+              <ContrastControl />
             </li>
             <li>
               <a href={localePath(target, path)} hrefLang={target} lang={target} onClick={switchLanguage} className="block py-3.5 text-muted">

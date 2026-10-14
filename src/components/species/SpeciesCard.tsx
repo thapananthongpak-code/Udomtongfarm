@@ -18,7 +18,7 @@ export default function SpeciesCard({ species, priority = false }: { species: Sp
           alt=""
           priority={priority}
           placeholder={species.type}
-          className="aspect-[4/5] transition-opacity duration-300 group-hover:opacity-85"
+          className="aspect-[4/5]"
         />
         {isNew(species) && (
           <span className="absolute left-2.5 top-2.5 bg-accent px-2 py-0.5 text-[0.75rem] font-medium text-on-accent">

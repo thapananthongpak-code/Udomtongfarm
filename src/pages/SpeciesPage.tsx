@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Link, useParams } from "react-router-dom";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import NotFoundContent from "@/components/NotFoundContent";
@@ -18,9 +19,13 @@ import {
   tagLabel,
   toParagraphs,
 } from "@/lib/species/helpers";
+import { speciesQrUrl } from "@/lib/site";
 import type { Species } from "@/lib/species/types";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { useData } from "@/state/data";
+
+// The QR library is only downloaded when a species page is opened.
+const QrCode = lazy(() => import("@/components/QrCode"));
 
 export default function SpeciesPage() {
   const { id } = useParams();
@@ -129,6 +134,18 @@ function SpeciesEntry({ sp, all }: { sp: Species; all: Species[] }) {
               </div>
             </section>
           )}
+
+          <section aria-labelledby="species-qr" className="mt-12 flex items-center gap-6 border-t border-line pt-10 print:break-inside-avoid">
+            <Suspense fallback={<div aria-hidden className="size-28 shrink-0 bg-wall" />}>
+              <QrCode url={speciesQrUrl(sp.id)} label={`${t.species.qrTitle}: ${name}`} className="size-28 shrink-0 border border-line-strong" />
+            </Suspense>
+            <div>
+              <h2 id="species-qr" className="eyebrow">
+                {t.species.qrTitle}
+              </h2>
+              <p className="mt-2 text-[0.9375rem] text-muted">{t.species.qrBody}</p>
+            </div>
+          </section>
 
           {sp.sources.length > 0 && (
             <section className="mt-12 border-t border-line pt-10">

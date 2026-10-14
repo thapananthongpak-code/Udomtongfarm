@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import QrPanel from "@/components/admin/QrPanel";
 import SpeciesForm from "@/components/admin/SpeciesForm";
 import NotFoundContent from "@/components/NotFoundContent";
 import { localePath } from "@/i18n";
@@ -16,6 +17,7 @@ export default function SpeciesEdit() {
   const lang = useLang();
   const t = useT().admin;
   const navigate = useNavigate();
+  const created = (useLocation().state as { created?: boolean } | null)?.created === true;
   const { reload } = useData();
   const listHref = localePath(lang, "/admin/species");
 
@@ -63,8 +65,14 @@ export default function SpeciesEdit() {
 
   return (
     <>
+      {created && (
+        <p role="status" className="notice mb-8 max-w-xl">
+          {t.qr.created}
+        </p>
+      )}
       <p className="eyebrow">{t.editSpecies}</p>
       <h1 className="display mt-3 text-4xl md:text-5xl">{speciesName(species, lang)}</h1>
+      <QrPanel id={species.id} name={speciesName(species, lang)} published={species.published} />
       <SpeciesForm key={species.id} species={species} listHref={listHref} />
       <div className="mt-16 border-t border-line pt-8">
         <button type="button" className="btn btn-danger" onClick={remove}>

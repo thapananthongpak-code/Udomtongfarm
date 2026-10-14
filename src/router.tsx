@@ -43,6 +43,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, lazy: page(() => import("@/pages/admin/Dashboard")) },
           { path: "species", lazy: page(() => import("@/pages/admin/SpeciesList")) },
+          { path: "qr", lazy: page(() => import("@/pages/admin/QrSheet")) },
           { path: "species/new", lazy: page(() => import("@/pages/admin/SpeciesEdit")) },
           { path: "species/:id", lazy: page(() => import("@/pages/admin/SpeciesEdit")) },
           { path: "menu", lazy: page(() => import("@/pages/admin/MenuList")) },

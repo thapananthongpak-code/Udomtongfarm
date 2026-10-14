@@ -20,7 +20,7 @@ export default function SiteFooter() {
   ];
 
   return (
-    <footer className="mt-24 border-t border-line">
+    <footer className="mt-24 border-t border-line print:hidden">
       <div className="shell grid gap-12 py-16 md:grid-cols-[2fr_1fr_1fr]">
         <div>
           <p className="font-serif text-2xl">{t.site.name}</p>
