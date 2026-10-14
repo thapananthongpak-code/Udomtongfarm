@@ -23,6 +23,7 @@ export default function Dashboard() {
   const areas = [
     { href: "/admin/species", title: t.species, body: t.speciesCard },
     { href: "/admin/menu", title: t.menu, body: t.menuCard },
+    { href: "/admin/shop", title: t.shop, body: t.shopCard },
     { href: "/admin/services", title: t.services, body: t.servicesCard },
     { href: "/admin/site", title: t.site, body: t.siteCard },
     { href: "/admin/texts", title: t.texts, body: t.textsCard },

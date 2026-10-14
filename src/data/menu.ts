@@ -27,6 +27,9 @@ const SAMPLES: Record<MenuCategory, Sample[]> = {
     ["fresh-milk", "นมสด", "Fresh milk", "ร้อน เย็น หรือปั่น", "Hot, iced or blended"],
     ["honey-lemon-soda", "น้ำผึ้งมะนาวโซดา", "Honey lemon soda", "น้ำผึ้ง มะนาว และโซดา", "Honey, lime and soda"],
   ],
+  // The café adds its own food and snacks in the admin dashboard.
+  food: [],
+  snack: [],
 };
 
 export const seedMenu: MenuItem[] = Object.entries(SAMPLES).flatMap(([category, samples]) =>
@@ -41,5 +44,6 @@ export const seedMenu: MenuItem[] = Object.entries(SAMPLES).flatMap(([category, 
     image: "",
     sort_order: index + 1,
     published: true,
+    available: true,
   })),
 );

@@ -6,3 +6,6 @@ export const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://udomtongfarm.
  * phone that scans it. It stays the same for as long as the entry's id and the site address do.
  */
 export const speciesQrUrl = (id: string) => `${SITE_URL}/species/${id}`;
+
+/** The address on a table's QR code: the café menu with the table number already set. */
+export const tableQrUrl = (table: number) => `${SITE_URL}/cafe?table=${table}`;

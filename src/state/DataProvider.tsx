@@ -6,17 +6,18 @@ import { getDictionary } from "@/i18n";
 import { applyContent, type ContentRow } from "@/lib/content";
 import { DEFAULT_CONTACT, SETTINGS_FIELDS, type SiteSettings } from "@/lib/farm";
 import type { MenuItem } from "@/lib/menu";
+import { DEFAULT_SHOP, SHOP_FIELDS, type ShopSettings } from "@/lib/shop";
 import type { FarmService } from "@/lib/services";
 import type { Species } from "@/lib/species/types";
 import { supabase } from "@/lib/supabase";
 import { DataContext, type DataState } from "./data";
 
-type Loaded = Pick<DataState, "status" | "problem" | "species" | "menu" | "services" | "settings" | "content">;
+type Loaded = Pick<DataState, "status" | "problem" | "species" | "menu" | "services" | "settings" | "shop" | "content">;
 
 // Without Supabase the bundled collection and menu are used straight away.
 const START: Loaded = supabase
-  ? { status: "loading", problem: false, species: [], menu: [], services: [], settings: DEFAULT_CONTACT, content: [] }
-  : { status: "ready", problem: false, species: seedSpecies, menu: seedMenu, services: seedServices, settings: DEFAULT_CONTACT, content: [] };
+  ? { status: "loading", problem: false, species: [], menu: [], services: [], settings: DEFAULT_CONTACT, shop: DEFAULT_SHOP, content: [] }
+  : { status: "ready", problem: false, species: seedSpecies, menu: seedMenu, services: seedServices, settings: DEFAULT_CONTACT, shop: DEFAULT_SHOP, content: [] };
 
 // The photographs that used to ship with the site are gone. A database that still points at them
 // (before supabase/update-2026-10.sql has been run) is read as having no photo.
@@ -36,6 +37,7 @@ const SAVED_COPY: Loaded = {
   menu: seedMenu,
   services: seedServices,
   settings: DEFAULT_CONTACT,
+  shop: DEFAULT_SHOP,
   content: [],
 };
 
@@ -49,11 +51,12 @@ async function readFromSupabase(previous: Loaded | null, timeoutMs: number | nul
   const client = supabase;
 
   async function read(): Promise<Loaded> {
-    const [species, menu, services, settings, content] = await Promise.all([
+    const [species, menu, services, settings, shop, content] = await Promise.all([
       client.from("species").select("*").eq("published", true).order("name_en"),
       client.from("menu_items").select("*").eq("published", true),
       client.from("farm_services").select("*").eq("published", true),
       client.from("site_settings").select(SETTINGS_FIELDS.join(",")).eq("id", 1).maybeSingle(),
+      client.from("shop_settings").select(SHOP_FIELDS.join(",")).eq("id", 1).maybeSingle(),
       client.from("site_content").select("key,th,en"),
     ]);
 
@@ -74,6 +77,8 @@ async function readFromSupabase(previous: Loaded | null, timeoutMs: number | nul
         settings.error || !settings.data
           ? (previous?.settings ?? DEFAULT_CONTACT)
           : (settings.data as unknown as SiteSettings),
+      // Without the table, ordering is simply closed.
+      shop: shop.error || !shop.data ? (previous?.shop ?? DEFAULT_SHOP) : (shop.data as unknown as ShopSettings),
       content: content.error ? (previous?.content ?? []) : (content.data as ContentRow[]),
     };
   }

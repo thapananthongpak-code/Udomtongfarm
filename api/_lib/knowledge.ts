@@ -10,6 +10,7 @@ import builtInTh from "../../src/i18n/dictionaries/th.js";
 import { applyContent, type ContentRow } from "../../src/lib/content.js";
 import { DEFAULT_CONTACT, SETTINGS_FIELDS, formatPhone, type SiteSettings } from "../../src/lib/farm.js";
 import { formatPrice, sortMenu, type MenuItem } from "../../src/lib/menu.js";
+import { DEFAULT_SHOP, SHOP_FIELDS, type ShopSettings } from "../../src/lib/shop.js";
 import { servicesOfKind, type FarmService } from "../../src/lib/services.js";
 import type { Species } from "../../src/lib/species/types.js";
 
@@ -25,6 +26,7 @@ type FarmData = {
   species: Species[];
   menu: MenuItem[];
   services: FarmService[];
+  shop: ShopSettings;
   contact: SiteSettings;
   th: Dictionary;
   en: Dictionary;
@@ -36,14 +38,23 @@ type FarmData = {
  */
 async function loadFarmData(): Promise<FarmData> {
   if (!supabase) {
-    return { species: seedSpecies, menu: seedMenu, services: seedServices, contact: DEFAULT_CONTACT, th: builtInTh, en: builtInEn };
+    return {
+      species: seedSpecies,
+      menu: seedMenu,
+      services: seedServices,
+      shop: DEFAULT_SHOP,
+      contact: DEFAULT_CONTACT,
+      th: builtInTh,
+      en: builtInEn,
+    };
   }
 
-  const [species, menu, services, settings, content] = await Promise.all([
+  const [species, menu, services, settings, shop, content] = await Promise.all([
     supabase.from("species").select("*").eq("published", true),
     supabase.from("menu_items").select("*").eq("published", true),
     supabase.from("farm_services").select("*").eq("published", true),
     supabase.from("site_settings").select(SETTINGS_FIELDS.join(",")).eq("id", 1).maybeSingle(),
+    supabase.from("shop_settings").select(SHOP_FIELDS.join(",")).eq("id", 1).maybeSingle(),
     supabase.from("site_content").select("key,th,en"),
   ]);
   // The texts an admin has changed replace the built-in ones, as they do on the pages.
@@ -52,6 +63,7 @@ async function loadFarmData(): Promise<FarmData> {
     species: species.error ? seedSpecies : (species.data as Species[]),
     menu: menu.error ? seedMenu : (menu.data as MenuItem[]),
     services: services.error ? seedServices : (services.data as FarmService[]),
+    shop: shop.error || !shop.data ? DEFAULT_SHOP : (shop.data as unknown as ShopSettings),
     contact: settings.error || !settings.data ? DEFAULT_CONTACT : (settings.data as unknown as SiteSettings),
     th: applyContent(builtInTh, edits, "th"),
     en: applyContent(builtInEn, edits, "en"),
@@ -66,7 +78,7 @@ Facts about the farm itself must come from the farm information below, which is 
 
 Entry to the farm is free, and for homestay guests the drinking water, breakfast and fishing are free. Prices come only from the activities and rates list below: quote a price only when the list gives one, say that something is free only when the list or the facts above say so, and when the list shows "price not published" say that the farm has not published that price and suggest asking the farm. Never work out a total or a discount yourself. Rooms are booked by contacting the farm; you cannot take a booking yourself.
 
-The farm describes the café as something it will have. Do not say it is open now. The café menu below is a preview of what it plans to serve. Give the price of a drink only when the menu lists one; otherwise say that prices have not been published yet.
+The farm describes the café as something it will have. Do not say it is open now, unless the <ordering> section below says online ordering is open. The café menu below is a preview of what it plans to serve. Give the price of a drink only when the menu lists one; otherwise say that prices have not been published yet.
 
 For questions about the biology or care of a species in the list, use the species information below. You may add well-established general facts about that species when they help, but do not invent details about the individual animals or plants at this farm.
 
@@ -92,7 +104,8 @@ function speciesLine(sp: Species): string {
 
 function menuLine(item: MenuItem): string {
   const price = item.price === null ? "price not published" : `${item.price} baht`;
-  return `- ${item.name_th} / ${item.name_en || item.name_th} (${item.category}; ${price})`;
+  const stock = item.available ? "" : "; sold out right now";
+  return `- ${item.name_th} / ${item.name_en || item.name_th} (${item.category}; ${price}${stock})`;
 }
 
 function serviceLine(item: FarmService): string {
@@ -111,7 +124,7 @@ function serviceLine(item: FarmService): string {
  * from one request to the next, which lets Gemini reuse it at a lower price.
  */
 export async function buildFarmKnowledge(): Promise<{ prompt: string; species: Species[] }> {
-  const { species, menu, services, contact, th, en } = await loadFarmData();
+  const { species, menu, services, shop, contact, th, en } = await loadFarmData();
   const sorted = [...species].sort((a, b) => a.id.localeCompare(b.id));
   const animals = sorted.filter((sp) => sp.type === "animal");
   const plants = sorted.filter((sp) => sp.type === "plant");
@@ -148,6 +161,14 @@ export async function buildFarmKnowledge(): Promise<{ prompt: string; species: S
     "<cafe_menu>",
     ...sortMenu(menu).map(menuLine),
     "</cafe_menu>",
+    "",
+    "<ordering>",
+    shop.ordering_open
+      ? "Online ordering is open. A customer adds items to a basket on the Café page, then pays with a PromptPay QR code" +
+        (shop.promptpay_id ? "" : " (not available right now, cash only)") +
+        " or in cash to the staff. Items marked sold out cannot be ordered. You cannot place an order for them."
+      : "Online ordering is not open yet. The menu is a preview.",
+    "</ordering>",
     "",
     "<visiting>",
     `Admission: ${en.visit.admissionValue} / ${th.visit.admissionValue}`,

@@ -4,7 +4,7 @@
 import type { Locale } from "../i18n/config.js";
 
 /** The sections of the menu, in the order they are shown. */
-export const MENU_CATEGORIES = ["coffee", "cocoa", "tea", "other"] as const;
+export const MENU_CATEGORIES = ["coffee", "cocoa", "tea", "other", "food", "snack"] as const;
 export type MenuCategory = (typeof MENU_CATEGORIES)[number];
 
 /** One drink on the menu. The shape matches the `menu_items` table in Supabase. */
@@ -25,6 +25,8 @@ export type MenuItem = {
   sort_order: number;
 
   published: boolean;
+  /** False while the item is sold out: it stays on the menu but cannot be ordered. */
+  available: boolean;
   created_at?: string;
   updated_at?: string;
 };
@@ -35,7 +37,10 @@ export const menuName = (item: Pick<MenuItem, "name_th" | "name_en">, lang: Loca
 export const menuDescription = (item: Pick<MenuItem, "description_th" | "description_en">, lang: Locale) =>
   (lang === "th" ? item.description_th : item.description_en) || item.description_th;
 
-export const formatPrice = (price: number) => `฿${price}`;
+export const formatPrice = (price: number) => `฿${price.toLocaleString("en-US")}`;
+
+/** Whether a customer can put the item in a basket: it has a price and is not sold out. */
+export const isOrderable = (item: Pick<MenuItem, "price" | "available">) => item.price !== null && item.available;
 
 /** Menu order: by category, then position, then Thai name. */
 export const sortMenu = (items: MenuItem[]) =>

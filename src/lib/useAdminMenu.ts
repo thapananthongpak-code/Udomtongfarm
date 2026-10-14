@@ -1,10 +1,16 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { sortMenu, type MenuItem } from "@/lib/menu";
 import { supabase } from "@/lib/supabase";
 
-/** Every menu item including hidden ones, in menu order. Null while loading. */
-export function useAdminMenu(): MenuItem[] | null {
+/** Every menu item including hidden ones, in menu order (null while loading), and a way to read them again. */
+export function useAdminMenu(): { menu: MenuItem[] | null; refresh: () => Promise<void> } {
   const [menu, setMenu] = useState<MenuItem[] | null>(null);
+
+  const refresh = useCallback(async () => {
+    if (!supabase) return;
+    const { data } = await supabase.from("menu_items").select("*");
+    setMenu(sortMenu((data ?? []) as MenuItem[]));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -19,5 +25,5 @@ export function useAdminMenu(): MenuItem[] | null {
     };
   }, []);
 
-  return menu;
+  return { menu, refresh };
 }
