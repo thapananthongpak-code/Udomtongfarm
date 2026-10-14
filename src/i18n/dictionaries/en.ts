@@ -35,6 +35,7 @@ const en = {
     speciesCount: "{n} species",
     viewGallery: "View the full gallery",
     home: "Home",
+    isNew: "New",
   },
 
   status: {
@@ -67,7 +68,7 @@ const en = {
       },
       {
         title: "Café",
-        body: "A café on the farm will serve drinks to visitors.",
+        body: "A café on the farm will serve drinks to guests.",
       },
     ],
     activitiesTitle: "Things to do",
@@ -87,15 +88,18 @@ const en = {
   },
 
   home: {
-    title: "A new landmark in Chaiyaphum, home to rare animals and plants.",
-    lede: "Udomtong Farm grew out of the dedication and passion of Mr. Terawut Thongpak: a place set aside for breeding animals and plants, and open to visitors free of charge.",
+    title: "Come to Udomtong Farm and meet the rare animals and plants of Chaiyaphum.",
+    lede: "We keep and grow many rare animals and plants. This site invites you to visit, and tells the story of each one so you can get to know them before you meet them. Entry is free.",
     browse: "Explore the gallery",
     visit: "Plan a visit",
     onView: "From the gallery",
-    statSpecies: "Species recorded",
+    statSpecies: "Animals and plants",
+    newEyebrow: "New arrivals",
+    newTitle: "New at the farm",
+    newBody: "Animals and plants we have just added. Come and get to know them.",
     offerEyebrow: "On the farm",
-    highlightsEyebrow: "Highlights",
-    highlightsTitle: "Selected from the gallery",
+    highlightsEyebrow: "Meet",
+    highlightsTitle: "A few to get to know",
     departmentsEyebrow: "Departments",
     departmentsTitle: "Animals and plants, one farm",
     animalsBody: "Swans, pheasants, parrots and other birds kept and bred at the farm.",
@@ -105,7 +109,7 @@ const en = {
     aboutBody: "Udomtong Farm was created by Mr. Terawut Thongpak to breed animals and plants, and is open to anyone who wants to come and see them.",
     aboutLink: "Read our story",
     visitTitle: "Come and see the farm",
-    visitBody: "The farm welcomes visitors, families and school groups, and there is no charge to enter.",
+    visitBody: "The farm welcomes every guest, families and school groups alike, and entry is free.",
   },
 
   gallery: {
@@ -160,7 +164,7 @@ const en = {
   cafe: {
     eyebrow: "Café",
     title: "The café menu",
-    lede: "Coffee, cocoa and tea for visitors to the farm.",
+    lede: "Coffee, cocoa and tea for guests of the farm.",
     notice: "The café is getting ready to open. This is a preview of the menu: photographs of the drinks and prices will be added later.",
     categories: { coffee: "Coffee", cocoa: "Cocoa", tea: "Tea", other: "Other drinks" },
     empty: "The menu is being prepared.",
@@ -173,12 +177,12 @@ const en = {
     storyTitle: "How the farm began",
     story: [
       "Udomtong Farm grew out of the dedication and passion of Mr. Terawut Thongpak, who wanted a place to breed animals and plants in Chaiyaphum province.",
-      "The farm is open to visitors free of charge, as a new landmark for Chaiyaphum. Visitors can ride an ATV around the farm, feed animals such as the peacocks and swans, and collect hens' eggs. The homestay has four rooms, and a café on the farm will serve drinks.",
+      "The farm is free to enter, and a new landmark for Chaiyaphum. Guests can ride an ATV around the farm, feed animals such as the peacocks and swans, and collect hens' eggs. The homestay has four rooms, and a café on the farm will serve drinks.",
     ],
-    valuesTitle: "Three commitments",
+    valuesTitle: "Three things we care about",
     values: [
       { title: "Conservation", body: "Preserve and breed rare species so they survive for future generations." },
-      { title: "Education", body: "Offer a place to learn for the public, young people and anyone with an interest in nature." },
+      { title: "Education", body: "A place where guests of every age can learn about animals and plants." },
       { title: "Community", body: "Work with natural farming methods that respect the ecosystem and the local community." },
     ],
     numbersTitle: "The farm at a glance",
@@ -194,7 +198,7 @@ const en = {
   visit: {
     eyebrow: "Visit",
     title: "Visit Udomtong Farm",
-    lede: "Entry to the farm is free. Please contact us before you travel so we can prepare for your arrival.",
+    lede: "Entry to the farm is free. Call or message us before you set off, so we can get ready for you.",
     hours: "Visiting hours",
     hoursValue: "Daily, 08:00 to 17:00",
     hoursNote: "By appointment",
@@ -243,7 +247,7 @@ const en = {
       },
       {
         q: "Is there somewhere to get a drink?",
-        a: "The farm will have a café serving drinks to visitors. A preview of the menu is on the Café page.",
+        a: "The farm will have a café serving drinks to guests. A preview of the menu is on the Café page.",
       },
       {
         q: "Can I bring students or a group?",
@@ -372,6 +376,11 @@ const en = {
       visibility: "Visibility",
       published: "Published on the site",
       featured: "Show in the highlights on the home page",
+      newBadge: "“New” badge",
+      newAuto: "Automatic (shown for 30 days after adding)",
+      newOn: "Always shown",
+      newOff: "Never shown",
+      newHint: "Entries with the badge appear in the “New arrivals” band on the home page and come first in the gallery.",
       save: "Save",
       saving: "Saving",
       cancel: "Cancel",
@@ -488,7 +497,7 @@ const en = {
     open: "Ask about the farm",
     title: "Ask about the farm",
     close: "Close chat",
-    greeting: "Hello. Ask me about Udomtong Farm, the animals and plants here, or how to visit.",
+    greeting: "Hello! Ask me anything about Udomtong Farm, the animals and plants here, or how to visit.",
     suggestions: ["Is there an entry fee?", "What is there to do at the farm?", "Tell me about the homestay"],
     placeholder: "Type your question",
     send: "Send",
@@ -549,7 +558,7 @@ const en = {
   },
 
   footer: {
-    about: "A farm for breeding rare animals and plants in Chaiyaphum, open to visitors free of charge.",
+    about: "A farm for breeding rare animals and plants in Chaiyaphum. Entry is free.",
     explore: "Explore",
     contact: "Contact",
     privacy: "Privacy policy",

@@ -31,6 +31,8 @@ export type SpeciesFormValues = {
   tags: string;
   featured: boolean;
   published: boolean;
+  /** "" leaves the badge to the date the entry was added. */
+  is_new: "" | "true" | "false";
 };
 
 const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -57,6 +59,7 @@ const speciesSchema = z.object({
   tags: text(500),
   featured: z.boolean(),
   published: z.boolean(),
+  is_new: z.enum(["", "true", "false"]),
   sources: z.array(z.object({ title: required(300), url: z.url({ protocol: /^https?$/ }).max(1000) })).max(20),
 });
 
@@ -89,9 +92,10 @@ export async function saveSpecies(
     return { ok: false, code: "invalid", fields: collectFields(parsed.error.issues, speciesFieldError) };
   }
 
-  const { status, tags, scientific_name, ...rest } = parsed.data;
+  const { status, tags, scientific_name, is_new, ...rest } = parsed.data;
   const row = {
     ...rest,
+    is_new: is_new === "" ? null : is_new === "true",
     scientific_name: scientific_name || null,
     status: status || null,
     tags: [...new Set(tags.split(",").map((tag) => tag.trim()).filter(Boolean))],

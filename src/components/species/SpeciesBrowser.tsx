@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
-import { isSortMode, listTags, searchSpecies, sortSpecies, tagLabel, type SortMode } from "@/lib/species/helpers";
+import { isSortMode, listTags, newFirst, searchSpecies, sortSpecies, tagLabel, type SortMode } from "@/lib/species/helpers";
 import type { SpeciesCardData, SpeciesType } from "@/lib/species/types";
 import SpeciesCard from "./SpeciesCard";
 
@@ -44,7 +44,9 @@ export default function SpeciesBrowser({ species, type }: { species: SpeciesCard
     if (filters.tag) list = list.filter((sp) => sp.tags.includes(filters.tag));
     // A search keeps its best-match order unless a sort other than the default is chosen.
     if (filters.q.trim() && filters.sort === "az") return searchSpecies(sortSpecies(list, "az", lang), filters.q);
-    return sortSpecies(searchSpecies(list, filters.q), filters.sort, lang);
+    const sorted = sortSpecies(searchSpecies(list, filters.q), filters.sort, lang);
+    // In the default order, new entries come first so that an addition is seen straight away.
+    return filters.sort === "az" ? newFirst(sorted) : sorted;
   }, [inDepartment, filters, lang]);
 
   const update = (next: Filters) => setSearchParams(toParams(next, tab), { replace: true, preventScrollReset: true });
@@ -56,7 +58,7 @@ export default function SpeciesBrowser({ species, type }: { species: SpeciesCard
       <form
         role="search"
         onSubmit={(event) => event.preventDefault()}
-        className="grid gap-x-6 gap-y-5 border-y border-line py-6 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr]"
+        className="grid gap-x-6 gap-y-5 border-b border-line pb-6 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr]"
       >
         <div className="sm:col-span-2 lg:col-span-1">
           <label htmlFor="gallery-search" className="field-label">

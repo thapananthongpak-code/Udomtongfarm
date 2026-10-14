@@ -24,6 +24,19 @@ create table if not exists public.species (
   updated_at timestamptz not null default now()
 );
 
+-- The "new" badge. Empty means automatic: shown for 30 days after the entry was added.
+-- True always shows it and false never does. Entries that existed before the badge start without it.
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'species' and column_name = 'is_new'
+  ) then
+    alter table public.species add column is_new boolean;
+    update public.species set is_new = false;
+  end if;
+end $$;
+
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
@@ -76,6 +89,12 @@ values (
   'Huai Bong, Mueang Chaiyaphum, Chaiyaphum 36000, Thailand'
 )
 on conflict (id) do nothing;
+
+-- How many browsers opened the site on each day (Thailand time). Shown to admins only.
+create table if not exists public.visit_days (
+  day date primary key,
+  visitors integer not null default 0 check (visitors >= 0)
+);
 
 -- Activities (shown with a photo) and the price list. Price is in whole baht, zero means free,
 -- and it stays empty until the farm has set one. 'unit' says what the price is for, e.g. 'per room'.
@@ -193,6 +212,18 @@ begin
 end;
 $$;
 
+-- Adds one to today's count. The site calls it once per browser per day; nothing about the visitor is stored.
+create or replace function public.record_visit()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  insert into public.visit_days (day, visitors)
+  values ((now() at time zone 'Asia/Bangkok')::date, 1)
+  on conflict (day) do update set visitors = public.visit_days.visitors + 1;
+$$;
+
 revoke execute on function public.delete_own_account() from public, anon;
 grant execute on function public.delete_own_account() to authenticated;
 grant execute on function public.is_admin() to anon, authenticated;
@@ -222,6 +253,16 @@ grant select on public.farm_services to anon, authenticated;
 grant insert, update, delete on public.farm_services to authenticated;
 grant select on public.site_content to anon, authenticated;
 grant insert, update, delete on public.site_content to authenticated;
+
+alter table public.visit_days enable row level security;
+revoke all on public.visit_days from anon, authenticated;
+grant select on public.visit_days to authenticated;
+grant execute on function public.record_visit() to anon, authenticated;
+
+drop policy if exists "Admins read visit counts" on public.visit_days;
+create policy "Admins read visit counts" on public.visit_days
+  for select to authenticated
+  using (public.is_admin());
 
 drop policy if exists "Published species are public" on public.species;
 create policy "Published species are public" on public.species
