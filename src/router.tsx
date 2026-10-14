@@ -48,6 +48,7 @@ export const router = createBrowserRouter([
           { path: "menu/new", lazy: page(() => import("@/pages/admin/MenuEdit")) },
           { path: "menu/:id", lazy: page(() => import("@/pages/admin/MenuEdit")) },
           { path: "site", lazy: page(() => import("@/pages/admin/SiteSettings")) },
+          { path: "texts", lazy: page(() => import("@/pages/admin/SiteContent")) },
         ],
       },
       { path: "*", element: <NotFound /> },

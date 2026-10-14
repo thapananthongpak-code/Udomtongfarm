@@ -3,6 +3,7 @@
 
 import { z } from "zod";
 import type { Dictionary } from "@/i18n";
+import { CONTENT_KEYS, CONTENT_MAX_LENGTH, type ContentRow } from "@/lib/content";
 import type { SiteSettings } from "@/lib/farm";
 import { MENU_CATEGORIES, type MenuCategory } from "@/lib/menu";
 import { STATUS_CODES, type Source, type Species } from "@/lib/species/types";
@@ -223,5 +224,24 @@ export async function saveSiteSettings(values: SiteSettings): Promise<SaveResult
   const { data, error } = await supabase.from("site_settings").update(row).eq("id", 1).select("id");
   if (error) return { ok: false, code: "unknown" };
   if (data.length === 0) return { ok: false, code: "forbidden" };
+  return { ok: true };
+}
+
+const contentSchema = z.array(
+  z.object({ key: z.enum(CONTENT_KEYS), th: text(CONTENT_MAX_LENGTH), en: text(CONTENT_MAX_LENGTH) }),
+);
+
+/** Saves the site's texts. A row with both languages empty puts the built-in text back. */
+export async function saveContent(rows: ContentRow[]): Promise<SaveResult> {
+  if (!supabase) return { ok: false, code: "forbidden" };
+
+  const parsed = contentSchema.safeParse(rows);
+  if (!parsed.success) return { ok: false, code: "invalid" };
+  if (parsed.data.length === 0) return { ok: true };
+
+  // Asking for the rows back shows whether the change was allowed: a non-admin changes nothing.
+  const { data, error } = await supabase.from("site_content").upsert(parsed.data).select("key");
+  if (error) return { ok: false, code: error.code === "42501" ? "forbidden" : "unknown" };
+  if (data.length !== parsed.data.length) return { ok: false, code: "forbidden" };
   return { ok: true };
 }

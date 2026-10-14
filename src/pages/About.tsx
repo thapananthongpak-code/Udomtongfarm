@@ -3,7 +3,6 @@ import FarmOffers from "@/components/FarmOffers";
 import PageIntro from "@/components/PageIntro";
 import { localePath } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
-import { FOUNDER } from "@/lib/farm";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { useData } from "@/state/data";
 
@@ -62,12 +61,12 @@ export default function About() {
         <div className="shell grid gap-10 py-16 md:py-24 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <p className="eyebrow">{t.about.founderEyebrow}</p>
-            <h2 className="display mt-3 text-3xl md:text-4xl">{FOUNDER.name[lang]}</h2>
-            <p className="mt-4 text-[0.9375rem] text-muted">{FOUNDER.title[lang]}</p>
-            <p className="text-[0.9375rem] text-muted">{FOUNDER.org[lang]}</p>
+            <h2 className="display mt-3 text-3xl md:text-4xl">{t.about.founder.name}</h2>
+            <p className="mt-4 text-[0.9375rem] text-muted">{t.about.founder.title}</p>
+            <p className="text-[0.9375rem] text-muted">{t.about.founder.org}</p>
           </div>
           <div className="prose lg:col-span-7 lg:col-start-6">
-            <p>{FOUNDER.bio[lang]}</p>
+            <p>{t.about.founder.bio}</p>
           </div>
         </div>
       </section>

@@ -1,25 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { seedMenu } from "@/data/menu";
 import { seedSpecies } from "@/data/species";
+import { getDictionary } from "@/i18n";
+import { applyContent, type ContentRow } from "@/lib/content";
 import { DEFAULT_CONTACT, SETTINGS_FIELDS, type SiteSettings } from "@/lib/farm";
 import type { MenuItem } from "@/lib/menu";
 import type { Species } from "@/lib/species/types";
 import { supabase } from "@/lib/supabase";
 import { DataContext, type DataState } from "./data";
 
-type Loaded = Pick<DataState, "status" | "species" | "menu" | "settings">;
+type Loaded = Pick<DataState, "status" | "species" | "menu" | "settings" | "content">;
 
 // Without Supabase the bundled collection and menu are used straight away.
 const START: Loaded = supabase
-  ? { status: "loading", species: [], menu: [], settings: DEFAULT_CONTACT }
-  : { status: "ready", species: seedSpecies, menu: seedMenu, settings: DEFAULT_CONTACT };
+  ? { status: "loading", species: [], menu: [], settings: DEFAULT_CONTACT, content: [] }
+  : { status: "ready", species: seedSpecies, menu: seedMenu, settings: DEFAULT_CONTACT, content: [] };
 
 async function readFromSupabase(): Promise<Loaded | null> {
   if (!supabase) return null;
-  const [species, menu, settings] = await Promise.all([
+  const [species, menu, settings, content] = await Promise.all([
     supabase.from("species").select("*").eq("published", true).order("name_en"),
     supabase.from("menu_items").select("*").eq("published", true),
     supabase.from("site_settings").select(SETTINGS_FIELDS.join(",")).eq("id", 1).maybeSingle(),
+    supabase.from("site_content").select("key,th,en"),
   ]);
 
   // If the database cannot be read, most often because the schema has not been applied yet,
@@ -30,10 +33,12 @@ async function readFromSupabase(): Promise<Loaded | null> {
     species: species.error ? seedSpecies : (species.data as Species[]),
     menu: menu.error ? seedMenu : (menu.data as MenuItem[]),
     settings: settings.error || !settings.data ? DEFAULT_CONTACT : (settings.data as unknown as SiteSettings),
+    // Without the table, or without any edits, the site shows its built-in texts.
+    content: content.error ? [] : (content.data as ContentRow[]),
   };
 }
 
-/** Loads the collection and the farm's contact details once, and shares them with every page. */
+/** Loads the collection, the farm's contact details and its texts once, and shares them with every page. */
 export default function DataProvider({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState<Loaded>(START);
 
@@ -52,6 +57,14 @@ export default function DataProvider({ children }: { children: React.ReactNode }
     if (fresh) setLoaded(fresh);
   }, []);
 
-  const value = useMemo(() => ({ ...loaded, reload }), [loaded, reload]);
+  const dictionaries = useMemo(
+    () => ({
+      th: applyContent(getDictionary("th"), loaded.content, "th"),
+      en: applyContent(getDictionary("en"), loaded.content, "en"),
+    }),
+    [loaded.content],
+  );
+
+  const value = useMemo(() => ({ ...loaded, dictionaries, reload }), [loaded, dictionaries, reload]);
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }

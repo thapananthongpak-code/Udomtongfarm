@@ -1,4 +1,6 @@
 import { createContext, useContext } from "react";
+import { getDictionary, type Dictionary, type Locale } from "@/i18n";
+import type { ContentRow } from "@/lib/content";
 import { DEFAULT_CONTACT, type SiteSettings } from "@/lib/farm";
 import type { MenuItem } from "@/lib/menu";
 import type { Species } from "@/lib/species/types";
@@ -11,6 +13,10 @@ export type DataState = {
   /** Every published item on the café menu. */
   menu: MenuItem[];
   settings: SiteSettings;
+  /** The texts an admin has changed. */
+  content: ContentRow[];
+  /** The interface text of each language, with the admin's texts in place. */
+  dictionaries: Record<Locale, Dictionary>;
   /** Reads everything again, after an admin has saved a change. */
   reload: () => Promise<void>;
 };
@@ -20,6 +26,8 @@ export const DataContext = createContext<DataState>({
   species: [],
   menu: [],
   settings: DEFAULT_CONTACT,
+  content: [],
+  dictionaries: { th: getDictionary("th"), en: getDictionary("en") },
   reload: async () => {},
 });
 

@@ -77,6 +77,15 @@ values (
 )
 on conflict (id) do nothing;
 
+-- Texts an admin has changed (Admin → Site texts). The key says which text it is, e.g. 'visit.faqs.2.a'.
+-- An empty value means the site shows its built-in text for that language.
+create table if not exists public.site_content (
+  key text primary key check (key ~ '^[a-z][A-Za-z0-9.]{0,79}$'),
+  th text not null default '' check (char_length(th) <= 4000),
+  en text not null default '' check (char_length(en) <= 4000),
+  updated_at timestamptz not null default now()
+);
+
 -- ── Functions and triggers ───────────────────────────────────
 
 -- True when the caller is an admin. Runs as the owner so policies on profiles can call it without recursion.
@@ -114,6 +123,11 @@ create trigger menu_items_touch_updated_at
 drop trigger if exists site_settings_touch_updated_at on public.site_settings;
 create trigger site_settings_touch_updated_at
   before update on public.site_settings
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists site_content_touch_updated_at on public.site_content;
+create trigger site_content_touch_updated_at
+  before update on public.site_content
   for each row execute function public.touch_updated_at();
 
 -- Creates a profile for every new account, using the name from the member's Google account.
@@ -166,6 +180,7 @@ alter table public.profiles enable row level security;
 alter table public.favorites enable row level security;
 alter table public.site_settings enable row level security;
 alter table public.menu_items enable row level security;
+alter table public.site_content enable row level security;
 
 grant select on public.species to anon, authenticated;
 grant insert, update, delete on public.species to authenticated;
@@ -178,6 +193,8 @@ grant select on public.menu_items to anon, authenticated;
 grant insert, update, delete on public.menu_items to authenticated;
 grant select on public.site_settings to anon, authenticated;
 grant update on public.site_settings to authenticated;
+grant select on public.site_content to anon, authenticated;
+grant insert, update, delete on public.site_content to authenticated;
 
 drop policy if exists "Published species are public" on public.species;
 create policy "Published species are public" on public.species
@@ -257,6 +274,27 @@ create policy "Admins edit site settings" on public.site_settings
   for update to authenticated
   using (public.is_admin())
   with check (public.is_admin());
+
+drop policy if exists "Site texts are public" on public.site_content;
+create policy "Site texts are public" on public.site_content
+  for select to anon, authenticated
+  using (true);
+
+drop policy if exists "Admins add site texts" on public.site_content;
+create policy "Admins add site texts" on public.site_content
+  for insert to authenticated
+  with check (public.is_admin());
+
+drop policy if exists "Admins edit site texts" on public.site_content;
+create policy "Admins edit site texts" on public.site_content
+  for update to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Admins delete site texts" on public.site_content;
+create policy "Admins delete site texts" on public.site_content
+  for delete to authenticated
+  using (public.is_admin());
 
 -- ── Photo storage ────────────────────────────────────────────
 -- One bucket holds every photograph. Café menu photos are kept under menu/ inside it.
