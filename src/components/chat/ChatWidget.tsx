@@ -177,7 +177,7 @@ export default function ChatWidget() {
     return (
       <div className="fixed bottom-4 right-4 z-40 flex items-end gap-3 print:hidden">
         {bubble && (
-          <div className="pop-enter relative mb-3 max-w-[min(15rem,calc(100vw-7.5rem))] border border-ink bg-surface text-[0.9375rem] leading-snug shadow-[0_10px_30px_-14px_rgb(0_0_0/0.5)]">
+          <div className="pop-enter relative mb-9 max-w-[min(15rem,calc(100vw-7.5rem))] border border-ink bg-surface text-[0.9375rem] leading-snug shadow-[0_10px_30px_-14px_rgb(0_0_0/0.5)]">
             <button
               type="button"
               onClick={() => {
@@ -198,7 +198,7 @@ export default function ChatWidget() {
                 <path d="m3 3 10 10M13 3 3 13" />
               </svg>
             </button>
-            <span aria-hidden className="absolute -bottom-1.5 right-7 size-3 rotate-45 border-b border-r border-ink bg-surface" />
+            <span aria-hidden className="absolute -right-1.5 bottom-5 size-3 rotate-45 border-r border-t border-ink bg-surface" />
           </div>
         )}
         <button
@@ -210,9 +210,9 @@ export default function ChatWidget() {
           }}
           aria-label={labels.open}
           title={labels.open}
-          className="conure-host lift grid size-[4.25rem] shrink-0 place-items-end justify-items-center overflow-hidden rounded-full border border-ink bg-surface shadow-[0_10px_30px_-10px_rgb(0_0_0/0.5)]"
+          className="conure-host shrink-0 rounded-xl"
         >
-          <SunConure view="bust" className="size-[3.6rem]" />
+          <SunConure className="size-[4.75rem] drop-shadow-[0_6px_7px_rgb(0_0_0/0.28)]" />
         </button>
       </div>
     );
@@ -229,9 +229,7 @@ export default function ChatWidget() {
     >
       <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-end justify-items-center overflow-hidden rounded-full border border-line-strong bg-wall">
-            <SunConure view="bust" animated={false} className="size-9" />
-          </span>
+          <SunConure animated={false} className="size-11 shrink-0" />
           <h2 className="font-serif text-xl">{labels.title}</h2>
         </div>
         <button type="button" onClick={() => setOpen(false)} aria-label={labels.close} className="-mr-2 p-2 text-muted hover:text-ink">

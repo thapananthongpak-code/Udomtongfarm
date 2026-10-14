@@ -478,6 +478,12 @@
     .conure-host:focus-visible .conure-wing {
       transform: rotate(7deg);
     }
+    .conure-host {
+      transition: transform 0.2s;
+    }
+    .conure-host:hover {
+      transform: translateY(-3px);
+    }
     .conure-host:active .conure-bob {
       animation-play-state: paused;
       transform: translateY(2px) scale(0.96);

@@ -2,17 +2,15 @@ import { useId } from "react";
 
 type Props = {
   className?: string;
-  /** "bust" crops to the head and body, so the bird stays recognisable at a small size. */
-  view?: "full" | "bust";
   /** Idle movement: bobbing, blinking, and a head tilt and wing flutter when the pointer is near. */
   animated?: boolean;
 };
 
 /**
- * The farm's sun conure, drawn in code. Shading comes from gradients (light from the upper left),
- * a soft shadow and a glint in the eye, which gives the flat shapes some depth.
+ * The farm's sun conure, drawn in code. Shading comes from gradients (light from the upper left)
+ * and a glint in the eye, which gives the flat shapes some depth. It has no frame or background of its own.
  */
-export default function SunConure({ className = "", view = "full", animated = true }: Props) {
+export default function SunConure({ className = "", animated = true }: Props) {
   // Gradient ids must be unique on the page, because the bird can be drawn more than once.
   const id = useId().replace(/:/g, "");
   const ref = (name: string) => `url(#${name}-${id})`;
@@ -20,7 +18,7 @@ export default function SunConure({ className = "", view = "full", animated = tr
   return (
     <svg
       aria-hidden
-      viewBox={view === "bust" ? "8 8 88 88" : "4 8 112 112"}
+      viewBox="4 8 112 112"
       className={`${animated ? "conure" : ""} ${className}`}
       focusable="false"
     >
@@ -58,13 +56,7 @@ export default function SunConure({ className = "", view = "full", animated = tr
           <stop offset="0" stopColor="#b98355" />
           <stop offset="1" stopColor="#6b4426" />
         </linearGradient>
-        <radialGradient id={`shadow-${id}`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#000" stopOpacity="0.28" />
-          <stop offset="1" stopColor="#000" stopOpacity="0" />
-        </radialGradient>
       </defs>
-
-      <ellipse cx="60" cy="110" rx="40" ry="6" fill={ref("shadow")} />
 
       <g className="conure-bob">
         {/* The tail hangs down behind the perch. */}
