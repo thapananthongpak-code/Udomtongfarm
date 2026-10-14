@@ -159,6 +159,41 @@ await as("authenticated", admin);
 r = await tryQ(`delete from public.orders where id = '${order.id}' returning id`);
 check("an admin can delete an order, and its lines go with it", r.rows?.length === 1 && (await tryQ("select count(*)::int n from public.order_items")).rows?.[0]?.n === 0);
 
+// ── sales
+await as("postgres");
+// Three paid orders on known Thailand days, one unpaid, one cancelled-but-paid.
+const day = (d) => `${d}T05:00:00Z`; // 12:00 in Bangkok
+const mkOrder = async (name, method, status, paidAt, lines) => {
+  const o = (await db.query("insert into public.orders (customer_name, payment_method, status, paid_at) values ($1,$2,$3,$4) returning id", [name, method, status, paidAt])).rows[0].id;
+  for (const [menuId, nameTh, price, qty] of lines) {
+    await db.query("insert into public.order_items (order_id, menu_item_id, name_th, unit_price, quantity) values ($1,$2,$3,$4,$5)", [o, menuId, nameTh, price, qty]);
+  }
+};
+await mkOrder("s1", "cash", "completed", day("2026-10-12"), [[a, "ลาเต้", 60, 2], [b, "อเมริกาโน่", 45, 1]]);       // 165
+await mkOrder("s2", "promptpay", "completed", day("2026-10-12"), [[a, "ลาเต้", 60, 1]]);                            //  60
+await mkOrder("s3", "cash", "completed", day("2026-10-13"), [[b, "อเมริกาโน่", 45, 4]]);                            // 180
+await mkOrder("s4", "cash", "new", null, [[a, "ลาเต้", 60, 5]]);                                                     // unpaid: not a sale
+await mkOrder("s5", "cash", "cancelled", day("2026-10-13"), [[a, "ลาเต้", 60, 9]]);                                  // cancelled: not a sale
+await mkOrder("s6", "cash", "completed", "2026-10-12T18:30:00Z", [[b, "อเมริกาโน่", 45, 1]]);                       // 01:30 on the 13th in Bangkok
+
+await as("authenticated", admin);
+let rs = await tryQ("select * from public.sales_by_day('2026-10-01','2026-10-31')");
+const byDay = Object.fromEntries((rs.rows ?? []).map((r) => [r.day instanceof Date ? r.day.toISOString().slice(0, 10) : String(r.day).slice(0, 10), r]));
+check("sales: the 12th has 2 orders and 225 (165 cash + 60 PromptPay)", byDay["2026-10-12"]?.orders === 2 && byDay["2026-10-12"]?.revenue === 225 && byDay["2026-10-12"]?.cash === 165 && byDay["2026-10-12"]?.promptpay === 60, JSON.stringify(rs.rows));
+check("sales: an order paid at 01:30 Bangkok time counts on the 13th, with the 180 one (225)", byDay["2026-10-13"]?.orders === 2 && byDay["2026-10-13"]?.revenue === 225, JSON.stringify(byDay["2026-10-13"]));
+check("sales: unpaid and cancelled orders are not counted", Object.values(byDay).reduce((s, r) => s + r.revenue, 0) === 450);
+check("sales: a range with nothing in it returns no rows", (await tryQ("select * from public.sales_by_day('2026-01-01','2026-01-31')")).rows?.length === 0);
+rs = await tryQ("select * from public.top_items('2026-10-01','2026-10-31', 10)");
+check("top items: ordered by quantity, only paid and not cancelled", rs.rows?.[0]?.name_th === "อเมริกาโน่" && rs.rows[0].quantity === 6 && rs.rows[1]?.name_th === "ลาเต้" && rs.rows[1].quantity === 3, JSON.stringify(rs.rows));
+check("top items: the limit is honoured", (await tryQ("select * from public.top_items('2026-10-01','2026-10-31', 1)")).rows?.length === 1);
+
+await as("authenticated", member);
+check("a member cannot read the sales", Boolean((await tryQ("select * from public.sales_by_day('2026-10-01','2026-10-31')")).error));
+check("a member cannot read the top items", Boolean((await tryQ("select * from public.top_items('2026-10-01','2026-10-31')")).error));
+await as("anon");
+check("a visitor cannot read the sales", Boolean((await tryQ("select * from public.sales_by_day('2026-10-01','2026-10-31')")).error));
+check("a visitor cannot read the top items", Boolean((await tryQ("select * from public.top_items('2026-10-01','2026-10-31')")).error));
+
 const failed = results.filter((x) => !x).length;
 console.log(`\n${results.length - failed}/${results.length} checks passed`);
 process.exit(failed ? 1 : 0);

@@ -24,6 +24,7 @@ export default function Dashboard() {
     { href: "/admin/species", title: t.species, body: t.speciesCard },
     { href: "/admin/menu", title: t.menu, body: t.menuCard },
     { href: "/admin/orders", title: t.orders.title, body: t.orders.card },
+    { href: "/admin/sales", title: t.sales.title, body: t.sales.card },
     { href: "/admin/shop", title: t.shop, body: t.shopCard },
     { href: "/admin/services", title: t.services, body: t.servicesCard },
     { href: "/admin/site", title: t.site, body: t.siteCard },

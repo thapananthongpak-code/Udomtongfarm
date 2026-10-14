@@ -385,6 +385,67 @@ as $$
   where o.id = p_id;
 $$;
 
+-- ── Sales ────────────────────────────────────────────────────
+-- An order counts as a sale once an admin has marked the money as received (paid_at) and it was not
+-- cancelled. It belongs to the day it was paid, by Thailand's clock. Only admins can call these.
+
+create or replace function public.sales_by_day(p_from date, p_to date)
+returns table (day date, orders integer, revenue integer, cash integer, promptpay integer)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'forbidden' using errcode = '42501';
+  end if;
+
+  return query
+  select
+    (o.paid_at at time zone 'Asia/Bangkok')::date,
+    count(*)::integer,
+    coalesce(sum(o.total), 0)::integer,
+    coalesce(sum(o.total) filter (where o.payment_method = 'cash'), 0)::integer,
+    coalesce(sum(o.total) filter (where o.payment_method = 'promptpay'), 0)::integer
+  from public.orders o
+  where o.paid_at is not null
+    and o.status <> 'cancelled'
+    and (o.paid_at at time zone 'Asia/Bangkok')::date between p_from and p_to
+  group by 1
+  order by 1;
+end;
+$$;
+
+create or replace function public.top_items(p_from date, p_to date, p_limit integer default 10)
+returns table (name_th text, name_en text, quantity integer, revenue integer)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'forbidden' using errcode = '42501';
+  end if;
+
+  return query
+  select
+    i.name_th,
+    max(i.name_en),
+    sum(i.quantity)::integer,
+    sum(i.unit_price * i.quantity)::integer
+  from public.order_items i
+  join public.orders o on o.id = i.order_id
+  where o.paid_at is not null
+    and o.status <> 'cancelled'
+    and (o.paid_at at time zone 'Asia/Bangkok')::date between p_from and p_to
+  group by i.name_th
+  order by 3 desc, 4 desc, 1
+  limit least(greatest(coalesce(p_limit, 10), 1), 50);
+end;
+$$;
+
 -- Creates a profile for every new account, using the name from the member's Google account.
 create or replace function public.handle_new_user()
 returns trigger
@@ -441,6 +502,10 @@ grant execute on function public.delete_own_account() to authenticated;
 grant execute on function public.is_admin() to anon, authenticated;
 revoke execute on function public.place_order(text, integer, text, text, jsonb) from public;
 grant execute on function public.place_order(text, integer, text, text, jsonb) to anon, authenticated;
+revoke execute on function public.sales_by_day(date, date) from public, anon;
+grant execute on function public.sales_by_day(date, date) to authenticated;
+revoke execute on function public.top_items(date, date, integer) from public, anon;
+grant execute on function public.top_items(date, date, integer) to authenticated;
 revoke execute on function public.get_order(uuid) from public;
 grant execute on function public.get_order(uuid) to anon, authenticated;
 

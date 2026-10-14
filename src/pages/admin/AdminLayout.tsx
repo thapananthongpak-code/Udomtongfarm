@@ -24,6 +24,7 @@ export default function AdminLayout() {
     { href: "/admin/species", label: t.species },
     { href: "/admin/menu", label: t.menu },
     { href: "/admin/orders", label: t.orders.title },
+    { href: "/admin/sales", label: t.sales.title },
     { href: "/admin/shop", label: t.shop },
     { href: "/admin/services", label: t.services },
     { href: "/admin/site", label: t.site },
