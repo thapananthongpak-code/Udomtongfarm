@@ -5,6 +5,8 @@ import { z } from "zod";
 import type { Dictionary } from "@/i18n";
 import { CONTENT_KEYS, CONTENT_MAX_LENGTH, type ContentRow } from "@/lib/content";
 import type { SiteSettings } from "@/lib/farm";
+import { promptPayTarget } from "@/lib/promptpay";
+import type { ShopSettings } from "@/lib/shop";
 import { MENU_CATEGORIES, type MenuCategory } from "@/lib/menu";
 import { SERVICE_KINDS, type ServiceKind } from "@/lib/services";
 import { STATUS_CODES, type Source, type Species } from "@/lib/species/types";
@@ -148,6 +150,8 @@ export type MenuFormValues = {
   image: string;
   sort_order: string;
   published: boolean;
+  /** False while the item is sold out. */
+  available: boolean;
 };
 
 const wholeNumber = (digits: number) => text(digits).regex(/^\d*$/);
@@ -162,6 +166,7 @@ const menuSchema = z.object({
   image: text(1000).refine(isAllowedImage),
   sort_order: wholeNumber(4),
   published: z.boolean(),
+  available: z.boolean(),
 });
 
 function menuFieldError(field: string): AdminError {
@@ -189,6 +194,13 @@ export async function saveMenuItem(values: MenuFormValues, existingId: string | 
   if (error) return { ok: false, code: error.code === "42501" ? "forbidden" : "unknown" };
   if (data.length === 0) return { ok: false, code: "forbidden" };
   return { ok: true };
+}
+
+/** Marks an item sold out, or on sale again. True only when the database really changed the item. */
+export async function setMenuAvailability(id: string, available: boolean): Promise<boolean> {
+  if (!supabase) return false;
+  const { data, error } = await supabase.from("menu_items").update({ available }).eq("id", id).select("id");
+  return !error && data.length > 0;
 }
 
 export async function deleteMenuItem(id: string): Promise<boolean> {
@@ -312,5 +324,26 @@ export async function saveContent(rows: ContentRow[]): Promise<SaveResult> {
   const { data, error } = await supabase.from("site_content").upsert(parsed.data).select("key");
   if (error) return { ok: false, code: error.code === "42501" ? "forbidden" : "unknown" };
   if (data.length !== parsed.data.length) return { ok: false, code: "forbidden" };
+  return { ok: true };
+}
+
+/** What the shop settings form holds while it is edited. */
+export type ShopFormValues = { ordering_open: boolean; promptpay_id: string; table_count: string };
+
+export async function saveShopSettings(values: ShopFormValues): Promise<SaveResult> {
+  if (!supabase) return { ok: false, code: "forbidden" };
+
+  const fields: Record<string, AdminError> = {};
+  const promptpay = values.promptpay_id.replace(/[\s-]/g, "");
+  if (promptpay !== "" && promptPayTarget(promptpay) === null) fields.promptpay_id = "promptpay";
+  const tables = values.table_count.trim() === "" ? 0 : Number(values.table_count);
+  if (!Number.isInteger(tables) || tables < 0 || tables > 200) fields.table_count = "tables";
+  if (Object.keys(fields).length > 0) return { ok: false, code: "invalid", fields };
+
+  const row: ShopSettings = { ordering_open: values.ordering_open, promptpay_id: promptpay, table_count: tables };
+  // Asking for the row back shows whether the update was allowed: a non-admin updates nothing.
+  const { data, error } = await supabase.from("shop_settings").update(row).eq("id", 1).select("id");
+  if (error) return { ok: false, code: error.code === "42501" ? "forbidden" : "unknown" };
+  if (data.length === 0) return { ok: false, code: "forbidden" };
   return { ok: true };
 }

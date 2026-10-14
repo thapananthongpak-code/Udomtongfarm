@@ -3,6 +3,7 @@ import { getDictionary, type Dictionary, type Locale } from "@/i18n";
 import type { ContentRow } from "@/lib/content";
 import { DEFAULT_CONTACT, type SiteSettings } from "@/lib/farm";
 import type { MenuItem } from "@/lib/menu";
+import { DEFAULT_SHOP, type ShopSettings } from "@/lib/shop";
 import type { FarmService } from "@/lib/services";
 import type { Species } from "@/lib/species/types";
 
@@ -18,6 +19,8 @@ export type DataState = {
   /** Every published activity and rate. */
   services: FarmService[];
   settings: SiteSettings;
+  /** Whether and how customers can order. */
+  shop: ShopSettings;
   /** The texts an admin has changed. */
   content: ContentRow[];
   /** The interface text of each language, with the admin's texts in place. */
@@ -33,6 +36,7 @@ export const DataContext = createContext<DataState>({
   menu: [],
   services: [],
   settings: DEFAULT_CONTACT,
+  shop: DEFAULT_SHOP,
   content: [],
   dictionaries: { th: getDictionary("th"), en: getDictionary("en") },
   reload: async () => {},

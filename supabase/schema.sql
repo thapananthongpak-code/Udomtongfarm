@@ -55,7 +55,7 @@ create table if not exists public.favorites (
 -- The café menu. Price is in whole baht and stays empty until the café has set one.
 create table if not exists public.menu_items (
   id uuid primary key default gen_random_uuid(),
-  category text not null check (category in ('coffee', 'cocoa', 'tea', 'other')),
+  category text not null check (category in ('coffee', 'cocoa', 'tea', 'other', 'food', 'snack')),
   name_th text not null,
   name_en text not null default '',
   description_th text not null default '',
@@ -64,9 +64,17 @@ create table if not exists public.menu_items (
   image text not null default '',
   sort_order integer not null default 0,
   published boolean not null default true,
+  -- False while the item is sold out: it stays on the menu, but cannot be ordered.
+  available boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Older databases: the same changes for a menu table that already exists.
+alter table public.menu_items add column if not exists available boolean not null default true;
+alter table public.menu_items drop constraint if exists menu_items_category_check;
+alter table public.menu_items
+  add constraint menu_items_category_check check (category in ('coffee', 'cocoa', 'tea', 'other', 'food', 'snack'));
 
 -- Contact details shown on the site. There is always exactly one row.
 create table if not exists public.site_settings (
@@ -124,6 +132,55 @@ create table if not exists public.site_content (
   updated_at timestamptz not null default now()
 );
 
+-- ── Ordering ─────────────────────────────────────────────────
+
+-- Settings of the shop. There is always exactly one row. Ordering stays closed until an admin opens it.
+create table if not exists public.shop_settings (
+  id integer primary key default 1 check (id = 1),
+  ordering_open boolean not null default false,
+  -- The PromptPay number (10 digits, a phone number) or ID (13 digits) that customers pay to.
+  promptpay_id text not null default '' check (promptpay_id ~ '^[0-9]*$' and char_length(promptpay_id) <= 15),
+  -- How many tables have a QR code. Zero means ordering at the counter only.
+  table_count integer not null default 0 check (table_count between 0 and 200),
+  updated_at timestamptz not null default now()
+);
+
+insert into public.shop_settings (id) values (1) on conflict (id) do nothing;
+
+-- One row per order. Customers never read or write this table: they place an order through
+-- place_order() and read their own through get_order(), which needs the order's random id.
+create table if not exists public.orders (
+  id uuid primary key default gen_random_uuid(),
+  order_no bigint generated always as identity,
+  customer_name text not null check (char_length(customer_name) between 1 and 60),
+  table_no integer check (table_no between 1 and 200),
+  note text not null default '' check (char_length(note) <= 200),
+  payment_method text not null check (payment_method in ('promptpay', 'cash')),
+  status text not null default 'new' check (status in ('new', 'confirmed', 'ready', 'completed', 'cancelled')),
+  total integer not null default 0 check (total >= 0),
+  -- Set by an admin once the money has arrived.
+  paid_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists orders_created_at_idx on public.orders (created_at desc);
+
+-- The lines of an order. The name and price are copied from the menu when the order is placed,
+-- so changing the menu later does not change an order that has already been taken.
+create table if not exists public.order_items (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references public.orders (id) on delete cascade,
+  menu_item_id uuid references public.menu_items (id) on delete set null,
+  name_th text not null,
+  name_en text not null default '',
+  unit_price integer not null check (unit_price >= 0),
+  quantity integer not null check (quantity between 1 and 50),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists order_items_order_idx on public.order_items (order_id);
+
 -- ── Functions and triggers ───────────────────────────────────
 
 -- True when the caller is an admin. Runs as the owner so policies on profiles can call it without recursion.
@@ -172,6 +229,161 @@ drop trigger if exists site_content_touch_updated_at on public.site_content;
 create trigger site_content_touch_updated_at
   before update on public.site_content
   for each row execute function public.touch_updated_at();
+
+drop trigger if exists shop_settings_touch_updated_at on public.shop_settings;
+create trigger shop_settings_touch_updated_at
+  before update on public.shop_settings
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists orders_touch_updated_at on public.orders;
+create trigger orders_touch_updated_at
+  before update on public.orders
+  for each row execute function public.touch_updated_at();
+
+-- Keeps an order's total equal to the sum of its lines, whoever changes the lines.
+create or replace function public.recompute_order_total()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target uuid := coalesce(new.order_id, old.order_id);
+begin
+  update public.orders
+  set total = coalesce((select sum(unit_price * quantity) from public.order_items where order_id = target), 0)
+  where id = target;
+  return null;
+end;
+$$;
+
+drop trigger if exists order_items_recompute_total on public.order_items;
+create trigger order_items_recompute_total
+  after insert or update or delete on public.order_items
+  for each row execute function public.recompute_order_total();
+
+-- Places an order. Everything is checked here, and the prices come from the menu table,
+-- never from the customer. If any line is refused the whole order is refused.
+create or replace function public.place_order(
+  p_name text,
+  p_table integer,
+  p_note text,
+  p_method text,
+  p_items jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  shop public.shop_settings;
+  item public.menu_items;
+  line jsonb;
+  qty integer;
+  new_id uuid;
+  new_no bigint;
+  new_total integer;
+  seen uuid[] := '{}';
+begin
+  select * into shop from public.shop_settings where id = 1;
+  if not found or not shop.ordering_open then
+    raise exception 'ordering_closed';
+  end if;
+
+  p_name := btrim(coalesce(p_name, ''));
+  if char_length(p_name) < 1 or char_length(p_name) > 60 then
+    raise exception 'invalid_name';
+  end if;
+  p_note := left(btrim(coalesce(p_note, '')), 200);
+
+  if p_method is null or p_method not in ('promptpay', 'cash') then
+    raise exception 'invalid_method';
+  end if;
+  if p_method = 'promptpay' and shop.promptpay_id = '' then
+    raise exception 'promptpay_unavailable';
+  end if;
+  if p_table is not null and (p_table < 1 or p_table > shop.table_count) then
+    raise exception 'invalid_table';
+  end if;
+
+  if p_items is null or jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) not between 1 and 30 then
+    raise exception 'invalid_items';
+  end if;
+
+  -- A simple brake on floods: a human cannot place this many orders, so staff are never buried.
+  if (select count(*) from public.orders where status = 'new' and created_at > now() - interval '10 minutes') >= 60 then
+    raise exception 'too_many_orders';
+  end if;
+
+  insert into public.orders (customer_name, table_no, note, payment_method)
+  values (p_name, p_table, p_note, p_method)
+  returning id, order_no into new_id, new_no;
+
+  for line in select * from jsonb_array_elements(p_items) loop
+    qty := (line ->> 'quantity')::integer;
+    select * into item from public.menu_items where id = (line ->> 'id')::uuid;
+
+    if not found or not item.published or not item.available or item.price is null then
+      raise exception 'item_unavailable';
+    end if;
+    if qty is null or qty < 1 or qty > 20 then
+      raise exception 'invalid_items';
+    end if;
+    if item.id = any (seen) then
+      raise exception 'invalid_items';
+    end if;
+    seen := seen || item.id;
+
+    insert into public.order_items (order_id, menu_item_id, name_th, name_en, unit_price, quantity)
+    values (new_id, item.id, item.name_th, item.name_en, item.price, qty);
+  end loop;
+
+  select total into new_total from public.orders where id = new_id;
+  return jsonb_build_object('id', new_id, 'order_no', new_no, 'total', new_total);
+end;
+$$;
+
+-- Reads one order by its random id, with its lines. The id is the only key: whoever placed the order
+-- has it, and nobody can list or guess orders.
+create or replace function public.get_order(p_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'id', o.id,
+    'order_no', o.order_no,
+    'customer_name', o.customer_name,
+    'table_no', o.table_no,
+    'note', o.note,
+    'payment_method', o.payment_method,
+    'status', o.status,
+    'total', o.total,
+    'paid', o.paid_at is not null,
+    'created_at', o.created_at,
+    'items', coalesce(
+      (
+        select jsonb_agg(
+          jsonb_build_object(
+            'name_th', i.name_th,
+            'name_en', i.name_en,
+            'unit_price', i.unit_price,
+            'quantity', i.quantity
+          )
+          order by i.created_at, i.name_th
+        )
+        from public.order_items i
+        where i.order_id = o.id
+      ),
+      '[]'::jsonb
+    )
+  )
+  from public.orders o
+  where o.id = p_id;
+$$;
 
 -- Creates a profile for every new account, using the name from the member's Google account.
 create or replace function public.handle_new_user()
@@ -227,6 +439,10 @@ $$;
 revoke execute on function public.delete_own_account() from public, anon;
 grant execute on function public.delete_own_account() to authenticated;
 grant execute on function public.is_admin() to anon, authenticated;
+revoke execute on function public.place_order(text, integer, text, text, jsonb) from public;
+grant execute on function public.place_order(text, integer, text, text, jsonb) to anon, authenticated;
+revoke execute on function public.get_order(uuid) from public;
+grant execute on function public.get_order(uuid) to anon, authenticated;
 
 -- ── Row level security ───────────────────────────────────────
 
@@ -237,6 +453,9 @@ alter table public.site_settings enable row level security;
 alter table public.menu_items enable row level security;
 alter table public.site_content enable row level security;
 alter table public.farm_services enable row level security;
+alter table public.shop_settings enable row level security;
+alter table public.orders enable row level security;
+alter table public.order_items enable row level security;
 
 grant select on public.species to anon, authenticated;
 grant insert, update, delete on public.species to authenticated;
@@ -250,6 +469,12 @@ grant insert, update, delete on public.menu_items to authenticated;
 grant select on public.site_settings to anon, authenticated;
 grant update on public.site_settings to authenticated;
 grant select on public.farm_services to anon, authenticated;
+grant select on public.shop_settings to anon, authenticated;
+grant update on public.shop_settings to authenticated;
+-- Orders are for admins only. Customers go through place_order() and get_order().
+revoke all on public.orders, public.order_items from anon, authenticated;
+grant select, update, delete on public.orders to authenticated;
+grant select, insert, update, delete on public.order_items to authenticated;
 grant insert, update, delete on public.farm_services to authenticated;
 grant select on public.site_content to anon, authenticated;
 grant insert, update, delete on public.site_content to authenticated;
@@ -363,6 +588,67 @@ drop policy if exists "Admins delete services" on public.farm_services;
 create policy "Admins delete services" on public.farm_services
   for delete to authenticated
   using (public.is_admin());
+
+drop policy if exists "Shop settings are public" on public.shop_settings;
+create policy "Shop settings are public" on public.shop_settings
+  for select to anon, authenticated
+  using (true);
+
+drop policy if exists "Admins edit shop settings" on public.shop_settings;
+create policy "Admins edit shop settings" on public.shop_settings
+  for update to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Admins read orders" on public.orders;
+create policy "Admins read orders" on public.orders
+  for select to authenticated
+  using (public.is_admin());
+
+drop policy if exists "Admins edit orders" on public.orders;
+create policy "Admins edit orders" on public.orders
+  for update to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Admins delete orders" on public.orders;
+create policy "Admins delete orders" on public.orders
+  for delete to authenticated
+  using (public.is_admin());
+
+drop policy if exists "Admins read order lines" on public.order_items;
+create policy "Admins read order lines" on public.order_items
+  for select to authenticated
+  using (public.is_admin());
+
+drop policy if exists "Admins add order lines" on public.order_items;
+create policy "Admins add order lines" on public.order_items
+  for insert to authenticated
+  with check (public.is_admin());
+
+drop policy if exists "Admins edit order lines" on public.order_items;
+create policy "Admins edit order lines" on public.order_items
+  for update to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Admins delete order lines" on public.order_items;
+create policy "Admins delete order lines" on public.order_items
+  for delete to authenticated
+  using (public.is_admin());
+
+-- New orders reach the admin dashboard as they arrive (Supabase Realtime). Only admins can read the
+-- table, so only admins receive them.
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (
+       select 1 from pg_publication_tables
+       where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'orders'
+     ) then
+    alter publication supabase_realtime add table public.orders;
+  end if;
+end $$;
 
 drop policy if exists "Site texts are public" on public.site_content;
 create policy "Site texts are public" on public.site_content

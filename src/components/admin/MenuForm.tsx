@@ -24,6 +24,7 @@ const initialValues = (item: MenuItem | null): Values => ({
   image: item?.image ?? "",
   sort_order: item?.sort_order.toString() ?? "",
   published: item?.published ?? true,
+  available: item?.available ?? true,
 });
 
 export default function MenuForm({ item, listHref }: Props) {
@@ -70,7 +71,7 @@ export default function MenuForm({ item, listHref }: Props) {
     setUpload(url ? "idle" : "failed");
   }
 
-  type TextName = Exclude<keyof Values, "category" | "published">;
+  type TextName = Exclude<keyof Values, "category" | "published" | "available">;
   const textField = (
     name: TextName,
     label: string,
@@ -179,6 +180,19 @@ export default function MenuForm({ item, listHref }: Props) {
           />
           {labels.published}
         </label>
+        <div>
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              name="available"
+              checked={values.available}
+              onChange={(event) => set("available", event.target.checked)}
+              className="size-4 accent-(--accent)"
+            />
+            {labels.available}
+          </label>
+          <p className="field-hint">{labels.availableHint}</p>
+        </div>
       </fieldset>
 
       <div className="flex flex-wrap gap-3 border-t border-ink pt-8">

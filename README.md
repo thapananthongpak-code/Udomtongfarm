@@ -7,7 +7,8 @@ Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the G
 ## What the site does
 
 - **Home, About and Visit pages** that present the farm: free to enter, with activities, a four-room homestay and a café, plus hours, map, directions and FAQ.
-- **Café page** with the drinks menu, grouped into coffee, cocoa, tea and other drinks.
+- **Café page** with the menu, grouped into coffee, cocoa, tea, other drinks, food and snacks.
+- **Ordering at the café:** a customer adds items to a basket, enters a name, picks a table or the counter, and pays with a PromptPay QR code (amount filled in) or cash. The order page shows its status and updates itself. See "Ordering" below.
 - **Gallery** with four tabs: animals, plants, activities and rates. The animals and plants tabs search across Thai, English and scientific names and filter by group; each species has its own page. Activities are shown with a photograph, and the rates tab is a price list in which an empty price reads "Ask the farm" and zero reads "Free".
 - **Chat assistant**, shown as a small sun conure in the corner of every page, that answers customers' questions about the farm, its animals and plants, and how to get in touch. A line greets the customer beside the bird once per visit: one for the time of day, or a general one, picked at random. It runs on Google Gemini.
 - **Sign-in with Google** for visitors who want to keep a saved list of species. There are no passwords on this site, so none can be lost.
@@ -48,7 +49,7 @@ Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap mess
 ## Supabase (sign-in, saved lists, admin)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. In the project's **SQL Editor**, run `supabase/schema.sql`, then `supabase/seed.sql`. The first creates the tables, access rules and photo storage. The second loads the starting collection and a sample café menu. Both are safe to run again after an update to this code: existing data is kept.
+2. In the project's **SQL Editor**, run `supabase/schema.sql`, then `supabase/seed.sql`. The first creates the tables, functions, access rules and photo storage. The second loads the starting collection and a sample café menu. Both are safe to run again after an update to this code: existing data is kept. **Run `schema.sql` again whenever it changes**, for example for the ordering tables.
 
    A database created before October 2026 also needs `supabase/update-2026-10.sql` run once. It adds the "new" badge and the visit counts, clears the photographs that were removed from the site, and cuts the conservation sentences from the descriptions.
 3. Set these from **Project Settings → API**:
@@ -77,6 +78,8 @@ Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap mess
 | Species information and photographs | Admin dashboard → Animals and plants |
 | Café menu: drinks, prices and photographs | Admin dashboard → Café menu |
 | Activities, their photographs, and rates | Admin dashboard → Activities and rates |
+| Opening ordering, PromptPay number, tables and their QR codes | Admin dashboard → Orders and payment |
+| Marking a menu item sold out | Admin dashboard → Café menu |
 | QR codes: download or print | Admin dashboard → Animals and plants → open an entry, or "QR code signs" |
 | Phone, Facebook link, map link, address | Admin dashboard → Farm details |
 | Site name, tagline, home page heading, farm story, founder profile, activities, homestay details, hours, FAQ, footer and privacy policy | Admin dashboard → Site texts |
@@ -133,7 +136,7 @@ The admin pages are hidden from everyone who is not an admin, but that is only f
 
 - Anyone can read published species, activities and rates, the farm's contact details and the site's texts.
 - Members can read and change only their own profile name and saved list.
-- Only admins can change species, activities and rates, upload photographs, or edit the farm's details and the site's texts, and only admins can read the visit counts. Admins are appointed in the SQL Editor.
+- Only admins can change species, activities and rates, upload photographs, or edit the farm's details and the site's texts, and only admins can read the visit counts and the orders. Customers place and read orders only through two functions (see "Ordering"). Admins are appointed in the SQL Editor.
 
 ### Visitor numbers
 
@@ -155,6 +158,23 @@ To check a deployment by hand, signed in as an admin:
 6. Change a text in Admin → Site texts, then empty the box and save: the original wording returns.
 
 And as a signed-in member who is not an admin (use another Google account): there is no link to the admin area, and `/th/admin` shows "not found".
+
+## Ordering
+
+How it fits together:
+
+- **The shop settings** are in Admin → Orders and payment: the switch that opens ordering (off to begin with), the shop's PromptPay number or ID, and the number of tables. Printing the table QR codes is on the same page. A table's code opens `/cafe?table=N`.
+- **A customer** adds menu items to a basket (kept in the browser) and places the order. The price of every line comes from the database when the order is placed, never from the browser, and an item that is sold out, hidden or has no price is refused.
+- **Placing and reading orders go through two database functions**, `place_order` and `get_order`. Visitors cannot read or write the `orders` tables at all. An order is opened with its random id, which is in the customer's own link, so one customer cannot see another's order. Admins read and change orders directly, under the same rules as the rest of the dashboard.
+- **Paying.** A PromptPay QR code is made in the browser from the shop's PromptPay number and the order total (`src/lib/promptpay.ts`). There is no payment gateway and nothing checks the payment: staff look at the bank app and press "paid" (in the order dashboard). Before opening ordering, **scan and pay 1 baht with a banking app** to check the money reaches the right account.
+- **Sold out.** An item can be marked sold out in Admin → Café menu (a button on its row). It stays on the menu, labelled, and cannot be ordered.
+- **Items in an order are copies.** An order keeps the name and price an item had when it was placed, so changing the menu later does not change old orders or the sales totals.
+
+Limits: anyone can place an order, so every order is for the staff to confirm before it is made; a basic brake refuses new orders when 60 are waiting within ten minutes; customers get the order status by refreshing every five seconds, not by a push message.
+
+## Testing the database rules
+
+`npm run db:test` loads `supabase/schema.sql` (twice, to prove it is safe to run again), the seed and the update file into a real Postgres engine that runs in the process (PGlite, no server needed), then places orders and tries every forbidden change as a visitor, a member and an admin. Run it after any change to `supabase/schema.sql`.
 
 ## Deployment
 
