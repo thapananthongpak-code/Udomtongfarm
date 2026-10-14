@@ -16,9 +16,14 @@ export default function SpeciesList() {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-4xl md:text-5xl">{t.species}</h1>
-        <Link to={localePath(lang, "/admin/species/new")} className="btn btn-primary">
-          {t.newSpecies}
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link to={localePath(lang, "/admin/qr")} className="btn btn-quiet">
+            {t.qr.sheetTitle}
+          </Link>
+          <Link to={localePath(lang, "/admin/species/new")} className="btn btn-primary">
+            {t.newSpecies}
+          </Link>
+        </div>
       </div>
 
       {species === null ? (

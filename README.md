@@ -13,7 +13,9 @@ Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the G
 - **Sign-in with Google** for visitors who want to keep a saved list of species. There are no passwords on this site, so none can be lost.
 - **Admin dashboard** for changing photographs and information: every species, the café menu, the farm's phone number, Facebook link, map link and address, and the site's main texts in Thai and English, and the activities and rates.
 - Thai and English versions of every page under `/th` and `/en`.
-- **Text size control** (normal, large, extra large) in the header, remembered in the browser, and markup that works with screen readers.
+- **Text size control** (normal, large, extra large) and **colour contrast control** (the site's colours, black text on white, white text on black) in the header, both remembered in the browser, and markup that works with screen readers.
+- **QR code on every species page**, which opens that page on the phone that scans it. In the admin dashboard the code appears as soon as a new entry is saved, with downloads (PNG, SVG) and a sheet of every code to print as signs.
+- **Hover and press feedback** on buttons, menus and cards, switched off for customers whose device asks for less motion.
 
 ## Getting started
 
@@ -74,6 +76,7 @@ Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap mess
 | Species information and photographs | Admin dashboard → Animals and plants |
 | Café menu: drinks, prices and photographs | Admin dashboard → Café menu |
 | Activities, their photographs, and rates | Admin dashboard → Activities and rates |
+| QR codes: download or print | Admin dashboard → Animals and plants → open an entry, or "QR code signs" |
 | Phone, Facebook link, map link, address | Admin dashboard → Farm details |
 | Site name, tagline, home page heading, farm story, founder profile, activities, homestay details, hours, FAQ, footer and privacy policy | Admin dashboard → Site texts |
 | Every other text, such as button and menu labels | `src/i18n/dictionaries/th.ts` and `en.ts` |
@@ -87,6 +90,8 @@ Before Supabase is connected, species live in `src/data/species.ts`, the sample 
 **Conservation status** (the IUCN category) is no longer shown on the site or given to the chat assistant: there is no badge, filter, sort or "threatened" section, and the sentences that stated it have been cut from the descriptions. The `status` column is kept in the database and in the admin form.
 
 **Photographs.** The photographs that first shipped with the site have been removed, so an entry has no photo until one is uploaded in the admin dashboard. Until then a card shows an empty frame with a small bird or leaf, and the entry's own page uses the full width for its text.
+
+**QR codes** open `<site address>/species/<id>`, with no language so that the site opens in the phone's own. A printed sign therefore keeps working for as long as the site address (`VITE_SITE_URL`) and the entry's web address name (its id, which cannot be changed in the form) stay the same. Choose the address before printing signs. A draft entry's code opens "not found" until the entry is published.
 
 **The "new" badge.** An entry added through the dashboard carries a "New" badge for 30 days, is listed first in the gallery, and appears in the "New arrivals" band on the home page (the three most recent). The form has a choice to keep the badge on or switch it off. The starting collection does not carry the badge.
 
@@ -140,6 +145,8 @@ Pushing to the `main` branch publishes to production. Pushing any other branch c
 - **Text size:** the buttons in the header (and in the menu on narrow screens) set the root font size to 100%, 112.5% or 125%. Every size in the stylesheet is in `rem`, so everything follows. Keep it that way: a size written in `px` would ignore the control. The choice is stored under `text-size` in the browser, and a small script in `index.html` applies it before the page is drawn.
 - **Page changes:** the site is a single-page app, which browsers do not announce to screen readers. `RouteAnnouncer` in `src/components/Layout.tsx` reads out the new page's title and moves keyboard focus to the page content. Changing a filter does not do this.
 - **Chat window:** replies are announced once, when complete, not word by word. Pressing Escape closes the window and returns focus to the button that opened it.
+- **Contrast modes:** `data-contrast="light"` and `"dark"` on `<html>` swap the colour tokens at the top of `src/index.css`, so every part of the site follows. Text is 13:1 or better and borders are the full text colour. Use the tokens and never a fixed colour for text or borders, or a new part of the site will not follow the mode. QR codes are the exception: they stay black on white so that phones can read them. A small script in `index.html` applies the saved choice before the page is drawn.
+- **Motion:** hover, press and entry animations are CSS, in the "Motion" section of `src/index.css`, inside a `prefers-reduced-motion: no-preference` query. Keep new animations there.
 - **Colours:** text colours meet 4.5:1 and the borders of fields and buttons meet 3:1 (`--control` in `src/index.css`). Check a new colour before using it for text.
 - **Language:** the page language is set on `<html>`, and scientific names are marked `lang="la"` so they are not read in the wrong voice.
 

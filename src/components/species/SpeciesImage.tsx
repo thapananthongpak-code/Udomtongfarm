@@ -48,14 +48,14 @@ export default function SpeciesImage({ src, alt, fit = "cover", priority = false
           loading={priority ? "eager" : "lazy"}
           decoding="async"
           onError={() => setFailed(src)}
-          className={`absolute inset-0 size-full ${fit === "cover" ? "object-cover" : "object-contain"}`}
+          className={`zoom-on-hover absolute inset-0 size-full ${fit === "cover" ? "object-cover" : "object-contain"}`}
         />
       ) : (
         <div aria-hidden className="absolute inset-[8%] flex items-center justify-center border border-line-strong">
           {placeholder && (
             <svg
               viewBox="0 0 24 24"
-              className="size-[34%] max-h-24 max-w-24 text-line-strong"
+              className="zoom-on-hover size-[34%] max-h-24 max-w-24 text-line-strong"
               fill="none"
               stroke="currentColor"
               strokeWidth="1"

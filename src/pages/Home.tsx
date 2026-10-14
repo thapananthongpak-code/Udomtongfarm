@@ -62,7 +62,7 @@ export default function Home() {
                 src={lead.image}
                 alt={speciesName(lead, lang)}
                 priority
-                className="aspect-square shadow-[0_18px_40px_-22px_rgb(0_0_0/0.45)] transition-opacity duration-300 group-hover:opacity-90"
+                className="aspect-square shadow-[0_18px_40px_-22px_rgb(0_0_0/0.45)]"
               />
             </Link>
             <figcaption className="mt-4 flex items-baseline justify-between gap-4 text-[0.9375rem]">
@@ -164,7 +164,7 @@ export default function Home() {
                       src={cover?.image ?? ""}
                       alt=""
                       placeholder={department.type}
-                      className="aspect-square transition-opacity duration-300 group-hover:opacity-85"
+                      className="aspect-square"
                     />
                     <div>
                       <p className="text-[0.8125rem] text-muted">{format(t.common.speciesCount, { n: department.list.length })}</p>

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SpeciesImage from "@/components/species/SpeciesImage";
-import { useT } from "@/i18n/hooks";
+import { localePath } from "@/i18n";
+import { useLang, useT } from "@/i18n/hooks";
 import { saveSpecies, uploadPhoto, type SaveResult, type SpeciesFormValues as Values } from "@/lib/admin";
 import { STATUS_CODES, type Source, type Species } from "@/lib/species/types";
 import { useData } from "@/state/data";
@@ -32,6 +33,7 @@ const initialValues = (sp: Species | null): Values => ({
 });
 
 export default function SpeciesForm({ species, listHref }: Props) {
+  const lang = useLang();
   const t = useT();
   const labels = t.admin.form;
   const errors = t.admin.errors;
@@ -53,7 +55,9 @@ export default function SpeciesForm({ species, listHref }: Props) {
     const outcome = await saveSpecies(values, sources, species?.id ?? null);
     if (outcome.ok) {
       await reload();
-      navigate(listHref);
+      // A new entry opens on its own page, where its QR code is ready to take away.
+      if (species) navigate(listHref);
+      else navigate(localePath(lang, `/admin/species/${values.id.trim()}`), { state: { created: true } });
       return;
     }
     setResult(outcome);

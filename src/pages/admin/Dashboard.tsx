@@ -41,7 +41,7 @@ export default function Dashboard() {
           <li key={area.href}>
             <Link
               to={localePath(lang, area.href)}
-              className="group block h-full border border-line-strong bg-surface p-7 transition-colors hover:border-ink"
+              className="lift group block h-full border border-line-strong bg-surface p-7 hover:border-ink"
             >
               <h2 className="font-serif text-2xl">{area.title}</h2>
               <p className="mt-2 text-[0.9375rem] text-muted">{area.body}</p>
