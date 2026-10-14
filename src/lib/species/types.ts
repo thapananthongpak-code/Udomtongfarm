@@ -31,6 +31,8 @@ export type Species = {
 
   featured: boolean;
   published: boolean;
+  /** The "new" badge: true shows it, false hides it, and empty leaves it to the date the entry was added. */
+  is_new?: boolean | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -38,7 +40,18 @@ export type Species = {
 /** The fields needed to draw a card. Passed to client components in place of the full entry. */
 export type SpeciesCardData = Pick<
   Species,
-  "id" | "type" | "name_th" | "name_en" | "scientific_name" | "status" | "summary_th" | "summary_en" | "image" | "tags"
+  | "id"
+  | "type"
+  | "name_th"
+  | "name_en"
+  | "scientific_name"
+  | "status"
+  | "summary_th"
+  | "summary_en"
+  | "image"
+  | "tags"
+  | "is_new"
+  | "created_at"
 >;
 
 export const toCardData = (sp: Species): SpeciesCardData => ({
@@ -52,4 +65,6 @@ export const toCardData = (sp: Species): SpeciesCardData => ({
   summary_en: sp.summary_en,
   image: sp.image,
   tags: sp.tags,
+  is_new: sp.is_new,
+  created_at: sp.created_at,
 });

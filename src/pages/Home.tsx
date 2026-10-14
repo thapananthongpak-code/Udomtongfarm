@@ -6,7 +6,7 @@ import SpeciesCard from "@/components/species/SpeciesCard";
 import SpeciesImage from "@/components/species/SpeciesImage";
 import { format, localePath } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
-import { speciesName, speciesPath } from "@/lib/species/helpers";
+import { isNew, newFirst, speciesName, speciesPath, speciesSummary } from "@/lib/species/helpers";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { useData } from "@/state/data";
 
@@ -22,7 +22,9 @@ export default function Home() {
   const plants = all.filter((sp) => sp.type === "plant");
   const highlighted = all.filter((sp) => sp.featured);
   const highlights = (highlighted.length ? highlighted : all).slice(0, 6);
-  const lead = highlights[0];
+  // The opening photo is only drawn for an entry that has one.
+  const lead = highlights.find((sp) => sp.image);
+  const arrivals = newFirst(all.filter((sp) => isNew(sp))).slice(0, 3);
 
   const stats: { value: string | number; label: string }[] = [
     { value: t.farm.admissionValue, label: t.farm.admissionLabel },
@@ -31,15 +33,15 @@ export default function Home() {
   ];
 
   const departments = [
-    { type: "animal", title: t.common.animals, body: t.home.animalsBody, list: animals },
-    { type: "plant", title: t.common.plants, body: t.home.plantsBody, list: plants },
+    { type: "animal" as const, title: t.common.animals, body: t.home.animalsBody, list: animals },
+    { type: "plant" as const, title: t.common.plants, body: t.home.plantsBody, list: plants },
   ].filter((department) => department.list.length > 0);
 
   return (
     <>
       {/* Opening */}
       <section className="shell grid items-center gap-12 pb-16 pt-14 md:pb-24 md:pt-20 lg:grid-cols-12 lg:gap-16">
-        <div className="lg:col-span-7">
+        <div className={lead ? "lg:col-span-7" : "lg:col-span-9"}>
           <p className="eyebrow">{t.site.location}</p>
           <h1 className="display mt-5 text-[2.5rem] sm:text-6xl lg:text-7xl">{t.home.title}</h1>
           <p className="lede mt-7 max-w-xl">{t.home.lede}</p>
@@ -73,6 +75,38 @@ export default function Home() {
           </figure>
         )}
       </section>
+
+      {/* New arrivals */}
+      {arrivals.length > 0 && (
+        <section aria-labelledby="new-arrivals" className="mb-16 bg-wall md:mb-24">
+          <div className="shell grid gap-8 py-10 md:py-14 lg:grid-cols-12 lg:gap-12">
+            <div className="lg:col-span-4">
+              <p className="eyebrow text-accent">{t.home.newEyebrow}</p>
+              <h2 id="new-arrivals" className="display mt-3 text-3xl md:text-4xl">
+                {t.home.newTitle}
+              </h2>
+              <p className="mt-4 text-[0.9375rem] text-muted">{t.home.newBody}</p>
+            </div>
+            <ul className="border-t border-ink lg:col-span-8">
+              {arrivals.map((sp) => (
+                <li key={sp.id} className="border-b border-line-strong">
+                  <Link to={localePath(lang, speciesPath(sp.id))} className="group flex items-baseline justify-between gap-6 py-4">
+                    <span className="min-w-0">
+                      <span className="font-serif text-xl decoration-1 underline-offset-4 group-hover:underline">
+                        {speciesName(sp, lang)}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[0.9375rem] text-muted">{speciesSummary(sp, lang)}</span>
+                    </span>
+                    <span className="shrink-0 bg-accent px-2 py-0.5 text-[0.75rem] font-medium text-on-accent">
+                      {t.common.isNew}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* The farm at a glance */}
       <section aria-label={t.about.numbersTitle} className="shell">
@@ -129,6 +163,7 @@ export default function Home() {
                     <SpeciesImage
                       src={cover?.image ?? ""}
                       alt=""
+                      placeholder={department.type}
                       className="aspect-square transition-opacity duration-300 group-hover:opacity-85"
                     />
                     <div>

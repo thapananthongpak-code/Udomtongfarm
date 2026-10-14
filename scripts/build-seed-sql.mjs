@@ -11,7 +11,7 @@ const textArray = (values) => (values.length ? `array[${values.map(text).join(",
 
 const COLUMNS = [
   "id", "type", "name_th", "name_en", "scientific_name", "status",
-  "summary_th", "summary_en", "body_th", "body_en", "image", "tags", "sources", "featured", "published",
+  "summary_th", "summary_en", "body_th", "body_en", "image", "tags", "sources", "featured", "published", "is_new",
 ];
 
 const rows = species.map(
@@ -20,6 +20,8 @@ const rows = species.map(
       text(sp.id), text(sp.type), text(sp.name_th), text(sp.name_en), text(sp.scientific_name), text(sp.status),
       text(sp.summary_th), text(sp.summary_en), text(sp.body_th), text(sp.body_en), text(sp.image),
       textArray(sp.tags), `${text(JSON.stringify(sp.sources))}::jsonb`, sp.featured, sp.published,
+      // The starting collection does not carry the "new" badge.
+      false,
     ].join(", ")})`,
 );
 

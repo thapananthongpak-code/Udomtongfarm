@@ -42,6 +42,27 @@ export function toParagraphs(text: string, lang: Locale): string[] {
   return paragraphs;
 }
 
+// ── The "new" badge ──────────────────────────────────────────
+
+const NEW_FOR_DAYS = 30;
+
+/**
+ * An entry is new for 30 days after it was added, unless an admin has switched the badge on or off.
+ * Entries from the bundled data, or from a database without the `is_new` column yet, are never new.
+ */
+export function isNew(sp: Pick<Species, "is_new" | "created_at">, now = Date.now()): boolean {
+  if (typeof sp.is_new === "boolean") return sp.is_new;
+  if (sp.is_new === undefined || !sp.created_at) return false;
+  return now - Date.parse(sp.created_at) < NEW_FOR_DAYS * 24 * 60 * 60 * 1000;
+}
+
+/** Moves the new entries to the front, most recently added first, and keeps the rest in order. */
+export function newFirst<T extends Pick<Species, "is_new" | "created_at">>(list: T[]): T[] {
+  const added = (sp: T) => (sp.created_at ? Date.parse(sp.created_at) : 0);
+  const fresh = list.filter((sp) => isNew(sp)).sort((a, b) => added(b) - added(a));
+  return [...fresh, ...list.filter((sp) => !isNew(sp))];
+}
+
 // ── Groups (tags) ────────────────────────────────────────────
 
 const TAG_TH: Record<string, string> = {

@@ -18,6 +18,12 @@ const START: Loaded = supabase
   ? { status: "loading", species: [], menu: [], services: [], settings: DEFAULT_CONTACT, content: [] }
   : { status: "ready", species: seedSpecies, menu: seedMenu, services: seedServices, settings: DEFAULT_CONTACT, content: [] };
 
+// The photographs that used to ship with the site are gone. A database that still points at them
+// (before supabase/update-2026-10.sql has been run) is read as having no photo.
+const REMOVED_PHOTOS = /^\/images\/(animals|plants)\//;
+const withoutRemovedPhotos = (list: Species[]) =>
+  list.map((sp) => (REMOVED_PHOTOS.test(sp.image) ? { ...sp, image: "" } : sp));
+
 async function readFromSupabase(): Promise<Loaded | null> {
   if (!supabase) return null;
   const [species, menu, services, settings, content] = await Promise.all([
@@ -33,7 +39,7 @@ async function readFromSupabase(): Promise<Loaded | null> {
   if (species.error) console.error(`Could not load species, using the bundled data instead: ${species.error.message}`);
   return {
     status: "ready",
-    species: species.error ? seedSpecies : (species.data as Species[]),
+    species: species.error ? seedSpecies : withoutRemovedPhotos(species.data as Species[]),
     menu: menu.error ? seedMenu : (menu.data as MenuItem[]),
     // Until the table exists the bundled list is shown, so the activities and rates are never empty.
     services: services.error ? seedServices : (services.data as FarmService[]),

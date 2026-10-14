@@ -28,6 +28,7 @@ const initialValues = (sp: Species | null): Values => ({
   tags: sp?.tags.join(", ") ?? "",
   featured: sp?.featured ?? false,
   published: sp?.published ?? true,
+  is_new: typeof sp?.is_new === "boolean" ? (sp.is_new ? "true" : "false") : "",
 });
 
 export default function SpeciesForm({ species, listHref }: Props) {
@@ -307,6 +308,23 @@ export default function SpeciesForm({ species, listHref }: Props) {
               {labels[name]}
             </label>
           ))}
+          <div className="pt-3">
+            <label htmlFor="is_new" className="field-label">
+              {labels.newBadge}
+            </label>
+            <select
+              id="is_new"
+              name="is_new"
+              value={values.is_new}
+              onChange={(event) => set("is_new", event.target.value as Values["is_new"])}
+              className="input max-w-sm"
+            >
+              <option value="">{labels.newAuto}</option>
+              <option value="true">{labels.newOn}</option>
+              <option value="false">{labels.newOff}</option>
+            </select>
+            <p className="field-hint">{labels.newHint}</p>
+          </div>
         </div>
       </fieldset>
 

@@ -8,6 +8,7 @@ import SpeciesImage from "@/components/species/SpeciesImage";
 import { localePath, otherLocale } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
 import {
+  isNew,
   neighbours,
   relatedSpecies,
   speciesBody,
@@ -63,16 +64,25 @@ function SpeciesEntry({ sp, all }: { sp: Species; all: Species[] }) {
 
       <div className="shell grid gap-10 pb-16 pt-8 md:pb-24 lg:grid-cols-12 lg:gap-16">
         {/* The photograph */}
-        <figure className="lg:sticky lg:top-24 lg:col-span-6 lg:self-start">
-          <div className="bg-wall p-6 sm:p-12">
-            <SpeciesImage src={sp.image} alt={name} fit="contain" priority className="aspect-square" />
-          </div>
-          <figcaption className="mt-3 text-[0.8125rem] text-faint">{t.species.photoNote}</figcaption>
-        </figure>
+        {sp.image && (
+          <figure className="lg:sticky lg:top-24 lg:col-span-6 lg:self-start">
+            <div className="bg-wall p-6 sm:p-12">
+              <SpeciesImage src={sp.image} alt={name} fit="contain" priority placeholder={sp.type} className="aspect-square" />
+            </div>
+            <figcaption className="mt-3 text-[0.8125rem] text-faint">{t.species.photoNote}</figcaption>
+          </figure>
+        )}
 
         {/* The label */}
-        <div className="lg:col-span-6">
-          <p className="eyebrow">{department}</p>
+        <div className={sp.image ? "lg:col-span-6" : "lg:col-span-8"}>
+          <p className="eyebrow flex flex-wrap items-center gap-3">
+            {department}
+            {isNew(sp) && (
+              <span className="bg-accent px-2 py-0.5 text-[0.75rem] font-medium normal-case tracking-normal text-on-accent">
+                {t.common.isNew}
+              </span>
+            )}
+          </p>
           <h1 className="display mt-4 text-4xl sm:text-5xl lg:text-6xl">{name}</h1>
           {sp.scientific_name && <p lang="la" className="scientific mt-3 text-2xl text-muted">{sp.scientific_name}</p>}
           <p className="lede mt-7">{speciesSummary(sp, lang)}</p>

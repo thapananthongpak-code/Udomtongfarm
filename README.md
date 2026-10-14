@@ -46,6 +46,8 @@ Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap mess
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the project's **SQL Editor**, run `supabase/schema.sql`, then `supabase/seed.sql`. The first creates the tables, access rules and photo storage. The second loads the starting collection and a sample café menu. Both are safe to run again after an update to this code: existing data is kept.
+
+   A database created before October 2026 also needs `supabase/update-2026-10.sql` run once. It adds the "new" badge and the visit counts, clears the photographs that were removed from the site, and cuts the conservation sentences from the descriptions.
 3. Set these from **Project Settings → API**:
 
    ```ini
@@ -82,7 +84,11 @@ Before Supabase is connected, species live in `src/data/species.ts`, the sample 
 
 **Prices** of activities and rates are whole baht. An empty price shows "Ask the farm" and the chat assistant says the price has not been published; `0` means free. Only entry to the farm is seeded as free.
 
-**Conservation status** (the IUCN category) is no longer shown on the site or given to the chat assistant: there is no badge, filter, sort or "threatened" section. The `status` column is kept in the database and in the admin form, and the descriptions of some species still mention it in their text.
+**Conservation status** (the IUCN category) is no longer shown on the site or given to the chat assistant: there is no badge, filter, sort or "threatened" section, and the sentences that stated it have been cut from the descriptions. The `status` column is kept in the database and in the admin form.
+
+**Photographs.** The photographs that first shipped with the site have been removed, so an entry has no photo until one is uploaded in the admin dashboard. Until then a card shows an empty frame with a small bird or leaf, and the entry's own page uses the full width for its text.
+
+**The "new" badge.** An entry added through the dashboard carries a "New" badge for 30 days, is listed first in the gallery, and appears in the "New arrivals" band on the home page (the three most recent). The form has a choice to keep the badge on or switch it off. The starting collection does not carry the badge.
 
 **Site texts** saves only what differs from the wording in the two dictionary files, in the `site_content` table. Emptying a box and saving puts the dictionary's wording back. The list of texts that can be edited is `CONTENT_GROUPS` in `src/lib/content.ts`; lists such as the FAQ keep the number of entries they have in the dictionaries.
 
