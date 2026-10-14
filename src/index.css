@@ -449,6 +449,40 @@
       transform: translateX(0.25rem);
     }
 
+    /* The sun conure: it bobs on its perch, blinks now and then, and tilts its head and ruffles a wing
+       when the pointer is near. Each part turns about its own centre. */
+    .conure * {
+      transform-box: fill-box;
+    }
+    .conure-bob {
+      animation: conure-bob 3.4s ease-in-out infinite;
+    }
+    .conure-lid {
+      transform-origin: center top;
+      transform: scaleY(0);
+      animation: conure-blink 5.6s infinite;
+    }
+    .conure-head {
+      transform-origin: 60% 80%;
+      transition: transform 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+    }
+    .conure-wing {
+      transform-origin: 30% 20%;
+      transition: transform 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+    }
+    .conure-host:hover .conure-head,
+    .conure-host:focus-visible .conure-head {
+      transform: rotate(-9deg);
+    }
+    .conure-host:hover .conure-wing,
+    .conure-host:focus-visible .conure-wing {
+      transform: rotate(7deg);
+    }
+    .conure-host:active .conure-bob {
+      animation-play-state: paused;
+      transform: translateY(2px) scale(0.96);
+    }
+
     .page-enter {
       animation: page-enter 0.35s ease-out both;
     }
@@ -470,6 +504,25 @@
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+  @keyframes conure-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-2.5px);
+    }
+  }
+  @keyframes conure-blink {
+    0%,
+    93%,
+    100% {
+      transform: scaleY(0);
+    }
+    96% {
+      transform: scaleY(1);
     }
   }
   @keyframes menu-enter {

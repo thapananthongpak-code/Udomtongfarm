@@ -9,7 +9,7 @@ Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the G
 - **Home, About and Visit pages** that present the farm: free to enter, with activities, a four-room homestay and a café, plus hours, map, directions and FAQ.
 - **Café page** with the drinks menu, grouped into coffee, cocoa, tea and other drinks.
 - **Gallery** with four tabs: animals, plants, activities and rates. The animals and plants tabs search across Thai, English and scientific names and filter by group; each species has its own page. Activities are shown with a photograph, and the rates tab is a price list in which an empty price reads "Ask the farm" and zero reads "Free".
-- **Chat assistant** that answers visitors' questions about the farm, its animals and plants, and how to get in touch. It runs on Google Gemini.
+- **Chat assistant**, shown as a small sun conure in the corner of every page, that answers customers' questions about the farm, its animals and plants, and how to get in touch. A line greets the customer beside the bird once per visit: one for the time of day, or a general one, picked at random. It runs on Google Gemini.
 - **Sign-in with Google** for visitors who want to keep a saved list of species. There are no passwords on this site, so none can be lost.
 - **Admin dashboard** for changing photographs and information: every species, the café menu, the farm's phone number, Facebook link, map link and address, and the site's main texts in Thai and English, and the activities and rates.
 - Thai and English versions of every page under `/th` and `/en`.
@@ -40,7 +40,7 @@ The key is a secret. Never commit it, and never give it a name starting with `VI
 
 The key is used only by `api/chat.ts`, which Vercel runs on its servers. `npm run dev` runs the same file locally, so the chat works there too. `npm run preview` only serves the built pages, so the chat button stays hidden in that mode.
 
-What the assistant knows is built in `api/_lib/knowledge.ts` from the same text the pages show: the farm story, activities, homestay, visiting details, FAQ, contact details and the species list. Updating those updates its answers. Its instructions are at the top of that file. The model is named in `api/chat.ts`.
+What the assistant knows is built in `api/_lib/knowledge.ts` from the same text the pages show: the farm story, activities, homestay, visiting details, FAQ, contact details and the species list. Updating those updates its answers. Its instructions are at the top of that file. The greetings the bird shows are `chat.greetings` in the two dictionary files. The model is named in `api/chat.ts`.
 
 Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap message length, conversation length and requests per visitor, but the per-visitor limit is kept in memory and is only a first line of defence. **Check the quota and billing settings for the key in Google AI Studio** so that misuse cannot run up a bill.
 
@@ -107,7 +107,7 @@ src/
   main.tsx           Starts the app
   router.tsx         Which address shows which page
   pages/             One file per page; admin/ holds the dashboard
-  components/        Shared interface pieces, grouped by area
+  components/        Shared interface pieces, grouped by area; chat/ holds the chat window and the sun conure (SunConure.tsx, drawn as SVG)
   state/             Data shared by every page: the collection, and who is signed in
   i18n/              Languages and dictionaries
   lib/
@@ -144,6 +144,7 @@ Pushing to the `main` branch publishes to production. Pushing any other branch c
 
 - **Text size:** the buttons in the header (and in the menu on narrow screens) set the root font size to 100%, 112.5% or 125%. Every size in the stylesheet is in `rem`, so everything follows. Keep it that way: a size written in `px` would ignore the control. The choice is stored under `text-size` in the browser, and a small script in `index.html` applies it before the page is drawn.
 - **Page changes:** the site is a single-page app, which browsers do not announce to screen readers. `RouteAnnouncer` in `src/components/Layout.tsx` reads out the new page's title and moves keyboard focus to the page content. Changing a filter does not do this.
+- **Chat bird and greeting:** the bird is a button named "Ask about the farm"; the bird itself is decorative. The greeting beside it can be dismissed and tucks itself away after 12 seconds. The same line opens the chat window as its first message, so a screen-reader user hears it there. Its idle movement is switched off for customers who ask for less motion.
 - **Chat window:** replies are announced once, when complete, not word by word. Pressing Escape closes the window and returns focus to the button that opened it.
 - **Contrast modes:** `data-contrast="light"` and `"dark"` on `<html>` swap the colour tokens at the top of `src/index.css`, so every part of the site follows. Text is 13:1 or better and borders are the full text colour. Use the tokens and never a fixed colour for text or borders, or a new part of the site will not follow the mode. QR codes are the exception: they stay black on white so that phones can read them. A small script in `index.html` applies the saved choice before the page is drawn.
 - **Motion:** hover, press and entry animations are CSS, in the "Motion" section of `src/index.css`, inside a `prefers-reduced-motion: no-preference` query. Keep new animations there.

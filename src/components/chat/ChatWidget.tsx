@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Dictionary } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
 import { CHAT_LIMITS as limits } from "@/lib/chat-limits";
+import SunConure from "./SunConure";
 
 type Message = { role: "user" | "assistant"; content: string };
 type ErrorCode = keyof Dictionary["chat"]["errors"];
@@ -9,13 +10,31 @@ type ErrorCode = keyof Dictionary["chat"]["errors"];
 const isErrorCode = (value: unknown, labels: Dictionary["chat"]): value is ErrorCode =>
   typeof value === "string" && value in labels.errors;
 
-/** A small chat window, opened from a button in the corner, for questions about the farm. */
+const BUBBLE_KEY = "chat-greeting-shown";
+/** How long the greeting stays beside the bird before it tucks itself away. */
+const BUBBLE_SECONDS = 12;
+
+/**
+ * One greeting for this visit: a line for the time of day (counted twice, so it comes up more often)
+ * or a general one. The lines are picked once, with a random number drawn when the page opens.
+ */
+function pickGreeting(greetings: Dictionary["chat"]["greetings"], hour: number, seed: number): string {
+  const part = hour >= 5 && hour < 12 ? "morning" : hour >= 12 && hour < 17 ? "afternoon" : hour >= 17 && hour < 21 ? "evening" : "night";
+  const pool = [...greetings[part], ...greetings[part], ...greetings.any];
+  return pool[Math.floor(seed * pool.length) % pool.length];
+}
+
+/** The sun conure in the corner, and a small chat window it opens, for questions about the farm. */
 export default function ChatWidget() {
   const lang = useLang();
   const labels = useT().chat;
   // The button stays hidden until the server confirms the chat has an API key.
   const [enabled, setEnabled] = useState(false);
   const [open, setOpen] = useState(false);
+  // Drawn once, so the greeting does not change while the page is open.
+  const [moment] = useState(() => ({ hour: new Date().getHours(), seed: Math.random() }));
+  const greeting = pickGreeting(labels.greetings, moment.hour, moment.seed);
+  const [bubble, setBubble] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -39,6 +58,32 @@ export default function ChatWidget() {
       cancelled = true;
     };
   }, []);
+
+  // The greeting appears beside the bird shortly after the page opens, once per visit, and tucks itself away.
+  useEffect(() => {
+    if (!enabled || open) return;
+    let seen = false;
+    try {
+      seen = window.sessionStorage.getItem(BUBBLE_KEY) === "1";
+    } catch {
+      // Without storage the greeting simply shows on each page load.
+    }
+    if (seen) return;
+
+    const show = window.setTimeout(() => {
+      setBubble(true);
+      try {
+        window.sessionStorage.setItem(BUBBLE_KEY, "1");
+      } catch {
+        // Not remembering that it was shown is harmless.
+      }
+    }, 1800);
+    const hide = window.setTimeout(() => setBubble(false), (1.8 + BUBBLE_SECONDS) * 1000);
+    return () => {
+      window.clearTimeout(show);
+      window.clearTimeout(hide);
+    };
+  }, [enabled, open]);
 
   // Keep the newest text in view as the reply arrives.
   useEffect(() => {
@@ -130,17 +175,46 @@ export default function ChatWidget() {
 
   if (!open) {
     return (
-      <button
-        type="button"
-        ref={launcherRef}
-        onClick={() => setOpen(true)}
-        className="btn btn-primary fixed bottom-5 right-5 z-40 shadow-[0_10px_30px_-10px_rgb(0_0_0/0.5)] print:hidden"
-      >
-        <svg aria-hidden viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.25">
-          <path d="M2.5 3h11v8h-6L4.5 13.5V11h-2V3Z" strokeLinejoin="round" />
-        </svg>
-        {labels.open}
-      </button>
+      <div className="fixed bottom-4 right-4 z-40 flex items-end gap-3 print:hidden">
+        {bubble && (
+          <div className="pop-enter relative mb-3 max-w-[min(15rem,calc(100vw-7.5rem))] border border-ink bg-surface text-[0.9375rem] leading-snug shadow-[0_10px_30px_-14px_rgb(0_0_0/0.5)]">
+            <button
+              type="button"
+              onClick={() => {
+                setBubble(false);
+                setOpen(true);
+              }}
+              className="block px-3.5 pb-3 pr-9 pt-3 text-left"
+            >
+              {greeting}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBubble(false)}
+              aria-label={labels.closeGreeting}
+              className="absolute right-0 top-0 grid size-8 place-items-center text-muted hover:text-ink"
+            >
+              <svg aria-hidden viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="m3 3 10 10M13 3 3 13" />
+              </svg>
+            </button>
+            <span aria-hidden className="absolute -bottom-1.5 right-7 size-3 rotate-45 border-b border-r border-ink bg-surface" />
+          </div>
+        )}
+        <button
+          type="button"
+          ref={launcherRef}
+          onClick={() => {
+            setBubble(false);
+            setOpen(true);
+          }}
+          aria-label={labels.open}
+          title={labels.open}
+          className="conure-host lift grid size-[4.25rem] shrink-0 place-items-end justify-items-center overflow-hidden rounded-full border border-ink bg-surface shadow-[0_10px_30px_-10px_rgb(0_0_0/0.5)]"
+        >
+          <SunConure view="bust" className="size-[3.6rem]" />
+        </button>
+      </div>
     );
   }
 
@@ -154,7 +228,12 @@ export default function ChatWidget() {
       className="pop-enter fixed inset-x-3 bottom-3 z-50 flex max-h-[min(36rem,calc(100dvh-1.5rem))] flex-col border border-ink bg-surface shadow-[0_24px_60px_-20px_rgb(0_0_0/0.5)] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[24rem] print:hidden"
     >
       <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
-        <h2 className="font-serif text-xl">{labels.title}</h2>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid size-10 shrink-0 place-items-end justify-items-center overflow-hidden rounded-full border border-line-strong bg-wall">
+            <SunConure view="bust" animated={false} className="size-9" />
+          </span>
+          <h2 className="font-serif text-xl">{labels.title}</h2>
+        </div>
         <button type="button" onClick={() => setOpen(false)} aria-label={labels.close} className="-mr-2 p-2 text-muted hover:text-ink">
           <svg aria-hidden viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.25">
             <path d="m3 3 10 10M13 3 3 13" />
@@ -163,7 +242,7 @@ export default function ChatWidget() {
       </div>
 
       <div ref={logRef} role="region" aria-label={labels.title} tabIndex={0} className="flex-1 space-y-4 overflow-y-auto px-5 py-5 text-[0.9375rem] leading-relaxed">
-        <p className="text-muted">{labels.greeting}</p>
+        <p className="mr-4 border-l-2 border-accent pl-3.5">{greeting}</p>
 
         {messages.length === 0 && (
           <ul className="space-y-2">
