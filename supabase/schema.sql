@@ -77,6 +77,25 @@ values (
 )
 on conflict (id) do nothing;
 
+-- Activities (shown with a photo) and the price list. Price is in whole baht, zero means free,
+-- and it stays empty until the farm has set one. 'unit' says what the price is for, e.g. 'per room'.
+create table if not exists public.farm_services (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('activity', 'rate')),
+  name_th text not null,
+  name_en text not null default '',
+  description_th text not null default '',
+  description_en text not null default '',
+  unit_th text not null default '',
+  unit_en text not null default '',
+  price integer check (price >= 0),
+  image text not null default '',
+  sort_order integer not null default 0,
+  published boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Texts an admin has changed (Admin → Site texts). The key says which text it is, e.g. 'visit.faqs.2.a'.
 -- An empty value means the site shows its built-in text for that language.
 create table if not exists public.site_content (
@@ -123,6 +142,11 @@ create trigger menu_items_touch_updated_at
 drop trigger if exists site_settings_touch_updated_at on public.site_settings;
 create trigger site_settings_touch_updated_at
   before update on public.site_settings
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists farm_services_touch_updated_at on public.farm_services;
+create trigger farm_services_touch_updated_at
+  before update on public.farm_services
   for each row execute function public.touch_updated_at();
 
 drop trigger if exists site_content_touch_updated_at on public.site_content;
@@ -181,6 +205,7 @@ alter table public.favorites enable row level security;
 alter table public.site_settings enable row level security;
 alter table public.menu_items enable row level security;
 alter table public.site_content enable row level security;
+alter table public.farm_services enable row level security;
 
 grant select on public.species to anon, authenticated;
 grant insert, update, delete on public.species to authenticated;
@@ -193,6 +218,8 @@ grant select on public.menu_items to anon, authenticated;
 grant insert, update, delete on public.menu_items to authenticated;
 grant select on public.site_settings to anon, authenticated;
 grant update on public.site_settings to authenticated;
+grant select on public.farm_services to anon, authenticated;
+grant insert, update, delete on public.farm_services to authenticated;
 grant select on public.site_content to anon, authenticated;
 grant insert, update, delete on public.site_content to authenticated;
 
@@ -275,6 +302,27 @@ create policy "Admins edit site settings" on public.site_settings
   using (public.is_admin())
   with check (public.is_admin());
 
+drop policy if exists "Published services are public" on public.farm_services;
+create policy "Published services are public" on public.farm_services
+  for select to anon, authenticated
+  using (published or public.is_admin());
+
+drop policy if exists "Admins add services" on public.farm_services;
+create policy "Admins add services" on public.farm_services
+  for insert to authenticated
+  with check (public.is_admin());
+
+drop policy if exists "Admins edit services" on public.farm_services;
+create policy "Admins edit services" on public.farm_services
+  for update to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Admins delete services" on public.farm_services;
+create policy "Admins delete services" on public.farm_services
+  for delete to authenticated
+  using (public.is_admin());
+
 drop policy if exists "Site texts are public" on public.site_content;
 create policy "Site texts are public" on public.site_content
   for select to anon, authenticated
@@ -297,7 +345,7 @@ create policy "Admins delete site texts" on public.site_content
   using (public.is_admin());
 
 -- ── Photo storage ────────────────────────────────────────────
--- One bucket holds every photograph. Café menu photos are kept under menu/ inside it.
+-- One bucket holds every photograph. Café menu photos are kept under menu/ and activity photos under services/ inside it.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('species', 'species', true, 5242880, array['image/jpeg', 'image/png', 'image/webp'])

@@ -3,6 +3,7 @@ import { getDictionary, type Dictionary, type Locale } from "@/i18n";
 import type { ContentRow } from "@/lib/content";
 import { DEFAULT_CONTACT, type SiteSettings } from "@/lib/farm";
 import type { MenuItem } from "@/lib/menu";
+import type { FarmService } from "@/lib/services";
 import type { Species } from "@/lib/species/types";
 
 export type DataState = {
@@ -12,6 +13,8 @@ export type DataState = {
   species: Species[];
   /** Every published item on the café menu. */
   menu: MenuItem[];
+  /** Every published activity and rate. */
+  services: FarmService[];
   settings: SiteSettings;
   /** The texts an admin has changed. */
   content: ContentRow[];
@@ -25,6 +28,7 @@ export const DataContext = createContext<DataState>({
   status: "ready",
   species: [],
   menu: [],
+  services: [],
   settings: DEFAULT_CONTACT,
   content: [],
   dictionaries: { th: getDictionary("th"), en: getDictionary("en") },

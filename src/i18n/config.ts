@@ -7,7 +7,7 @@ export const isLocale = (value: string | null | undefined): value is Locale => v
 
 export const otherLocale = (lang: Locale): Locale => (lang === "th" ? "en" : "th");
 
-/** Prefixes an app path with the language: localePath("en", "/collection") gives "/en/collection". */
+/** Prefixes an app path with the language: localePath("en", "/gallery") gives "/en/gallery". */
 export const localePath = (lang: Locale, path = "/") => `/${lang}${path === "/" ? "" : path}`;
 
 /** Fills {placeholders} in a dictionary string. */

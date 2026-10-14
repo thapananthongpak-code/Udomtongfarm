@@ -23,6 +23,7 @@ export default function AdminLayout() {
     { href: "/admin", label: t.overview },
     { href: "/admin/species", label: t.species },
     { href: "/admin/menu", label: t.menu },
+    { href: "/admin/services", label: t.services },
     { href: "/admin/site", label: t.site },
     { href: "/admin/texts", label: t.texts },
   ];

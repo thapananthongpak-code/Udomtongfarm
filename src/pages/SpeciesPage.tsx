@@ -5,7 +5,6 @@ import PageLoading from "@/components/PageLoading";
 import FavoriteButton from "@/components/species/FavoriteButton";
 import SpeciesCard from "@/components/species/SpeciesCard";
 import SpeciesImage from "@/components/species/SpeciesImage";
-import { StatusScale } from "@/components/species/StatusBadge";
 import { localePath, otherLocale } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
 import {
@@ -49,13 +48,13 @@ function SpeciesEntry({ sp, all }: { sp: Species; all: Species[] }) {
       <nav aria-label="Breadcrumb" className="shell pt-8 text-[0.8125rem] text-muted">
         <ol className="flex flex-wrap items-center gap-2">
           <li>
-            <Link to={localePath(lang, "/collection")} className="transition-colors hover:text-ink">
-              {t.nav.collection}
+            <Link to={localePath(lang, "/gallery")} className="transition-colors hover:text-ink">
+              {t.nav.gallery}
             </Link>
           </li>
           <li aria-hidden>/</li>
           <li>
-            <Link to={localePath(lang, `/collection?type=${sp.type}`)} className="transition-colors hover:text-ink">
+            <Link to={localePath(lang, `/gallery?tab=${sp.type === "animal" ? "animals" : "plants"}`)} className="transition-colors hover:text-ink">
               {department}
             </Link>
           </li>
@@ -87,14 +86,6 @@ function SpeciesEntry({ sp, all }: { sp: Species; all: Species[] }) {
             )}
             <dt>{t.species.department}</dt>
             <dd>{department}</dd>
-            <dt>{t.status.label}</dt>
-            <dd>
-              {sp.status ? (
-                <StatusScale status={sp.status} labels={t.status} />
-              ) : (
-                <span className="text-muted">{t.common.notEvaluated}</span>
-              )}
-            </dd>
             {sp.tags.length > 0 && (
               <>
                 <dt>{t.species.groups}</dt>
@@ -102,7 +93,7 @@ function SpeciesEntry({ sp, all }: { sp: Species; all: Species[] }) {
                   <ul className="flex flex-wrap gap-x-4 gap-y-1">
                     {sp.tags.map((tag) => (
                       <li key={tag}>
-                        <Link to={localePath(lang, `/collection?group=${encodeURIComponent(tag)}`)} className="link">
+                        <Link to={localePath(lang, `/gallery?tab=${sp.type === "animal" ? "animals" : "plants"}&group=${encodeURIComponent(tag)}`)} className="link">
                           {tagLabel(tag, lang)}
                         </Link>
                       </li>

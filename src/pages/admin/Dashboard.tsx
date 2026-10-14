@@ -18,6 +18,7 @@ export default function Dashboard() {
   const areas = [
     { href: "/admin/species", title: t.species, body: t.speciesCard },
     { href: "/admin/menu", title: t.menu, body: t.menuCard },
+    { href: "/admin/services", title: t.services, body: t.servicesCard },
     { href: "/admin/site", title: t.site, body: t.siteCard },
     { href: "/admin/texts", title: t.texts, body: t.textsCard },
   ];
@@ -35,7 +36,7 @@ export default function Dashboard() {
         ))}
       </dl>
 
-      <ul className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <ul className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {areas.map((area) => (
           <li key={area.href}>
             <Link

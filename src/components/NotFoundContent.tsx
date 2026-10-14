@@ -17,7 +17,7 @@ export default function NotFoundContent() {
         <Link to={localePath(lang)} className="btn btn-primary">
           {t.home}
         </Link>
-        <Link to={localePath(lang, "/collection")} className="btn">
+        <Link to={localePath(lang, "/gallery")} className="btn">
           {t.browse}
         </Link>
       </div>

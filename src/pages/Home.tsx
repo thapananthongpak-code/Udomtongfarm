@@ -4,10 +4,9 @@ import PageLoading from "@/components/PageLoading";
 import SectionHeading from "@/components/SectionHeading";
 import SpeciesCard from "@/components/species/SpeciesCard";
 import SpeciesImage from "@/components/species/SpeciesImage";
-import { StatusBadge } from "@/components/species/StatusBadge";
 import { format, localePath } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
-import { isThreatened, sortSpecies, speciesName, speciesPath } from "@/lib/species/helpers";
+import { speciesName, speciesPath } from "@/lib/species/helpers";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { useData } from "@/state/data";
 
@@ -24,16 +23,10 @@ export default function Home() {
   const highlighted = all.filter((sp) => sp.featured);
   const highlights = (highlighted.length ? highlighted : all).slice(0, 6);
   const lead = highlights[0];
-  const threatened = sortSpecies(
-    all.filter((sp) => isThreatened(sp.status)),
-    "status",
-    lang,
-  );
 
   const stats: { value: string | number; label: string }[] = [
     { value: t.farm.admissionValue, label: t.farm.admissionLabel },
     { value: all.length, label: t.home.statSpecies },
-    { value: threatened.length, label: t.home.statThreatened },
     { value: t.farm.roomsValue, label: t.farm.roomsLabel },
   ];
 
@@ -51,7 +44,7 @@ export default function Home() {
           <h1 className="display mt-5 text-[2.5rem] sm:text-6xl lg:text-7xl">{t.home.title}</h1>
           <p className="lede mt-7 max-w-xl">{t.home.lede}</p>
           <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
-            <Link to={localePath(lang, "/collection")} className="btn btn-primary">
+            <Link to={localePath(lang, "/gallery")} className="btn btn-primary">
               {t.home.browse}
             </Link>
             <Link to={localePath(lang, "/visit")} className="link text-[0.9375rem]">
@@ -83,7 +76,7 @@ export default function Home() {
 
       {/* The farm at a glance */}
       <section aria-label={t.about.numbersTitle} className="shell">
-        <dl className="grid grid-cols-2 gap-x-6 md:grid-cols-4 md:gap-x-10">
+        <dl className="grid grid-cols-3 gap-x-4 md:gap-x-10">
           {stats.map((stat) => (
             <div key={stat.label} className="flex flex-col-reverse border-t border-ink pb-8 pt-4">
               <dt className="mt-1 text-[0.8125rem] text-muted">{stat.label}</dt>
@@ -105,8 +98,8 @@ export default function Home() {
       {highlights.length > 0 && (
         <section className="shell py-20 md:py-28">
           <SectionHeading eyebrow={t.home.highlightsEyebrow} title={t.home.highlightsTitle}>
-            <Link to={localePath(lang, "/collection")} className="link text-[0.9375rem]">
-              {t.common.viewCollection}
+            <Link to={localePath(lang, "/gallery")} className="link text-[0.9375rem]">
+              {t.common.viewGallery}
             </Link>
           </SectionHeading>
           <ul className="mt-12 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 md:gap-x-10">
@@ -130,7 +123,7 @@ export default function Home() {
                 return (
                   <Link
                     key={department.type}
-                    to={localePath(lang, `/collection?type=${department.type}`)}
+                    to={localePath(lang, `/gallery?tab=${department.type === "animal" ? "animals" : "plants"}`)}
                     className="group grid grid-cols-[7rem_1fr] items-center gap-6 border-t border-ink pt-6 sm:grid-cols-[10rem_1fr] sm:gap-8"
                   >
                     <SpeciesImage
@@ -149,34 +142,6 @@ export default function Home() {
                 );
               })}
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Conservation */}
-      {threatened.length > 0 && (
-        <section className="border-t border-line">
-          <div className="shell grid gap-12 py-20 md:py-28 lg:grid-cols-12">
-            <div className="lg:col-span-4">
-              <p className="eyebrow">{t.home.watchEyebrow}</p>
-              <h2 className="display mt-3 text-3xl md:text-4xl">{t.home.watchTitle}</h2>
-              <p className="mt-5 text-[0.9375rem] text-muted">{t.home.watchLede}</p>
-            </div>
-            <ul className="border-t border-ink lg:col-span-7 lg:col-start-6">
-              {threatened.map((sp) => (
-                <li key={sp.id} className="border-b border-line">
-                  <Link to={localePath(lang, speciesPath(sp.id))} className="group flex items-baseline justify-between gap-4 py-4">
-                    <span className="min-w-0">
-                      <span className="font-serif text-xl decoration-1 underline-offset-4 group-hover:underline">
-                        {speciesName(sp, lang)}
-                      </span>
-                      {sp.scientific_name && <span lang="la" className="scientific ml-3 hidden text-muted sm:inline">{sp.scientific_name}</span>}
-                    </span>
-                    {sp.status && <StatusBadge status={sp.status} labels={t.status} full />}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
         </section>
       )}

@@ -60,3 +60,21 @@ from (
     ('other', 'น้ำผึ้งมะนาวโซดา', 'Honey lemon soda', 'น้ำผึ้ง มะนาว และโซดา', 'Honey, lime and soda', 2)
 ) as sample (category, name_th, name_en, description_th, description_en, sort_order)
 where not exists (select 1 from public.menu_items);
+
+-- Loads the farm's activities and rates (8 lines), only while that list is still empty.
+-- Prices are left empty except where the farm has said something is free.
+
+insert into public.farm_services (kind, name_th, name_en, description_th, description_en, price, sort_order)
+select *
+from (
+  values
+    ('activity', 'ขับรถ ATV', 'ATV rides', 'ขับรถ ATV ชมบรรยากาศรอบฟาร์ม', 'Drive an ATV on a circuit around the farm.', null::integer, 1),
+    ('activity', 'ให้อาหารสัตว์', 'Feeding the animals', 'ให้อาหารสัตว์ต่าง ๆ ในฟาร์ม เช่น นกยูง และหงส์', 'Feed the animals around the farm, such as the peacocks and the swans.', null::integer, 2),
+    ('activity', 'เก็บไข่ไก่', 'Collecting eggs', 'ลงมือเก็บไข่ไก่ด้วยตัวเอง', 'Collect hens'' eggs yourself.', null::integer, 3),
+    ('activity', 'ตกปลา', 'Fishing', 'ฟรีสำหรับผู้ที่เข้าพักโฮมสเตย์', 'Free for guests staying at the homestay.', null::integer, 4),
+    ('rate', 'เข้าชมฟาร์ม', 'Farm admission', 'เข้าพื้นที่ฟาร์มได้โดยไม่มีค่าใช้จ่าย', 'Entering the farm is free of charge.', 0, 1),
+    ('rate', 'ที่พักโฮมสเตย์', 'Homestay', '4 ห้อง พักได้ห้องละไม่เกิน 4 คน รวมน้ำดื่ม อาหารเช้า และกิจกรรมตกปลา', 'Four rooms, each for up to four guests. Drinking water, breakfast and fishing are included.', null::integer, 2),
+    ('rate', 'ขับรถ ATV', 'ATV rides', 'ขับรถ ATV ชมบรรยากาศรอบฟาร์ม', 'Drive an ATV on a circuit around the farm.', null::integer, 3),
+    ('rate', 'ตกปลา', 'Fishing', 'ฟรีสำหรับผู้เข้าพักโฮมสเตย์ ผู้ที่ไม่ได้เข้าพักกรุณาสอบถามฟาร์ม', 'Free for homestay guests. Other customers, please ask the farm.', null::integer, 4)
+) as sample (kind, name_th, name_en, description_th, description_en, price, sort_order)
+where not exists (select 1 from public.farm_services);
