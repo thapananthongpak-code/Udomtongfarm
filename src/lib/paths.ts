@@ -9,14 +9,14 @@ export function safeNextPath(next: string | null | undefined, fallback: string):
 // Addresses from earlier versions of the site, mapped to where that content lives now.
 const LEGACY: [RegExp, string][] = [
   [/^\/species\/(?:animal|plant)\/([^/]+)\/?$/, "/species/$1"],
-  [/^\/(?:encyclopedia|gallery|compare)\/?$/, "/collection"],
+  [/^\/(?:encyclopedia|collection|compare)\/?$/, "/gallery"],
   [/^\/(?:saved|wishlist|profile)\/?$/, "/account"],
   [/^\/(?:contact|map|faq)\/?$/, "/visit"],
   [/^\/(?:register|forgot|forgot-password|reset-password)\/?$/, "/login"],
   [/^\/(?:cart|checkout|orders)(?:\/.*)?$/, "/"],
 ];
 
-/** Turns an address without a language into one with it, e.g. "/encyclopedia" into "/th/collection". */
+/** Turns an address without a language into one with it, e.g. "/encyclopedia" into "/th/gallery". */
 export function withLocale(pathname: string): string {
   let path = pathname;
   for (const [pattern, replacement] of LEGACY) {

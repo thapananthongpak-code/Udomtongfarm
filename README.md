@@ -8,10 +8,10 @@ Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the G
 
 - **Home, About and Visit pages** that present the farm: free to enter, with activities, a four-room homestay and a café, plus hours, map, directions and FAQ.
 - **Café page** with the drinks menu, grouped into coffee, cocoa, tea and other drinks.
-- **Collection** of every species, with search across Thai, English and scientific names, and filters for department, group and IUCN status. Each species has its own page.
+- **Gallery** with four tabs: animals, plants, activities and rates. The animals and plants tabs search across Thai, English and scientific names and filter by group; each species has its own page. Activities are shown with a photograph, and the rates tab is a price list in which an empty price reads "Ask the farm" and zero reads "Free".
 - **Chat assistant** that answers visitors' questions about the farm, its animals and plants, and how to get in touch. It runs on Google Gemini.
 - **Sign-in with Google** for visitors who want to keep a saved list of species. There are no passwords on this site, so none can be lost.
-- **Admin dashboard** for changing photographs and information: every species, the café menu, the farm's phone number, Facebook link, map link and address, and the site's main texts in Thai and English.
+- **Admin dashboard** for changing photographs and information: every species, the café menu, the farm's phone number, Facebook link, map link and address, and the site's main texts in Thai and English, and the activities and rates.
 - Thai and English versions of every page under `/th` and `/en`.
 - **Text size control** (normal, large, extra large) in the header, remembered in the browser, and markup that works with screen readers.
 
@@ -71,13 +71,18 @@ Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap mess
 | --- | --- |
 | Species information and photographs | Admin dashboard → Animals and plants |
 | Café menu: drinks, prices and photographs | Admin dashboard → Café menu |
+| Activities, their photographs, and rates | Admin dashboard → Activities and rates |
 | Phone, Facebook link, map link, address | Admin dashboard → Farm details |
 | Site name, tagline, home page heading, farm story, founder profile, activities, homestay details, hours, FAQ, footer and privacy policy | Admin dashboard → Site texts |
 | Every other text, such as button and menu labels | `src/i18n/dictionaries/th.ts` and `en.ts` |
 | Thai names for groups | `TAG_TH` in `src/lib/species/helpers.ts` |
 | Colours and type | `src/index.css` |
 
-Before Supabase is connected, species live in `src/data/species.ts`, the sample café menu in `src/data/menu.ts`, and contact details in `src/lib/farm.ts`. After editing the species or menu file, run `npm run db:seed-sql` to regenerate `supabase/seed.sql`.
+Before Supabase is connected, species live in `src/data/species.ts`, the sample café menu in `src/data/menu.ts`, the activities and rates in `src/data/services.ts`, and contact details in `src/lib/farm.ts`. After editing any of the three data files, run `npm run db:seed-sql` to regenerate `supabase/seed.sql`.
+
+**Prices** of activities and rates are whole baht. An empty price shows "Ask the farm" and the chat assistant says the price has not been published; `0` means free. Only entry to the farm is seeded as free.
+
+**Conservation status** (the IUCN category) is no longer shown on the site or given to the chat assistant: there is no badge, filter, sort or "threatened" section. The `status` column is kept in the database and in the admin form, and the descriptions of some species still mention it in their text.
 
 **Site texts** saves only what differs from the wording in the two dictionary files, in the `site_content` table. Emptying a box and saving puts the dictionary's wording back. The list of texts that can be edited is `CONTENT_GROUPS` in `src/lib/content.ts`; lists such as the FAQ keep the number of entries they have in the dictionaries.
 
@@ -97,10 +102,12 @@ src/
   lib/
     farm.ts          Farm facts and starting contact details
     content.ts       Which texts an admin can change, and putting them in place
+    services.ts      Types and helpers for activities and rates
     admin.ts         Checking and saving what an admin types
     supabase.ts      The Supabase client
     species/         Types and helpers for the collection
   data/species.ts    The starting collection
+  data/services.ts   The starting activities and rates
 api/
   chat.ts            The chat assistant's endpoint (a Vercel function)
   _lib/              What the assistant knows, and request limits
@@ -112,9 +119,9 @@ public/              Photographs and icons
 
 The admin pages are hidden from everyone who is not an admin, but that is only for tidiness. The real protection is row level security in the database, defined in `supabase/schema.sql`:
 
-- Anyone can read published species, the farm's contact details and the site's texts.
+- Anyone can read published species, activities and rates, the farm's contact details and the site's texts.
 - Members can read and change only their own profile name and saved list.
-- Only admins can change species, upload photographs, or edit the farm's details and the site's texts. Admins are appointed in the SQL Editor.
+- Only admins can change species, activities and rates, upload photographs, or edit the farm's details and the site's texts. Admins are appointed in the SQL Editor.
 
 ## Deployment
 

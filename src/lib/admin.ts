@@ -6,6 +6,7 @@ import type { Dictionary } from "@/i18n";
 import { CONTENT_KEYS, CONTENT_MAX_LENGTH, type ContentRow } from "@/lib/content";
 import type { SiteSettings } from "@/lib/farm";
 import { MENU_CATEGORIES, type MenuCategory } from "@/lib/menu";
+import { SERVICE_KINDS, type ServiceKind } from "@/lib/services";
 import { STATUS_CODES, type Source, type Species } from "@/lib/species/types";
 import { SPECIES_BUCKET, STORAGE_PREFIX, supabase } from "@/lib/supabase";
 
@@ -184,6 +185,64 @@ export async function deleteMenuItem(id: string): Promise<boolean> {
   if (!supabase) return false;
   const { error } = await supabase.from("menu_items").delete().eq("id", id);
   return !error;
+}
+
+/** What the activity and rate form holds while it is being edited. */
+export type ServiceFormValues = {
+  kind: ServiceKind;
+  name_th: string;
+  name_en: string;
+  description_th: string;
+  description_en: string;
+  unit_th: string;
+  unit_en: string;
+  /** Whole baht, zero for free, or empty while there is no price. */
+  price: string;
+  image: string;
+  sort_order: string;
+  published: boolean;
+};
+
+const serviceSchema = z.object({
+  kind: z.enum(SERVICE_KINDS),
+  name_th: required(120),
+  name_en: text(120),
+  description_th: text(300),
+  description_en: text(300),
+  unit_th: text(60),
+  unit_en: text(60),
+  price: wholeNumber(6),
+  image: text(1000).refine(isAllowedImage),
+  sort_order: wholeNumber(4),
+  published: z.boolean(),
+});
+
+/** Adds an activity or rate, or updates the one with `existingId`. */
+export async function saveService(values: ServiceFormValues, existingId: string | null): Promise<SaveResult> {
+  if (!supabase) return { ok: false, code: "forbidden" };
+
+  const parsed = serviceSchema.safeParse(values);
+  if (!parsed.success) {
+    return { ok: false, code: "invalid", fields: collectFields(parsed.error.issues, menuFieldError) };
+  }
+
+  const { price, sort_order, ...rest } = parsed.data;
+  const row = { ...rest, price: price === "" ? null : Number(price), sort_order: sort_order === "" ? 0 : Number(sort_order) };
+
+  // Asking for the row back shows whether the change was allowed: a non-admin changes nothing.
+  const { data, error } = existingId
+    ? await supabase.from("farm_services").update(row).eq("id", existingId).select("id")
+    : await supabase.from("farm_services").insert(row).select("id");
+  if (error) return { ok: false, code: error.code === "42501" ? "forbidden" : "unknown" };
+  if (data.length === 0) return { ok: false, code: "forbidden" };
+  return { ok: true };
+}
+
+export async function deleteService(id: string): Promise<boolean> {
+  if (!supabase) return false;
+  // Asking for the row back shows whether the delete was allowed: a non-admin deletes nothing.
+  const { data, error } = await supabase.from("farm_services").delete().eq("id", id).select("id");
+  return !error && data.length > 0;
 }
 
 const link = text(500).refine((value) => value === "" || /^https:\/\/\S+$/.test(value));

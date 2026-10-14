@@ -55,7 +55,7 @@ export default function Account() {
           {saved.length === 0 ? (
             <div className="border-t border-line py-10">
               <p className="text-muted">{t.savedEmpty}</p>
-              <Link to={localePath(lang, "/collection")} className="btn mt-5">
+              <Link to={localePath(lang, "/gallery")} className="btn mt-5">
                 {t.savedEmptyCta}
               </Link>
             </div>

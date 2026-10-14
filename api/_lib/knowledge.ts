@@ -3,12 +3,14 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { seedMenu } from "../../src/data/menu.js";
+import { seedServices } from "../../src/data/services.js";
 import { seedSpecies } from "../../src/data/species.js";
 import builtInEn, { type Dictionary } from "../../src/i18n/dictionaries/en.js";
 import builtInTh from "../../src/i18n/dictionaries/th.js";
 import { applyContent, type ContentRow } from "../../src/lib/content.js";
 import { DEFAULT_CONTACT, SETTINGS_FIELDS, formatPhone, type SiteSettings } from "../../src/lib/farm.js";
-import { sortMenu, type MenuItem } from "../../src/lib/menu.js";
+import { formatPrice, sortMenu, type MenuItem } from "../../src/lib/menu.js";
+import { servicesOfKind, type FarmService } from "../../src/lib/services.js";
 import type { Species } from "../../src/lib/species/types.js";
 
 // The same public values the website uses. Vercel makes them available to this function too.
@@ -19,18 +21,28 @@ const supabase =
     ? createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } })
     : null;
 
-type FarmData = { species: Species[]; menu: MenuItem[]; contact: SiteSettings; th: Dictionary; en: Dictionary };
+type FarmData = {
+  species: Species[];
+  menu: MenuItem[];
+  services: FarmService[];
+  contact: SiteSettings;
+  th: Dictionary;
+  en: Dictionary;
+};
 
 /**
  * The published collection, café menu, contact details and site texts:
  * from Supabase when connected, otherwise the bundled data.
  */
 async function loadFarmData(): Promise<FarmData> {
-  if (!supabase) return { species: seedSpecies, menu: seedMenu, contact: DEFAULT_CONTACT, th: builtInTh, en: builtInEn };
+  if (!supabase) {
+    return { species: seedSpecies, menu: seedMenu, services: seedServices, contact: DEFAULT_CONTACT, th: builtInTh, en: builtInEn };
+  }
 
-  const [species, menu, settings, content] = await Promise.all([
+  const [species, menu, services, settings, content] = await Promise.all([
     supabase.from("species").select("*").eq("published", true),
     supabase.from("menu_items").select("*").eq("published", true),
+    supabase.from("farm_services").select("*").eq("published", true),
     supabase.from("site_settings").select(SETTINGS_FIELDS.join(",")).eq("id", 1).maybeSingle(),
     supabase.from("site_content").select("key,th,en"),
   ]);
@@ -39,6 +51,7 @@ async function loadFarmData(): Promise<FarmData> {
   return {
     species: species.error ? seedSpecies : (species.data as Species[]),
     menu: menu.error ? seedMenu : (menu.data as MenuItem[]),
+    services: services.error ? seedServices : (services.data as FarmService[]),
     contact: settings.error || !settings.data ? DEFAULT_CONTACT : (settings.data as unknown as SiteSettings),
     th: applyContent(builtInTh, edits, "th"),
     en: applyContent(builtInEn, edits, "en"),
@@ -51,7 +64,7 @@ How to answer:
 
 Facts about the farm itself must come from the farm information below, which is everything the farm has published. When a visitor asks about something it does not cover, such as the price of a room or an activity, whether a room is free on a given date, or an animal or plant that is not in the species list, say plainly that you do not have that information and suggest contacting the farm using the contact details below. For a species that is not in the list, say that it is not in the collection the farm has published, rather than that the farm does not have it. Do not fill the gap with a guess or with how farms usually work: a visitor may travel a long way on the strength of your answer.
 
-Entry to the farm is free, and for homestay guests the drinking water, breakfast and fishing are free. No other prices have been published, so do not describe anything else as free or quote a price for it. Rooms are booked by contacting the farm; you cannot take a booking yourself.
+Entry to the farm is free, and for homestay guests the drinking water, breakfast and fishing are free. Prices come only from the activities and rates list below: quote a price only when the list gives one, say that something is free only when the list or the facts above say so, and when the list shows "price not published" say that the farm has not published that price and suggest asking the farm. Never work out a total or a discount yourself. Rooms are booked by contacting the farm; you cannot take a booking yourself.
 
 The farm describes the café as something it will have. Do not say it is open now. The café menu below is a preview of what it plans to serve. Give the price of a drink only when the menu lists one; otherwise say that prices have not been published yet.
 
@@ -67,10 +80,9 @@ const lines = (items: string[]) => items.filter(Boolean).join("\n");
 
 function speciesLine(sp: Species): string {
   const scientific = sp.scientific_name ? ` (${sp.scientific_name})` : "";
-  const status = sp.status ? `${sp.status} (${builtInEn.status[sp.status]} / ${builtInTh.status[sp.status]})` : "not evaluated";
   return lines([
     `- ${sp.name_th} / ${sp.name_en}${scientific}`,
-    `  kind: ${sp.type}; IUCN status: ${status}; groups: ${sp.tags.join(", ") || "none"}`,
+    `  kind: ${sp.type}; groups: ${sp.tags.join(", ") || "none"}`,
     sp.summary_th && `  th: ${sp.summary_th}`,
     sp.summary_en && `  en: ${sp.summary_en}`,
   ]);
@@ -81,13 +93,23 @@ function menuLine(item: MenuItem): string {
   return `- ${item.name_th} / ${item.name_en || item.name_th} (${item.category}; ${price})`;
 }
 
+function serviceLine(item: FarmService): string {
+  const price = item.price === null ? "price not published" : item.price === 0 ? "free" : formatPrice(item.price);
+  const unit = [item.unit_th, item.unit_en].filter(Boolean).join(" / ");
+  return lines([
+    `- ${item.name_th} / ${item.name_en || item.name_th} (${price}${unit && item.price ? ` ${unit}` : ""})`,
+    item.description_th && `  th: ${item.description_th}`,
+    item.description_en && `  en: ${item.description_en}`,
+  ]);
+}
+
 /**
  * The part of the prompt that is the same for every visitor: the instructions and
  * everything the farm has published. Species are sorted so the text is identical
  * from one request to the next, which lets Gemini reuse it at a lower price.
  */
 export async function buildFarmKnowledge(): Promise<{ prompt: string; species: Species[] }> {
-  const { species, menu, contact, th, en } = await loadFarmData();
+  const { species, menu, services, contact, th, en } = await loadFarmData();
   const sorted = [...species].sort((a, b) => a.id.localeCompare(b.id));
   const animals = sorted.filter((sp) => sp.type === "animal");
   const plants = sorted.filter((sp) => sp.type === "plant");
@@ -113,6 +135,13 @@ export async function buildFarmKnowledge(): Promise<{ prompt: string; species: S
     ...th.farm.stay.map((row) => `${row.label}: ${row.value}`),
     ...en.farm.stay.map((row) => `${row.label}: ${row.value}`),
     "</homestay>",
+    "",
+    "<activities_and_rates>",
+    "Activities:",
+    ...servicesOfKind(services, "activity").map(serviceLine),
+    "Rates:",
+    ...servicesOfKind(services, "rate").map(serviceLine),
+    "</activities_and_rates>",
     "",
     "<cafe_menu>",
     ...sortMenu(menu).map(menuLine),

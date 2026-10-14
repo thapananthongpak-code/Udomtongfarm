@@ -1,11 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { OldSpeciesAddress, RootRedirect } from "@/components/Redirects";
+import { CollectionRedirect, OldSpeciesAddress, RootRedirect } from "@/components/Redirects";
 import About from "@/pages/About";
 import Account from "@/pages/Account";
 import AuthCallback from "@/pages/AuthCallback";
 import Cafe from "@/pages/Cafe";
-import Collection from "@/pages/Collection";
+import Gallery from "@/pages/Gallery";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
@@ -26,7 +26,8 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <Home /> },
-      { path: "collection", element: <Collection /> },
+      { path: "gallery", element: <Gallery /> },
+      { path: "collection", element: <CollectionRedirect /> },
       { path: "species/:id", element: <SpeciesPage /> },
       { path: "species/:type/:id", element: <OldSpeciesAddress /> },
       { path: "cafe", element: <Cafe /> },
@@ -47,6 +48,9 @@ export const router = createBrowserRouter([
           { path: "menu", lazy: page(() => import("@/pages/admin/MenuList")) },
           { path: "menu/new", lazy: page(() => import("@/pages/admin/MenuEdit")) },
           { path: "menu/:id", lazy: page(() => import("@/pages/admin/MenuEdit")) },
+          { path: "services", lazy: page(() => import("@/pages/admin/ServiceList")) },
+          { path: "services/new", lazy: page(() => import("@/pages/admin/ServiceEdit")) },
+          { path: "services/:id", lazy: page(() => import("@/pages/admin/ServiceEdit")) },
           { path: "site", lazy: page(() => import("@/pages/admin/SiteSettings")) },
           { path: "texts", lazy: page(() => import("@/pages/admin/SiteContent")) },
         ],

@@ -14,7 +14,7 @@ export default function SiteHeader() {
   const { status } = useSession();
   const [open, setOpen] = useState(false);
 
-  // Path without the language prefix, e.g. "/collection".
+  // Path without the language prefix, e.g. "/gallery".
   const path = pathname.replace(/^\/(th|en)(?=\/|$)/, "") || "/";
   const target = otherLocale(lang);
 
@@ -26,7 +26,7 @@ export default function SiteHeader() {
   }, [open]);
 
   const links = [
-    { href: "/collection", label: labels.collection, active: path.startsWith("/collection") || path.startsWith("/species") },
+    { href: "/gallery", label: labels.gallery, active: path.startsWith("/gallery") || path.startsWith("/species") },
     { href: "/cafe", label: labels.cafe, active: path.startsWith("/cafe") },
     { href: "/about", label: labels.about, active: path.startsWith("/about") },
     { href: "/visit", label: labels.visit, active: path.startsWith("/visit") },

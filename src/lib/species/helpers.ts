@@ -1,7 +1,7 @@
 // Pure helpers for species data. Safe to import from server and client components.
 
 import type { Locale } from "@/i18n/config";
-import { STATUS_CODES, type Species, type SpeciesCardData, type SpeciesType, type Status } from "./types";
+import type { Species, SpeciesCardData, SpeciesType } from "./types";
 
 type Named = Pick<Species, "name_th" | "name_en">;
 type Summarised = Pick<Species, "summary_th" | "summary_en">;
@@ -20,9 +20,6 @@ export const speciesBody = (sp: Pick<Species, "body_th" | "body_en">, lang: Loca
 
 export const isSpeciesType = (value: string | null | undefined): value is SpeciesType =>
   value === "animal" || value === "plant";
-
-export const isStatus = (value: string | null | undefined): value is Status =>
-  STATUS_CODES.includes(value as Status);
 
 /**
  * Splits a description into paragraphs. Blank lines always start a new paragraph.
@@ -44,12 +41,6 @@ export function toParagraphs(text: string, lang: Locale): string[] {
   for (let i = 0; i < sentences.length; i += size) paragraphs.push(sentences.slice(i, i + size).join(" "));
   return paragraphs;
 }
-
-// ── Conservation status ──────────────────────────────────────
-
-export const isThreatened = (status: Status | null) => status === "VU" || status === "EN" || status === "CR";
-
-export const statusRank = (status: Status | null) => (status ? STATUS_CODES.indexOf(status) : -1);
 
 // ── Groups (tags) ────────────────────────────────────────────
 
@@ -120,23 +111,15 @@ export function searchSpecies<T extends SpeciesCardData>(list: T[], rawQuery: st
     .map((entry) => entry.sp);
 }
 
-export type SortMode = "az" | "za" | "status";
+export type SortMode = "az" | "za";
 
-export const isSortMode = (value: string | null | undefined): value is SortMode =>
-  value === "az" || value === "za" || value === "status";
+export const isSortMode = (value: string | null | undefined): value is SortMode => value === "az" || value === "za";
 
-export function sortSpecies<T extends Named & Pick<Species, "status">>(list: T[], mode: SortMode, lang: Locale): T[] {
+export function sortSpecies<T extends Named>(list: T[], mode: SortMode, lang: Locale): T[] {
   const collator = new Intl.Collator(lang, { sensitivity: "base" });
   const byName = (a: T, b: T) => collator.compare(speciesName(a, lang), speciesName(b, lang));
   const sorted = [...list];
-  switch (mode) {
-    case "za":
-      return sorted.sort((a, b) => byName(b, a));
-    case "status":
-      return sorted.sort((a, b) => statusRank(b.status) - statusRank(a.status) || byName(a, b));
-    default:
-      return sorted.sort(byName);
-  }
+  return mode === "za" ? sorted.sort((a, b) => byName(b, a)) : sorted.sort(byName);
 }
 
 // ── Relationships ────────────────────────────────────────────
@@ -147,8 +130,7 @@ export function relatedSpecies(sp: Species, all: Species[], count = 4): Species[
     .filter((other) => other.id !== sp.id)
     .map((other) => {
       const shared = other.tags.filter((tag) => tags.has(tag)).length;
-      const score =
-        shared * 3 + (other.type === sp.type ? 1 : 0) + (isThreatened(other.status) && isThreatened(sp.status) ? 0.5 : 0);
+      const score = shared * 3 + (other.type === sp.type ? 1 : 0);
       return { other, score };
     })
     .sort((a, b) => b.score - a.score || a.other.name_en.localeCompare(b.other.name_en))

@@ -10,9 +10,10 @@ export default function SiteFooter() {
   const { settings: contact } = useData();
 
   const explore = [
-    { href: "/collection", label: t.nav.collection },
-    { href: "/collection?type=animal", label: t.common.animals },
-    { href: "/collection?type=plant", label: t.common.plants },
+    { href: "/gallery?tab=animals", label: t.common.animals },
+    { href: "/gallery?tab=plants", label: t.common.plants },
+    { href: "/gallery?tab=activities", label: t.gallery.tabActivities },
+    { href: "/gallery?tab=rates", label: t.gallery.tabRates },
     { href: "/cafe", label: t.nav.cafe },
     { href: "/about", label: t.nav.about },
     { href: "/visit", label: t.nav.visit },
