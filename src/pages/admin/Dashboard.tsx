@@ -19,6 +19,7 @@ export default function Dashboard() {
     { href: "/admin/species", title: t.species, body: t.speciesCard },
     { href: "/admin/menu", title: t.menu, body: t.menuCard },
     { href: "/admin/site", title: t.site, body: t.siteCard },
+    { href: "/admin/texts", title: t.texts, body: t.textsCard },
   ];
 
   return (
@@ -34,7 +35,7 @@ export default function Dashboard() {
         ))}
       </dl>
 
-      <ul className="mt-6 grid gap-6 md:grid-cols-3">
+      <ul className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {areas.map((area) => (
           <li key={area.href}>
             <Link

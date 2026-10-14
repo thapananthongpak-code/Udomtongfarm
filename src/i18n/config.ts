@@ -15,8 +15,6 @@ export function format(template: string, values: Record<string, string | number>
   return template.replace(/\{(\w+)\}/g, (match, key: string) => (key in values ? String(values[key]) : match));
 }
 
-export type Bilingual = Record<Locale, string>;
-
 const LANGUAGE_KEY = "lang";
 
 /** The language a visitor chose last time, or the first of their browser languages that the site has. */

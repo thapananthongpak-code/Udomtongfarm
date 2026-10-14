@@ -4,9 +4,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { seedMenu } from "../../src/data/menu.js";
 import { seedSpecies } from "../../src/data/species.js";
-import en from "../../src/i18n/dictionaries/en.js";
-import th from "../../src/i18n/dictionaries/th.js";
-import { DEFAULT_CONTACT, FOUNDER, SETTINGS_FIELDS, formatPhone, type SiteSettings } from "../../src/lib/farm.js";
+import builtInEn, { type Dictionary } from "../../src/i18n/dictionaries/en.js";
+import builtInTh from "../../src/i18n/dictionaries/th.js";
+import { applyContent, type ContentRow } from "../../src/lib/content.js";
+import { DEFAULT_CONTACT, SETTINGS_FIELDS, formatPhone, type SiteSettings } from "../../src/lib/farm.js";
 import { sortMenu, type MenuItem } from "../../src/lib/menu.js";
 import type { Species } from "../../src/lib/species/types.js";
 
@@ -18,19 +19,29 @@ const supabase =
     ? createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } })
     : null;
 
-/** The published collection, café menu and contact details: from Supabase when connected, otherwise the bundled data. */
-async function loadFarmData(): Promise<{ species: Species[]; menu: MenuItem[]; contact: SiteSettings }> {
-  if (!supabase) return { species: seedSpecies, menu: seedMenu, contact: DEFAULT_CONTACT };
+type FarmData = { species: Species[]; menu: MenuItem[]; contact: SiteSettings; th: Dictionary; en: Dictionary };
 
-  const [species, menu, settings] = await Promise.all([
+/**
+ * The published collection, café menu, contact details and site texts:
+ * from Supabase when connected, otherwise the bundled data.
+ */
+async function loadFarmData(): Promise<FarmData> {
+  if (!supabase) return { species: seedSpecies, menu: seedMenu, contact: DEFAULT_CONTACT, th: builtInTh, en: builtInEn };
+
+  const [species, menu, settings, content] = await Promise.all([
     supabase.from("species").select("*").eq("published", true),
     supabase.from("menu_items").select("*").eq("published", true),
     supabase.from("site_settings").select(SETTINGS_FIELDS.join(",")).eq("id", 1).maybeSingle(),
+    supabase.from("site_content").select("key,th,en"),
   ]);
+  // The texts an admin has changed replace the built-in ones, as they do on the pages.
+  const edits = content.error ? [] : (content.data as ContentRow[]);
   return {
     species: species.error ? seedSpecies : (species.data as Species[]),
     menu: menu.error ? seedMenu : (menu.data as MenuItem[]),
     contact: settings.error || !settings.data ? DEFAULT_CONTACT : (settings.data as unknown as SiteSettings),
+    th: applyContent(builtInTh, edits, "th"),
+    en: applyContent(builtInEn, edits, "en"),
   };
 }
 
@@ -56,7 +67,7 @@ const lines = (items: string[]) => items.filter(Boolean).join("\n");
 
 function speciesLine(sp: Species): string {
   const scientific = sp.scientific_name ? ` (${sp.scientific_name})` : "";
-  const status = sp.status ? `${sp.status} (${en.status[sp.status]} / ${th.status[sp.status]})` : "not evaluated";
+  const status = sp.status ? `${sp.status} (${builtInEn.status[sp.status]} / ${builtInTh.status[sp.status]})` : "not evaluated";
   return lines([
     `- ${sp.name_th} / ${sp.name_en}${scientific}`,
     `  kind: ${sp.type}; IUCN status: ${status}; groups: ${sp.tags.join(", ") || "none"}`,
@@ -76,7 +87,7 @@ function menuLine(item: MenuItem): string {
  * from one request to the next, which lets Gemini reuse it at a lower price.
  */
 export async function buildFarmKnowledge(): Promise<{ prompt: string; species: Species[] }> {
-  const { species, menu, contact } = await loadFarmData();
+  const { species, menu, contact, th, en } = await loadFarmData();
   const sorted = [...species].sort((a, b) => a.id.localeCompare(b.id));
   const animals = sorted.filter((sp) => sp.type === "animal");
   const plants = sorted.filter((sp) => sp.type === "plant");
@@ -88,7 +99,7 @@ export async function buildFarmKnowledge(): Promise<{ prompt: string; species: S
     "<about>",
     ...th.about.story,
     ...en.about.story,
-    `Owner and founder: ${FOUNDER.name.th} / ${FOUNDER.name.en}`,
+    `Owner and founder: ${th.about.founder.name} / ${en.about.founder.name}`,
     ...th.farm.offers.map((offer) => `${offer.title}: ${offer.body}`),
     ...en.farm.offers.map((offer) => `${offer.title}: ${offer.body}`),
     "</about>",

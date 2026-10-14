@@ -11,7 +11,7 @@ Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the G
 - **Collection** of every species, with search across Thai, English and scientific names, and filters for department, group and IUCN status. Each species has its own page.
 - **Chat assistant** that answers visitors' questions about the farm, its animals and plants, and how to get in touch. It runs on Google Gemini.
 - **Sign-in with Google** for visitors who want to keep a saved list of species. There are no passwords on this site, so none can be lost.
-- **Admin dashboard** for changing photographs and information: every species, the café menu, and the farm's phone number, Facebook link, map link and address.
+- **Admin dashboard** for changing photographs and information: every species, the café menu, the farm's phone number, Facebook link, map link and address, and the site's main texts in Thai and English.
 - Thai and English versions of every page under `/th` and `/en`.
 - **Text size control** (normal, large, extra large) in the header, remembered in the browser, and markup that works with screen readers.
 
@@ -72,12 +72,14 @@ Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap mess
 | Species information and photographs | Admin dashboard → Animals and plants |
 | Café menu: drinks, prices and photographs | Admin dashboard → Café menu |
 | Phone, Facebook link, map link, address | Admin dashboard → Farm details |
-| Farm story, activities, homestay and café text, hours, FAQ, all interface text | `src/i18n/dictionaries/th.ts` and `en.ts` |
-| Founder profile | `src/lib/farm.ts` |
+| Site name, tagline, home page heading, farm story, founder profile, activities, homestay details, hours, FAQ, footer and privacy policy | Admin dashboard → Site texts |
+| Every other text, such as button and menu labels | `src/i18n/dictionaries/th.ts` and `en.ts` |
 | Thai names for groups | `TAG_TH` in `src/lib/species/helpers.ts` |
 | Colours and type | `src/index.css` |
 
 Before Supabase is connected, species live in `src/data/species.ts`, the sample café menu in `src/data/menu.ts`, and contact details in `src/lib/farm.ts`. After editing the species or menu file, run `npm run db:seed-sql` to regenerate `supabase/seed.sql`.
+
+**Site texts** saves only what differs from the wording in the two dictionary files, in the `site_content` table. Emptying a box and saving puts the dictionary's wording back. The list of texts that can be edited is `CONTENT_GROUPS` in `src/lib/content.ts`; lists such as the FAQ keep the number of entries they have in the dictionaries.
 
 The note at the top of the Café page, which says the café is getting ready to open, is `cafe.notice` in the two dictionary files.
 
@@ -94,6 +96,7 @@ src/
   i18n/              Languages and dictionaries
   lib/
     farm.ts          Farm facts and starting contact details
+    content.ts       Which texts an admin can change, and putting them in place
     admin.ts         Checking and saving what an admin types
     supabase.ts      The Supabase client
     species/         Types and helpers for the collection
@@ -109,9 +112,9 @@ public/              Photographs and icons
 
 The admin pages are hidden from everyone who is not an admin, but that is only for tidiness. The real protection is row level security in the database, defined in `supabase/schema.sql`:
 
-- Anyone can read published species and the farm's contact details.
+- Anyone can read published species, the farm's contact details and the site's texts.
 - Members can read and change only their own profile name and saved list.
-- Only admins can change species, upload photographs or edit the farm's details. Admins are appointed in the SQL Editor.
+- Only admins can change species, upload photographs, or edit the farm's details and the site's texts. Admins are appointed in the SQL Editor.
 
 ## Deployment
 
@@ -132,4 +135,5 @@ New pages should keep the heading order (one `h1`, then `h2`, then `h3`), label 
 ## Limitations
 
 - The site is a single-page app, so a link shared on LINE or Facebook shows the same preview image and title for every page.
+- That preview title, and the title shown for a moment while a page loads, come from `index.html`. A site name changed in Admin → Site texts does not reach them: edit `index.html` as well.
 - `sitemap.xml` is written at build time from `src/data/species.ts`. Species added later in the dashboard appear on the site straight away, but not in the sitemap until that file is updated.

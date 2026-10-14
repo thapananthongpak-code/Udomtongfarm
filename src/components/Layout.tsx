@@ -3,7 +3,9 @@ import { Navigate, Outlet, ScrollRestoration, useLocation, useParams } from "rea
 import { isLocale } from "@/i18n";
 import { useT } from "@/i18n/hooks";
 import { withLocale } from "@/lib/paths";
+import { useData } from "@/state/data";
 import ChatWidget from "./chat/ChatWidget";
+import PageLoading from "./PageLoading";
 import SiteFooter from "./SiteFooter";
 import SiteHeader from "./SiteHeader";
 
@@ -40,6 +42,7 @@ export default function Layout() {
   const { lang } = useParams();
   const { pathname, search, hash } = useLocation();
   const t = useT();
+  const { status } = useData();
 
   useEffect(() => {
     if (isLocale(lang)) document.documentElement.lang = lang;
@@ -58,7 +61,8 @@ export default function Layout() {
       </a>
       <SiteHeader />
       <main id="main" tabIndex={-1} className="flex-1 outline-none">
-        <Outlet />
+        {/* A page is drawn once its texts are known, so an edited text never flashes its old wording. */}
+        {status === "loading" ? <PageLoading /> : <Outlet />}
       </main>
       <SiteFooter />
       <ChatWidget />
