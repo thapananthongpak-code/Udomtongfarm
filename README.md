@@ -13,7 +13,7 @@ Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the G
 - **Sign-in with Google** for visitors who want to keep a saved list of species. There are no passwords on this site, so none can be lost.
 - **Admin dashboard** for changing photographs and information: every species, the café menu, the farm's phone number, Facebook link, map link and address, and the site's main texts in Thai and English, and the activities and rates.
 - Thai and English versions of every page under `/th` and `/en`.
-- **Text size control** (normal, large, extra large) and **colour contrast control** (the site's colours, black text on white, white text on black) in the header, both remembered in the browser, and markup that works with screen readers.
+- **Text size control** (normal, large, extra large) and **colour control** (the site's green and white, or a high-contrast black and green) in the header, both remembered in the browser, and markup that works with screen readers.
 - **QR code on every species page**, which opens that page on the phone that scans it. In the admin dashboard the code appears as soon as a new entry is saved, with downloads (PNG, SVG) and a sheet of every code to print as signs.
 - **Visitor numbers in the admin dashboard** (admins only): how many browsers have the site open now, today, the last 7 days and all time, with the last 14 days as bars.
 - **Hover and press feedback** on buttons, menus and cards, switched off for customers whose device asks for less motion.
@@ -82,7 +82,7 @@ Every question costs a small amount. Limits in `src/lib/chat-limits.ts` cap mess
 | Site name, tagline, home page heading, farm story, founder profile, activities, homestay details, hours, FAQ, footer and privacy policy | Admin dashboard → Site texts |
 | Every other text, such as button and menu labels | `src/i18n/dictionaries/th.ts` and `en.ts` |
 | Thai names for groups | `TAG_TH` in `src/lib/species/helpers.ts` |
-| Colours and type | `src/index.css` |
+| Colours, corners, buttons and type | `src/index.css` (the tokens at the top, and `.btn`, `.card`, `.input`) |
 
 Before Supabase is connected, species live in `src/data/species.ts`, the sample café menu in `src/data/menu.ts`, the activities and rates in `src/data/services.ts`, and contact details in `src/lib/farm.ts`. After editing any of the three data files, run `npm run db:seed-sql` to regenerate `supabase/seed.sql`.
 
@@ -168,7 +168,7 @@ Pushing to the `main` branch publishes to production. Pushing any other branch c
 - **Page changes:** the site is a single-page app, which browsers do not announce to screen readers. `RouteAnnouncer` in `src/components/Layout.tsx` reads out the new page's title and moves keyboard focus to the page content. Changing a filter does not do this.
 - **Chat bird and greeting:** the bird is a button named "Ask about the farm"; the bird itself is decorative. The greeting beside it can be dismissed and tucks itself away after 12 seconds. The same line opens the chat window as its first message, so a screen-reader user hears it there. Its idle movement is switched off for customers who ask for less motion.
 - **Chat window:** replies are announced once, when complete, not word by word. Pressing Escape closes the window and returns focus to the button that opened it.
-- **Contrast modes:** `data-contrast="light"` and `"dark"` on `<html>` swap the colour tokens at the top of `src/index.css`, so every part of the site follows. Text is 13:1 or better and borders are the full text colour. Use the tokens and never a fixed colour for text or borders, or a new part of the site will not follow the mode. QR codes are the exception: they stay black on white so that phones can read them. A small script in `index.html` applies the saved choice before the page is drawn.
+- **Colours and contrast mode:** the site is green and white; its colour tokens are at the top of `src/index.css` (`--accent` is the farm green used for buttons, links and labels). `data-contrast="dark"` on `<html>` swaps them for a black and green palette, so every part of the site follows. In both, body text is 12:1 or better, smaller grey text 5:1 or better, and the borders of fields and buttons 3.7:1 or better. Use the tokens and never a fixed colour for text or borders, or a new part of the site will not follow the mode. QR codes are the exception: they stay black on white so that phones can read them. A small script in `index.html` applies the saved choice before the page is drawn.
 - **Motion:** hover, press and entry animations are CSS, in the "Motion" section of `src/index.css`, inside a `prefers-reduced-motion: no-preference` query. Keep new animations there.
 - **Colours:** text colours meet 4.5:1 and the borders of fields and buttons meet 3:1 (`--control` in `src/index.css`). Check a new colour before using it for text.
 - **Language:** the page language is set on `<html>`, and scientific names are marked `lang="la"` so they are not read in the wrong voice.

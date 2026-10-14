@@ -177,7 +177,7 @@ export default function ChatWidget() {
     return (
       <div className="fixed bottom-4 right-4 z-40 flex items-end gap-3 print:hidden">
         {bubble && (
-          <div className="pop-enter relative mb-9 max-w-[min(15rem,calc(100vw-7.5rem))] border border-ink bg-surface text-[0.9375rem] leading-snug shadow-[0_10px_30px_-14px_rgb(0_0_0/0.5)]">
+          <div className="pop-enter relative mb-9 max-w-[min(15rem,calc(100vw-7.5rem))] rounded-2xl border border-line-strong bg-surface text-[0.9375rem] leading-snug shadow-[0_10px_30px_-14px_rgb(0_0_0/0.5)]">
             <button
               type="button"
               onClick={() => {
@@ -198,7 +198,7 @@ export default function ChatWidget() {
                 <path d="m3 3 10 10M13 3 3 13" />
               </svg>
             </button>
-            <span aria-hidden className="absolute -right-1.5 bottom-5 size-3 rotate-45 border-r border-t border-ink bg-surface" />
+            <span aria-hidden className="absolute -right-1.5 bottom-5 size-3 rotate-45 border-r border-t border-line-strong bg-surface" />
           </div>
         )}
         <button
@@ -225,12 +225,12 @@ export default function ChatWidget() {
       role="dialog"
       aria-label={labels.title}
       lang={lang}
-      className="pop-enter fixed inset-x-3 bottom-3 z-50 flex max-h-[min(36rem,calc(100dvh-1.5rem))] flex-col border border-ink bg-surface shadow-[0_24px_60px_-20px_rgb(0_0_0/0.5)] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[24rem] print:hidden"
+      className="pop-enter fixed inset-x-3 bottom-3 z-50 flex max-h-[min(36rem,calc(100dvh-1.5rem))] flex-col overflow-hidden rounded-3xl border border-line-strong bg-surface shadow-[0_24px_60px_-20px_rgb(0_0_0/0.5)] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[24rem] print:hidden"
     >
       <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
         <div className="flex min-w-0 items-center gap-3">
           <SunConure animated={false} className="size-11 shrink-0" />
-          <h2 className="font-serif text-xl">{labels.title}</h2>
+          <h2 className="text-lg font-semibold">{labels.title}</h2>
         </div>
         <button type="button" onClick={() => setOpen(false)} aria-label={labels.close} className="-mr-2 p-2 text-muted hover:text-ink">
           <svg aria-hidden viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.25">
@@ -240,7 +240,7 @@ export default function ChatWidget() {
       </div>
 
       <div ref={logRef} role="region" aria-label={labels.title} tabIndex={0} className="flex-1 space-y-4 overflow-y-auto px-5 py-5 text-[0.9375rem] leading-relaxed">
-        <p className="mr-4 border-l-2 border-accent pl-3.5">{greeting}</p>
+        <p className="mr-4 rounded-2xl rounded-bl-md bg-wall px-3.5 py-2.5">{greeting}</p>
 
         {messages.length === 0 && (
           <ul className="space-y-2">
@@ -256,12 +256,12 @@ export default function ChatWidget() {
 
         {messages.map((message, index) =>
           message.role === "user" ? (
-            <p key={index} className="ml-8 bg-wall px-3.5 py-2.5">
+            <p key={index} className="ml-8 rounded-2xl rounded-br-md bg-accent px-3.5 py-2.5 text-on-accent">
               {message.content}
             </p>
           ) : (
             message.content && (
-              <p key={index} className="mr-4 whitespace-pre-wrap border-l-2 border-accent pl-3.5">
+              <p key={index} className="mr-4 whitespace-pre-wrap rounded-2xl rounded-bl-md bg-wall px-3.5 py-2.5">
                 {message.content}
               </p>
             )

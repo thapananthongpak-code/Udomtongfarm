@@ -41,7 +41,7 @@ export default function Gallery() {
       <PageIntro eyebrow={labels.eyebrow} title={labels.title} lede={labels.lede} />
 
       <nav aria-label={labels.tabs} className="shell">
-        <ul className="-mb-px flex gap-x-1 overflow-x-auto border-b border-line">
+        <ul className="flex gap-2 overflow-x-auto pb-1">
           {tabs.map((item) => {
             const active = item.id === tab;
             return (
@@ -50,12 +50,14 @@ export default function Gallery() {
                   to={`${localePath(lang, "/gallery")}?tab=${item.id}`}
                   preventScrollReset
                   aria-current={active ? "page" : undefined}
-                  className={`flex min-h-12 items-center gap-2 border-b-2 px-4 text-[0.9375rem] transition-colors ${
-                    active ? "border-ink font-medium text-ink" : "border-transparent text-muted hover:text-ink"
+                  className={`flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.9375rem] transition-colors ${
+                    active
+                      ? "border-accent bg-accent font-semibold text-on-accent"
+                      : "border-line bg-surface text-muted hover:border-accent hover:text-accent"
                   }`}
                 >
                   {item.label}
-                  {status === "ready" && <span className="text-[0.8125rem] text-faint">{item.count}</span>}
+                  {status === "ready" && <span className={`text-[0.8125rem] ${active ? "opacity-80" : "text-faint"}`}>{item.count}</span>}
                 </Link>
               </li>
             );

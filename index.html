@@ -3,15 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f8f7f3" />
+    <meta name="theme-color" content="#fbfdf9" />
 
     <script>
       // Apply the customer's saved text size and colour contrast before the page is drawn, so it does not jump.
       try {
         var size = window.localStorage.getItem("text-size");
         if (size === "lg" || size === "xl") document.documentElement.dataset.textSize = size;
-        var contrast = window.localStorage.getItem("contrast");
-        if (contrast === "light" || contrast === "dark") document.documentElement.dataset.contrast = contrast;
+        if (window.localStorage.getItem("contrast") === "dark") document.documentElement.dataset.contrast = "dark";
       } catch (e) {}
     </script>
 
@@ -39,7 +38,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Noto+Serif+Thai:wght@300..700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap"
     />
   </head>
   <body>

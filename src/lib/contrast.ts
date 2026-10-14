@@ -1,15 +1,16 @@
-// The customer's chosen colour contrast: the site's own colours, black text on white, or white text on black.
+// The customer's chosen colours: the site's green and white, or the contrast mode, black with green.
 // The choice swaps the colour tokens in index.css through a data attribute on <html>.
 // index.html applies the saved choice before the page is drawn, so there is no flash.
 
-export type Contrast = "normal" | "light" | "dark";
+export type Contrast = "normal" | "dark";
 
 const STORAGE_KEY = "contrast";
 
 /** The mode currently applied to the page. */
 export function readContrast(): Contrast {
   const applied = document.documentElement.dataset.contrast;
-  return applied === "light" || applied === "dark" ? applied : "normal";
+  // An earlier version also had "light"; it now falls back to the normal colours.
+  return applied === "dark" ? "dark" : "normal";
 }
 
 export function applyContrast(mode: Contrast) {

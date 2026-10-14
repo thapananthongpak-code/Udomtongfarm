@@ -21,7 +21,7 @@ export default function TextSizeControl() {
   }
 
   return (
-    <div role="group" aria-label={t.textSize} className="inline-flex">
+    <div role="group" aria-label={t.textSize} className="inline-flex overflow-hidden rounded-full border border-control">
       {OPTIONS.map(({ value, letter }) => {
         const active = size === value;
         return (
@@ -32,8 +32,8 @@ export default function TextSizeControl() {
             aria-label={`${t.textSize}: ${names[value]}`}
             title={names[value]}
             onClick={() => choose(value)}
-            className={`-ml-px grid size-9 place-items-center border transition-colors first:ml-0 ${
-              active ? "relative border-ink bg-ink text-paper" : "border-control bg-surface text-ink hover:border-ink hover:bg-wall"
+            className={`grid size-9 place-items-center transition-colors ${
+              active ? "bg-accent text-on-accent" : "bg-surface text-ink hover:bg-wall hover:text-accent"
             }`}
           >
             <span aria-hidden className={`${letter} leading-none`}>

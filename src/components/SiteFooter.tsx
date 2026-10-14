@@ -20,10 +20,10 @@ export default function SiteFooter() {
   ];
 
   return (
-    <footer className="mt-24 border-t border-line print:hidden">
+    <footer className="mt-20 bg-wall print:hidden">
       <div className="shell grid gap-12 py-16 md:grid-cols-[2fr_1fr_1fr]">
         <div>
-          <p className="font-serif text-2xl">{t.site.name}</p>
+          <p className="text-xl font-semibold text-accent">{t.site.name}</p>
           <p className="mt-3 max-w-sm text-[0.9375rem] text-muted">{t.footer.about}</p>
         </div>
 
@@ -32,7 +32,7 @@ export default function SiteFooter() {
           <ul className="mt-4 space-y-2 text-[0.9375rem]">
             {explore.map((link) => (
               <li key={link.href}>
-                <Link to={localePath(lang, link.href)} className="text-muted transition-colors hover:text-ink">
+                <Link to={localePath(lang, link.href)} className="text-muted transition-colors hover:text-accent">
                   {link.label}
                 </Link>
               </li>
@@ -45,13 +45,13 @@ export default function SiteFooter() {
           <address className="mt-4 space-y-2 text-[0.9375rem] not-italic text-muted">
             <p>{addressFor(contact, lang)}</p>
             <p>
-              <a href={`tel:${contact.phone}`} className="transition-colors hover:text-ink">
+              <a href={`tel:${contact.phone}`} className="transition-colors hover:text-accent">
                 {formatPhone(contact.phone)}
               </a>
             </p>
             {contact.facebook_url && (
               <p>
-                <a href={contact.facebook_url} target="_blank" rel="noreferrer" className="transition-colors hover:text-ink">
+                <a href={contact.facebook_url} target="_blank" rel="noreferrer" className="transition-colors hover:text-accent">
                   {t.visit.facebook}
                 </a>
               </p>
@@ -60,10 +60,10 @@ export default function SiteFooter() {
         </div>
       </div>
 
-      <div className="border-t border-line">
+      <div className="border-t border-line-strong/50">
         <div className="shell flex flex-col gap-2 py-6 text-[0.8125rem] text-faint sm:flex-row sm:items-center sm:justify-between">
           <p>{format(t.footer.rights, { year: new Date().getFullYear() })}</p>
-          <Link to={localePath(lang, "/privacy")} className="transition-colors hover:text-ink">
+          <Link to={localePath(lang, "/privacy")} className="transition-colors hover:text-accent">
             {t.footer.privacy}
           </Link>
         </div>

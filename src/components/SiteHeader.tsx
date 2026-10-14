@@ -44,9 +44,15 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-md print:hidden">
+    <header className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur-md print:hidden">
       <div className="shell flex h-16 items-center justify-between gap-6">
-        <Link to={localePath(lang)} className="font-serif text-xl tracking-tight" onClick={() => setOpen(false)}>
+        <Link to={localePath(lang)} className="group flex items-center gap-2 text-lg font-semibold" onClick={() => setOpen(false)}>
+          <span aria-hidden className="grid size-8 place-items-center rounded-full bg-accent text-on-accent transition-transform group-hover:rotate-[-12deg]">
+            <svg viewBox="0 0 24 24" className="size-[1.1rem]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 19c0-8 5-13 14-14 0 9-5 14-14 14Z" />
+              <path d="M5 19 13 11" />
+            </svg>
+          </span>
           {t.site.name}
         </Link>
 
@@ -100,7 +106,7 @@ export default function SiteHeader() {
                   to={localePath(lang, link.href)}
                   aria-current={link.active ? "page" : undefined}
                   onClick={() => setOpen(false)}
-                  className="nudge block py-3.5 font-serif text-2xl"
+                  className="nudge block py-3.5 text-xl font-semibold"
                 >
                   {link.label}
                 </Link>
