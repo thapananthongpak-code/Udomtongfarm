@@ -18,16 +18,17 @@ export default function SpeciesCard({ species, priority = false }: { species: Sp
           alt=""
           priority={priority}
           placeholder={species.type}
-          className="aspect-[4/5]"
+          // Without a photo a shorter frame is enough, so a page of entries is not mostly empty frames.
+          className={species.image ? "aspect-[4/5]" : "aspect-[4/3]"}
         />
         {isNew(species) && (
-          <span className="absolute left-2.5 top-2.5 bg-accent px-2 py-0.5 text-[0.75rem] font-medium text-on-accent">
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-accent px-2.5 py-0.5 text-[0.75rem] font-semibold text-on-accent">
             {t.common.isNew}
           </span>
         )}
       </div>
       <div className="mt-3.5">
-        <h3 className="font-serif text-lg leading-snug decoration-line-strong decoration-1 underline-offset-4 group-hover:underline">
+        <h3 className="font-serif text-lg leading-snug transition-colors group-hover:text-accent">
           {speciesName(species, lang)}
         </h3>
         {species.scientific_name && (

@@ -83,7 +83,7 @@ function SpeciesEntry({ sp, all }: { sp: Species; all: Species[] }) {
           <p className="eyebrow flex flex-wrap items-center gap-3">
             {department}
             {isNew(sp) && (
-              <span className="bg-accent px-2 py-0.5 text-[0.75rem] font-medium normal-case tracking-normal text-on-accent">
+              <span className="rounded-full bg-accent px-2.5 py-0.5 text-[0.75rem] font-semibold normal-case tracking-normal text-on-accent">
                 {t.common.isNew}
               </span>
             )}

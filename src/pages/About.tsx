@@ -34,14 +34,14 @@ export default function About() {
         </div>
       </section>
 
-      <section className="border-t border-line bg-wall">
-        <div className="shell py-16 md:py-20">
+      <section className="shell">
+        <div className="rounded-[2rem] bg-wall px-6 py-12 sm:px-10 md:py-16">
           <h2 className="eyebrow">{t.about.numbersTitle}</h2>
           <dl className="mt-8 grid gap-8 sm:grid-cols-3">
             {numbers.map((item) => (
               <div key={item.label} className="flex flex-col-reverse">
                 <dt className="mt-1 text-[0.9375rem] text-muted">{item.label}</dt>
-                <dd className="font-serif text-5xl md:text-6xl">{item.value}</dd>
+                <dd className="text-4xl font-semibold text-accent md:text-5xl">{item.value}</dd>
               </div>
             ))}
           </dl>
@@ -76,7 +76,7 @@ export default function About() {
           <h2 className="display text-3xl md:text-4xl">{t.about.valuesTitle}</h2>
           <ul className="mt-12 grid gap-10 md:grid-cols-3 md:gap-12">
             {t.about.values.map((value) => (
-              <li key={value.title} className="border-t border-ink pt-5">
+              <li key={value.title} className="lift card p-6 hover:border-accent">
                 <h3 className="font-serif text-2xl">{value.title}</h3>
                 <p className="mt-3 text-[0.9375rem] text-muted">{value.body}</p>
               </li>

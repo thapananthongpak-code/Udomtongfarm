@@ -40,7 +40,7 @@ export default function SpeciesImage({ src, alt, fit = "cover", priority = false
   const showPhoto = src !== "" && failed !== src;
 
   return (
-    <div className={`relative overflow-hidden bg-wall ${className}`}>
+    <div className={`relative overflow-hidden rounded-2xl bg-wall ${className}`}>
       {showPhoto ? (
         <img
           src={src}
@@ -51,7 +51,7 @@ export default function SpeciesImage({ src, alt, fit = "cover", priority = false
           className={`zoom-on-hover absolute inset-0 size-full ${fit === "cover" ? "object-cover" : "object-contain"}`}
         />
       ) : (
-        <div aria-hidden className="absolute inset-[8%] flex items-center justify-center border border-line-strong">
+        <div aria-hidden className="absolute inset-[8%] flex items-center justify-center rounded-xl border border-dashed border-line-strong">
           {placeholder && (
             <svg
               viewBox="0 0 24 24"

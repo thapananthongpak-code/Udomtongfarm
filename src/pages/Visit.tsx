@@ -64,7 +64,7 @@ export default function Visit() {
             title={t.visit.mapTitle}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            className="aspect-[4/3] w-full border border-line bg-wall"
+            className="aspect-[4/3] w-full rounded-2xl border border-line bg-wall"
           />
         </div>
       </section>
@@ -74,7 +74,7 @@ export default function Visit() {
           <h2 className="display text-3xl md:text-4xl">{t.farm.activitiesTitle}</h2>
           <ul className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {t.farm.activities.map((activity) => (
-              <li key={activity.title} className="border-t border-ink pt-5">
+              <li key={activity.title} className="lift card p-5 hover:border-accent">
                 <h3 className="font-serif text-2xl">{activity.title}</h3>
                 <p className="mt-3 text-[0.9375rem] text-muted">{activity.body}</p>
               </li>
@@ -83,8 +83,8 @@ export default function Visit() {
         </div>
       </section>
 
-      <section id="stay" className="border-t border-line bg-wall">
-        <div className="shell grid gap-10 py-16 md:py-24 lg:grid-cols-12">
+      <section id="stay" className="shell">
+        <div className="grid gap-8 rounded-[2rem] bg-wall px-6 py-12 sm:px-10 md:py-16 lg:grid-cols-12">
           <h2 className="display text-3xl md:text-4xl lg:col-span-4">{t.farm.stayTitle}</h2>
           <dl className="label-list self-start text-[0.9375rem] lg:col-span-7 lg:col-start-6">
             {t.farm.stay.map((row) => (
@@ -102,7 +102,7 @@ export default function Visit() {
           <h2 className="display text-3xl md:text-4xl">{t.visit.gettingThere}</h2>
           <ul className="mt-12 grid gap-10 md:grid-cols-3 md:gap-12">
             {t.visit.routes.map((route) => (
-              <li key={route.title} className="border-t border-ink pt-5">
+              <li key={route.title} className="card p-5">
                 <h3 className="font-serif text-2xl">{route.title}</h3>
                 <p className="mt-3 text-[0.9375rem] text-muted">{route.body}</p>
               </li>

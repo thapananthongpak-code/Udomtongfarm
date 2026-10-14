@@ -25,9 +25,8 @@ const en = {
     extraLarge: "Extra large",
     letter: "A",
     contrast: "Site colours",
-    contrastNormal: "Normal colours",
-    contrastLight: "Black text on white",
-    contrastDark: "White text on black",
+    contrastNormal: "Normal colours, green and white",
+    contrastDark: "High contrast, black and green",
   },
 
   common: {
@@ -92,8 +91,8 @@ const en = {
   },
 
   home: {
-    title: "Come to Udomtong Farm and meet the rare animals and plants of Chaiyaphum.",
-    lede: "We keep and grow many rare animals and plants. This site invites you to visit, and tells the story of each one so you can get to know them before you meet them. Entry is free.",
+    title: "Visit the farm. Meet rare animals and plants.",
+    lede: "Rare animals and plants are waiting to meet you. Read about each one here before you come. Entry is free.",
     browse: "Explore the gallery",
     visit: "Plan a visit",
     onView: "From the gallery",
@@ -119,7 +118,7 @@ const en = {
   gallery: {
     eyebrow: "Gallery",
     title: "Animals, plants and activities at Udomtong Farm",
-    lede: "See every animal and plant on the farm, the activities you can join, and the rates.",
+    lede: "Animals, plants, activities and prices, all in one place.",
     tabs: "Sections of the gallery",
     tabAnimals: "Animals",
     tabPlants: "Plants",

@@ -1,73 +1,56 @@
 @import "tailwindcss";
 
 /* ── Tokens ───────────────────────────────────────────────────
-   A quiet, gallery-like palette: warm white walls, near-black ink,
-   hairline rules and a single moss accent used sparingly. */
+   A minimal farm palette: white ground, pale leaf green for panels, deep forest
+   green for text, and one fresh green for buttons, links and highlights. */
 
 :root {
-  --paper: #f8f7f3;
+  --paper: #fbfdf9;
   --surface: #ffffff;
-  --wall: #eeece5;
-  --ink: #171716;
-  --muted: #5c5b55;
-  --faint: #66655e;
-  --line: #e2e0d8;
-  --line-strong: #c6c3b8;
+  --wall: #edf5ea;
+  --ink: #14281c;
+  --muted: #46604e;
+  --faint: #506a58;
+  --line: #dfe9da;
+  --line-strong: #b7cbb0;
   /* Borders of buttons and fields. 3:1 against the page, as WCAG asks for interface parts. */
-  --control: #85837a;
-  --accent: #2c4a3a;
-  --on-accent: #f8f7f3;
-  --danger: #9a2a1f;
-
-  --status-lc: #3d7a52;
-  --status-nt: #7d7f1c;
-  --status-vu: #b07a00;
-  --status-en: #b8551a;
-  --status-cr: #a52a20;
-
-  color-scheme: light;
-}
-
-/* High-contrast modes, chosen with the buttons in the header (see src/lib/contrast.ts).
-   Only the tokens change, so every part of the site follows. Text is 7:1 or better on its ground
-   and the borders of fields and buttons are the full text colour. */
-:root[data-contrast="light"] {
-  --paper: #ffffff;
-  --surface: #ffffff;
-  --wall: #f1f1f1;
-  --ink: #000000;
-  --muted: #1a1a1a;
-  --faint: #262626;
-  --line: #595959;
-  --line-strong: #000000;
-  --control: #000000;
-  --accent: #000000;
+  --control: #6f8a74;
+  --accent: #1f7a43;
   --on-accent: #ffffff;
-  --danger: #a00000;
+  --danger: #a3261b;
+
+  --radius: 1rem;
+  --shadow-soft: 0 12px 28px -18px rgb(20 40 28 / 0.45);
 
   color-scheme: light;
 }
 
+/* The contrast mode, chosen with the buttons in the header (see src/lib/contrast.ts): black with green.
+   Only the tokens change, so every part of the site follows. Text is 10:1 or better on its ground. */
 :root[data-contrast="dark"] {
-  --paper: #000000;
-  --surface: #000000;
-  --wall: #141414;
-  --ink: #ffffff;
-  --muted: #f2f2f2;
-  --faint: #e6e6e6;
-  --line: #a6a6a6;
-  --line-strong: #ffffff;
-  --control: #ffffff;
-  --accent: #ffd400;
-  --on-accent: #000000;
+  --paper: #040906;
+  --surface: #0a140d;
+  --wall: #0f2116;
+  --ink: #ecfdf1;
+  --muted: #c2e8cd;
+  --faint: #a6d8b4;
+  --line: #245030;
+  --line-strong: #57c97a;
+  --control: #57c97a;
+  --accent: #4ade80;
+  --on-accent: #03130a;
   --danger: #ff9b8f;
+
+  --shadow-soft: 0 0 0 1px rgb(87 201 122 / 0.35);
 
   color-scheme: dark;
 }
 
 @theme inline {
   --font-sans: "IBM Plex Sans Thai", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-serif: "Newsreader", "Noto Serif Thai", Georgia, "Times New Roman", serif;
+  /* "font-serif" is used for headings and names. It is the same sans as the text, set heavier,
+     which reads better on a phone than a Thai serif. Latin names use Newsreader (see .scientific). */
+  --font-serif: "IBM Plex Sans Thai", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --color-paper: var(--paper);
   --color-surface: var(--surface);
@@ -110,6 +93,13 @@
     text-rendering: optimizeLegibility;
   }
 
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 600;
+  }
+
   ::selection {
     background: var(--accent);
     color: var(--on-accent);
@@ -123,7 +113,7 @@
     outline-width: 3px;
   }
 
-  /* Underlines and borders are drawn solid in the high-contrast modes. */
+  /* Underlines are drawn solid in the contrast mode. */
   :root[data-contrast] .link {
     text-decoration-color: currentColor;
   }
@@ -149,35 +139,36 @@
     padding-inline: clamp(1.25rem, 4vw, 3rem);
   }
 
-  /* Small label above a heading, like a gallery wall text. */
+  /* Small green label above a heading. */
   .eyebrow {
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.4;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--accent);
   }
   :lang(th) .eyebrow {
-    font-size: 0.8125rem;
-    letter-spacing: 0.04em;
+    font-size: 0.875rem;
+    letter-spacing: 0.02em;
   }
 
   .display {
     font-family: var(--font-serif);
-    font-weight: 400;
-    line-height: 1.08;
-    letter-spacing: -0.015em;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
   :lang(th) .display {
-    line-height: 1.3;
+    line-height: 1.35;
     letter-spacing: 0;
   }
 
   .scientific {
-    font-family: var(--font-serif);
+    font-family: "Newsreader", Georgia, "Times New Roman", serif;
     font-style: italic;
+    font-weight: 400;
   }
 
   .lede {
@@ -192,9 +183,12 @@
     text-decoration-color: var(--line-strong);
     text-decoration-thickness: 1px;
     text-underline-offset: 0.3em;
-    transition: text-decoration-color 0.15s;
+    transition:
+      color 0.15s,
+      text-decoration-color 0.15s;
   }
   .link:hover {
+    color: var(--accent);
     text-decoration-color: currentColor;
   }
 
@@ -204,10 +198,10 @@
     justify-content: center;
     gap: 0.5rem;
     min-height: 2.75rem;
-    padding: 0.5rem 1.25rem;
-    border: 1px solid var(--ink);
-    border-radius: 2px;
-    background: transparent;
+    padding: 0.5rem 1.35rem;
+    border: 1px solid var(--control);
+    border-radius: 999px;
+    background: var(--surface);
     color: var(--ink);
     font-size: 0.9375rem;
     font-weight: 500;
@@ -219,24 +213,26 @@
       border-color 0.15s;
   }
   .btn:hover {
-    background: var(--ink);
-    color: var(--paper);
+    border-color: var(--accent);
+    background: var(--wall);
+    color: var(--accent);
   }
   .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
   .btn-primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .btn-primary:hover {
+    border-color: var(--ink);
     background: var(--ink);
     color: var(--paper);
   }
-  .btn-primary:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--on-accent);
-  }
   .btn-quiet {
-    border-color: var(--control);
+    border-color: var(--line-strong);
   }
   .btn-danger {
     border-color: var(--danger);
@@ -245,12 +241,19 @@
   .btn-danger:hover {
     background: var(--danger);
     border-color: var(--danger);
-    color: var(--paper);
+    color: var(--surface);
   }
   .btn-sm {
     min-height: 2.25rem;
-    padding: 0.25rem 0.875rem;
+    padding: 0.25rem 1rem;
     font-size: 0.875rem;
+  }
+
+  /* A rounded panel on the page, for groups of content that belong together. */
+  .card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
   }
 
   .field-label {
@@ -275,20 +278,27 @@
     display: block;
     width: 100%;
     min-height: 2.75rem;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.875rem;
     border: 1px solid var(--control);
-    border-radius: 2px;
+    border-radius: 0.75rem;
     background: var(--surface);
     color: var(--ink);
     font: inherit;
     line-height: 1.5;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
   }
   .input::placeholder {
     color: var(--faint);
   }
+  .input:hover {
+    border-color: var(--accent);
+  }
   .input:focus-visible {
     outline-offset: 0;
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
   }
   .input[aria-invalid="true"] {
     border-color: var(--danger);
@@ -302,7 +312,9 @@
 
   .notice {
     padding: 0.75rem 1rem;
-    border-left: 2px solid var(--accent);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0.75rem;
     background: var(--wall);
     font-size: 0.9375rem;
     line-height: 1.6;
@@ -360,14 +372,15 @@
   }
   .nav-link:hover,
   .nav-link[aria-current="page"] {
-    color: var(--ink);
+    color: var(--accent);
   }
   .nav-link::after {
     content: "";
     position: absolute;
     inset-inline: 0;
     bottom: -1px;
-    height: 1px;
+    height: 2px;
+    border-radius: 2px;
     background: currentColor;
     transform: scaleX(0);
     transform-origin: left;
@@ -390,7 +403,7 @@
     }
     .btn:not(:disabled):hover {
       transform: translateY(-1px);
-      box-shadow: 0 6px 14px -8px rgb(0 0 0 / 0.45);
+      box-shadow: var(--shadow-soft);
     }
     .btn:not(:disabled):active {
       transform: translateY(0) scale(0.97);
@@ -437,8 +450,8 @@
         border-color 0.15s;
     }
     .lift:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 14px 24px -16px rgb(0 0 0 / 0.5);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-soft);
     }
 
     /* A row in a menu that nudges toward the pointer. */

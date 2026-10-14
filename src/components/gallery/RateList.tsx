@@ -17,17 +17,17 @@ export default function RateList({ rates }: { rates: FarmService[] }) {
   return (
     <div>
       <h2 className="sr-only">{labels.ratesListHeading}</h2>
-      <ul className="border-t border-ink">
+      <ul className="card divide-y divide-line px-5">
         {rates.map((rate) => {
           const description = serviceDescription(rate, lang);
           const unit = serviceUnit(rate, lang);
           return (
-            <li key={rate.id} className="grid gap-x-8 gap-y-1 border-b border-line py-5 sm:grid-cols-[1fr_auto] sm:items-baseline">
+            <li key={rate.id} className="grid gap-x-8 gap-y-1 py-5 sm:grid-cols-[1fr_auto] sm:items-baseline">
               <div>
                 <h3 className="font-serif text-xl leading-snug">{serviceName(rate, lang)}</h3>
                 {description && <p className="mt-1 max-w-xl text-[0.9375rem] text-muted">{description}</p>}
               </div>
-              <p className="font-serif text-xl sm:text-right">
+              <p className="text-xl font-semibold text-accent sm:text-right">
                 {rate.price === null ? (
                   <span className="font-sans text-[0.9375rem] text-muted">{labels.askFarm}</span>
                 ) : rate.price === 0 ? (
