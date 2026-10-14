@@ -15,6 +15,7 @@ Built with React, Vite, Tailwind CSS and Supabase. The chat assistant uses the G
 - Thai and English versions of every page under `/th` and `/en`.
 - **Text size control** (normal, large, extra large) and **colour contrast control** (the site's colours, black text on white, white text on black) in the header, both remembered in the browser, and markup that works with screen readers.
 - **QR code on every species page**, which opens that page on the phone that scans it. In the admin dashboard the code appears as soon as a new entry is saved, with downloads (PNG, SVG) and a sheet of every code to print as signs.
+- **Visitor numbers in the admin dashboard** (admins only): how many browsers have the site open now, today, the last 7 days and all time, with the last 14 days as bars.
 - **Hover and press feedback** on buttons, menus and cards, switched off for customers whose device asks for less motion.
 
 ## Getting started
@@ -132,7 +133,28 @@ The admin pages are hidden from everyone who is not an admin, but that is only f
 
 - Anyone can read published species, activities and rates, the farm's contact details and the site's texts.
 - Members can read and change only their own profile name and saved list.
-- Only admins can change species, activities and rates, upload photographs, or edit the farm's details and the site's texts. Admins are appointed in the SQL Editor.
+- Only admins can change species, activities and rates, upload photographs, or edit the farm's details and the site's texts, and only admins can read the visit counts. Admins are appointed in the SQL Editor.
+
+### Visitor numbers
+
+Each browser is counted once a day: the page calls the `record_visit` function, which adds one to that day's row in `visit_days` (Thailand's date), and the browser remembers the date so it is not counted again. Nothing else is sent or stored, admins are not counted, and the table can only be read by admins. "On the site now" comes from Supabase Realtime presence: while a page is visible its tab announces itself on the `site-presence` channel with nothing attached, and the dashboard counts the announcements, so nothing is recorded. The privacy policy has a section saying all of this.
+
+Limits: the numbers count browsers, not people; anyone can call `record_visit` directly and inflate a day's total; and each open tab holds one Realtime connection, which Supabase's free plan caps at 200 at once.
+
+## Checking that saving works
+
+Everything an admin saves is confirmed against the database: a save or delete only reports success when a row was really changed, so a refused change is shown as an error and never as "saved". When the database cannot be reached the site shows a saved copy with a notice and a "Try again" link, and a form with unsaved changes asks before it is left.
+
+To check a deployment by hand, signed in as an admin:
+
+1. Add an animal. It opens on its own page with its QR code. Reload the page: it is still there.
+2. Change its summary and save. Open it on the site in another tab: the new text is there. Reload: still there.
+3. Switch its "New" badge to "Always shown" and check the home page's "New arrivals".
+4. Delete it. Reload the list and the site: it is gone.
+5. Repeat steps 1 to 4 for a menu item and an activity or rate.
+6. Change a text in Admin → Site texts, then empty the box and save: the original wording returns.
+
+And as a signed-in member who is not an admin (use another Google account): there is no link to the admin area, and `/th/admin` shows "not found".
 
 ## Deployment
 

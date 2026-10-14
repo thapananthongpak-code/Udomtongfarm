@@ -9,6 +9,8 @@ import type { Species } from "@/lib/species/types";
 export type DataState = {
   /** "loading" while the first read from Supabase is in flight. */
   status: "loading" | "ready";
+  /** True when the database could not be read and the bundled data is shown instead. */
+  problem: boolean;
   /** Every published species. */
   species: Species[];
   /** Every published item on the café menu. */
@@ -26,6 +28,7 @@ export type DataState = {
 
 export const DataContext = createContext<DataState>({
   status: "ready",
+  problem: false,
   species: [],
   menu: [],
   services: [],

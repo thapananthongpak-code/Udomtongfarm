@@ -101,19 +101,25 @@ export async function saveSpecies(
     tags: [...new Set(tags.split(",").map((tag) => tag.trim()).filter(Boolean))],
   };
 
-  const { error } = existingId
-    ? await supabase.from("species").update(row).eq("id", existingId)
-    : await supabase.from("species").insert(row);
-  if (!error) return { ok: true };
-  if (error.code === "23505") return { ok: false, code: "invalid", fields: { id: "id_taken" } };
-  // 42501 is "row level security refused this", which means the account is not an admin.
-  return { ok: false, code: error.code === "42501" ? "forbidden" : "unknown" };
+  // Asking for the row back shows whether the change was allowed: a non-admin changes nothing,
+  // and the database then answers "success" with no rows, which must not be reported as saved.
+  const { data, error } = existingId
+    ? await supabase.from("species").update(row).eq("id", existingId).select("id")
+    : await supabase.from("species").insert(row).select("id");
+  if (error) {
+    if (error.code === "23505") return { ok: false, code: "invalid", fields: { id: "id_taken" } };
+    // 42501 is "row level security refused this", which means the account is not an admin.
+    return { ok: false, code: error.code === "42501" ? "forbidden" : "unknown" };
+  }
+  if (data.length === 0) return { ok: false, code: "forbidden" };
+  return { ok: true };
 }
 
+/** True only when the database really removed the row: a non-admin's delete removes nothing and still "succeeds". */
 export async function deleteSpecies(id: string): Promise<boolean> {
   if (!supabase) return false;
-  const { error } = await supabase.from("species").delete().eq("id", id);
-  return !error;
+  const { data, error } = await supabase.from("species").delete().eq("id", id).select("id");
+  return !error && data.length > 0;
 }
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -187,8 +193,8 @@ export async function saveMenuItem(values: MenuFormValues, existingId: string | 
 
 export async function deleteMenuItem(id: string): Promise<boolean> {
   if (!supabase) return false;
-  const { error } = await supabase.from("menu_items").delete().eq("id", id);
-  return !error;
+  const { data, error } = await supabase.from("menu_items").delete().eq("id", id).select("id");
+  return !error && data.length > 0;
 }
 
 /** What the activity and rate form holds while it is being edited. */

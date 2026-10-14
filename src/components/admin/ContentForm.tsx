@@ -3,6 +3,7 @@ import { getDictionary, locales, type Locale } from "@/i18n";
 import { useLang, useT } from "@/i18n/hooks";
 import { saveContent, type SaveResult } from "@/lib/admin";
 import { CONTENT_GROUPS, CONTENT_KEYS, CONTENT_MAX_LENGTH, textAt } from "@/lib/content";
+import { useUnsavedChanges } from "@/lib/useUnsavedChanges";
 import { useData } from "@/state/data";
 
 type Values = Record<string, Record<Locale, string>>;
@@ -22,6 +23,8 @@ export default function ContentForm() {
   );
   const [result, setResult] = useState<SaveResult | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(() => JSON.stringify(values));
+  useUnsavedChanges(JSON.stringify(values) !== saved, t.unsavedConfirm);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -41,17 +44,17 @@ export default function ContentForm() {
     if (outcome.ok) {
       await reload();
       // An emptied box shows the built-in text again, which is what the site now uses.
-      setValues((current) =>
-        Object.fromEntries(
-          CONTENT_KEYS.map((key) => [
-            key,
-            {
-              th: current[key].th.trim() || textAt(getDictionary("th"), key),
-              en: current[key].en.trim() || textAt(getDictionary("en"), key),
-            },
-          ]),
-        ),
+      const next: Values = Object.fromEntries(
+        CONTENT_KEYS.map((key) => [
+          key,
+          {
+            th: values[key].th.trim() || textAt(getDictionary("th"), key),
+            en: values[key].en.trim() || textAt(getDictionary("en"), key),
+          },
+        ]),
       );
+      setValues(next);
+      setSaved(JSON.stringify(next));
     }
     setResult(outcome);
     setSaving(false);
