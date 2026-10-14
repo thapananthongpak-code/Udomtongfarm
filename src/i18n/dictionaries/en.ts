@@ -519,7 +519,33 @@ const en = {
     open: "Ask about the farm",
     title: "Ask about the farm",
     close: "Close chat",
-    greeting: "Hello! Ask me anything about Udomtong Farm, the animals and plants here, or how to visit.",
+    greetings: {
+      morning: [
+        "Good morning! Ask me anything about the farm.",
+        "Morning! Thinking of visiting? Ask me about the way there or what to do.",
+        "Is there an animal or plant you would like to know about this morning? Ask away.",
+      ],
+      afternoon: [
+        "Good afternoon! Anything you would like to know about the farm?",
+        "Planning a visit? Ask me anything about it.",
+        "Curious about the activities or the homestay? Ask me.",
+      ],
+      evening: [
+        "Good evening! Free tomorrow? Ask me about visiting the farm.",
+        "Planning a visit ahead of time? Ask me anything.",
+      ],
+      night: [
+        "Good evening! I am always here. Ask me anything about the farm.",
+        "It is late, but I am still here. Ask me about the farm.",
+      ],
+      any: [
+        "I am the sun conure of Udomtong Farm. Ask me anything!",
+        "Entry to the farm is free. Ask me how to get here.",
+        "Have a look at the animals and plants in the gallery, and ask me about any you like.",
+      ],
+    },
+    closeGreeting: "Dismiss",
+    ask: "Ask me anything",
     suggestions: ["Is there an entry fee?", "What is there to do at the farm?", "Tell me about the homestay"],
     placeholder: "Type your question",
     send: "Send",
